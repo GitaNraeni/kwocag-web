@@ -29,9 +29,23 @@ export async function POST(req: NextRequest) {
       if (!expired) continue;
 
       // Cek apakah sudah ada order aktif untuk grup ini
-      const existing = await prisma.order.findFirst({
-        where: { groupLink: { contains: groupLink.replace("https://chat.whatsapp.com/", "") }, botTypeId: botType.id, status: "ACTIVE" },
-      });
+      const searchTerm = groupLink
+        ? groupLink.replace("https://chat.whatsapp.com/", "")
+        : groupId || "";
+
+      let existing = null;
+      if (searchTerm) {
+        existing = await prisma.order.findFirst({
+          where: {
+            botTypeId: botType.id,
+            status: "ACTIVE",
+            OR: [
+              { groupLink: { contains: searchTerm } },
+              { notes: { contains: groupId || "NOMATCH" } },
+            ],
+          },
+        });
+      }
 
       if (existing) {
         // Update expiresAt dan notes (nama grup)
@@ -56,7 +70,7 @@ export async function POST(req: NextRequest) {
             status: "ACTIVE",
             paidAt: new Date(),
             expiresAt: new Date(expired),
-            notes: groupName || `Synced (${groupId || "unknown"})`,
+            notes: groupName || groupId || "Synced",
           },
         });
         synced++;
