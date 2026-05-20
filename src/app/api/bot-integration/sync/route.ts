@@ -28,20 +28,19 @@ export async function POST(req: NextRequest) {
       const { groupId, groupLink, groupName, expired, contactPhone } = entry;
       if (!expired) continue;
 
-      // Cek apakah sudah ada order aktif untuk grup ini
-      const searchTerm = groupLink
-        ? groupLink.replace("https://chat.whatsapp.com/", "")
-        : groupId || "";
+      // Cek apakah sudah ada order aktif untuk grup ini (dedup agresif)
+      const groupIdClean = groupId ? groupId.replace("@g.us", "") : "";
 
       let existing = null;
-      if (searchTerm) {
+      if (groupIdClean) {
         existing = await prisma.order.findFirst({
           where: {
             botTypeId: botType.id,
             status: "ACTIVE",
             OR: [
-              { groupLink: { contains: searchTerm } },
-              { notes: { contains: groupId || "NOMATCH" } },
+              { groupLink: { contains: groupIdClean } },
+              { notes: { contains: groupIdClean } },
+              ...(groupLink && groupLink.startsWith("http") ? [{ groupLink: { contains: groupLink.replace("https://chat.whatsapp.com/", "") } }] : []),
             ],
           },
         });

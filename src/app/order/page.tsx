@@ -75,7 +75,9 @@ export default function OrderTypePage() {
         ) : (
           <div className="space-y-3">
             {bots.map((bot) => {
-              const lowest = bot.prices.length > 0 ? Math.min(...bot.prices.map((p) => p.price)) : 0;
+              const lowest = bot.prices.length > 0
+                ? (bot.prices.find((p: any) => p.duration === "WEEKLY")?.price || Math.min(...bot.prices.map((p: any) => p.price)))
+                : 0;
               const href = mode === "new" ? `/order/${bot.slug}` : `/order/${bot.slug}?mode=extend`;
               const isClosed = bot.acceptingOrders === false;
               const hasSlotLimit = bot.maxSlots !== undefined && bot.maxSlots > 0;

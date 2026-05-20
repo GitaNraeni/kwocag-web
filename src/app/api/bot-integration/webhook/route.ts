@@ -27,7 +27,8 @@ export async function GET(req: NextRequest) {
   const where: Record<string, unknown> = {
     status: "ACTIVE",
     logs: { none: { action: "BOT_JOINED" } },
-    botType: { slug }, // FILTER BY SLUG — ini yang bikin bot cuma ambil order tipe-nya
+    botType: { slug },
+    NOT: { orderCode: { startsWith: "SYNC-" } },
   };
 
   // Filter by instance number
