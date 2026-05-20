@@ -6,7 +6,12 @@ import { useRouter } from "next/navigation";
 
 interface OrderResult {
   orderCode: string;
+  botType: string;
   status: string;
+  totalPrice: number;
+  duration: string;
+  customDays?: number | null;
+  expiresAt?: string | null;
   createdAt: string;
 }
 
@@ -22,6 +27,8 @@ export default function CheckPage() {
   const [query, setQuery] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState<OrderResult[] | null>(null);
+
   const [results, setResults] = useState<OrderResult[] | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -86,23 +93,29 @@ export default function CheckPage() {
             </button>
           </form>
 
-          {/* Results list */}
           {results && results.length > 0 && (
             <div className="mt-6 pt-4 border-t border-[var(--card-border)] space-y-2">
-              <p className="text-xs text-[var(--muted)] mb-2">{results.length} order ditemukan</p>
+              <p className="text-xs text-[var(--muted)] mb-3">{results.length} order ditemukan</p>
               {results.map((r) => (
                 <Link
                   key={r.orderCode}
                   href={`/order/status/${r.orderCode}`}
-                  className="flex items-center justify-between p-3 bg-[var(--background)] rounded-lg hover:bg-white/5 transition"
+                  className="block p-3 bg-[var(--background)] rounded-lg hover:bg-white/5 transition"
                 >
-                  <div>
-                    <p className="text-sm font-mono">{r.orderCode}</p>
-                    <p className="text-xs text-[var(--muted)]">{new Date(r.createdAt).toLocaleDateString("id-ID")}</p>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-mono">{r.orderCode}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded ${statusColors[r.status] || ""}`}>
+                      {r.status}
+                    </span>
                   </div>
-                  <span className={`text-xs px-2 py-0.5 rounded ${statusColors[r.status] || ""}`}>
-                    {r.status}
-                  </span>
+                  <div className="flex items-center justify-between text-xs text-[var(--muted)]">
+                    <span>{r.botType} - {r.duration === "WEEKLY" ? "1 Minggu" : r.duration === "MONTHLY" ? "1 Bulan" : `${r.customDays || "?"} Hari`}</span>
+                    <span>Rp {r.totalPrice.toLocaleString("id-ID")}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] text-[var(--muted)] mt-1">
+                    <span>{new Date(r.createdAt).toLocaleDateString("id-ID")}</span>
+                    {r.expiresAt && <span>s/d {new Date(r.expiresAt).toLocaleDateString("id-ID")}</span>}
+                  </div>
                 </Link>
               ))}
             </div>
