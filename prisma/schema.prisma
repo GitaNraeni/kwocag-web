@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model BotType {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String
+  features    String[] // list fitur bot
+  prices      Price[]
+  orders      Order[]
+  isActive    Boolean  @default(true)
+  maxSlots    Int      @default(0) // 0 = unlimited (per bot instance)
+  totalInstances Int   @default(1) // jumlah nomor bot yang handle tipe ini
+  acceptingOrders Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Price {
+  id        String   @id @default(cuid())
+  botTypeId String
+  botType   BotType  @relation(fields: [botTypeId], references: [id], onDelete: Cascade)
+  duration  Duration
+  customDays Int?    // untuk durasi custom
+  price     Int      // harga dalam rupiah
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([botTypeId, duration])
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  orderCode     String      @unique
+  botTypeId     String
+  botType       BotType     @relation(fields: [botTypeId], references: [id])
+  botInstance   Int         @default(1) // nomor bot mana yang handle (1, 2, 3...)
+  duration      Duration
+  customDays    Int?
+  groupLink     String
+  contactPhone  String?
+  contactEmail  String?
+  totalPrice    Int
+  status        OrderStatus @default(PENDING)
+  paymentId     String?     // ID dari Pakasir
+  paymentUrl    String?     // URL pembayaran Pakasir
+  paidAt        DateTime?
+  expiresAt     DateTime?   // kapan sewa berakhir
+  notes         String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  logs          OrderLog[]
+}
+
+model OrderLog {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  action    String
+  details   String?
+  createdAt DateTime @default(now())
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String   // hashed
+  createdAt DateTime @default(now())
+}
+
+model SiteSettings {
+  id              String  @id @default("main")
+  siteName        String  @default("KWOCAG")
+  siteLogo        String?
+  pakasirApiKey   String?
+  pakasirSlug     String?
+  telegramToken   String?
+  telegramChatId  String?
+  contactWhatsapp String?
+  // Payment gateway
+  paymentProvider String  @default("pakasir") // "pakasir" atau "ramashop"
+  ramashopApiKey  String?
+  // Admin fee
+  adminFee        Int     @default(0) // fee tetap (rupiah), 0 = tidak ada
+  adminFeePercent Float   @default(0) // fee persen, 0 = tidak ada
+}
+
+enum Duration {
+  WEEKLY
+  MONTHLY
+  CUSTOM
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
