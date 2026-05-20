@@ -48,28 +48,35 @@ export async function POST(req: NextRequest) {
       }
 
       if (existing) {
-        // Update expiresAt dan notes (nama grup)
+        // Update expiresAt, groupLink, dan notes (nama grup)
         const newExpiry = new Date(expired);
         const updates: Record<string, unknown> = {};
         if (existing.expiresAt?.getTime() !== newExpiry.getTime()) updates.expiresAt = newExpiry;
         if (groupName && existing.notes !== groupName) updates.notes = groupName;
+        if (groupLink && groupLink.startsWith("http") && existing.groupLink !== groupLink) updates.groupLink = groupLink;
+        // Hitung customDays
+        const days = Math.ceil((newExpiry.getTime() - Date.now()) / 86400000);
+        if (days > 0) updates.customDays = days;
         if (Object.keys(updates).length > 0) {
           await prisma.order.update({ where: { id: existing.id }, data: updates });
         }
       } else {
         // Buat order baru (dari sync bot)
         const orderCode = `SYNC-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
+        const expiryDate = new Date(expired);
+        const days = Math.ceil((expiryDate.getTime() - Date.now()) / 86400000);
         await prisma.order.create({
           data: {
             orderCode,
             botTypeId: botType.id,
             duration: "CUSTOM",
-            groupLink: groupLink || `group://${groupId}`,
+            customDays: days > 0 ? days : 1,
+            groupLink: groupLink && groupLink.startsWith("http") ? groupLink : `group://${groupId}`,
             contactPhone: contactPhone || null,
             totalPrice: 0,
             status: "ACTIVE",
             paidAt: new Date(),
-            expiresAt: new Date(expired),
+            expiresAt: expiryDate,
             notes: groupName || groupId || "Synced",
           },
         });

@@ -17,6 +17,7 @@ interface Order {
   customDays?: number | null;
   expiresAt?: string | null;
   createdAt: string;
+  notes?: string | null;
 }
 
 const PAGE_SIZE = 10;
@@ -91,11 +92,11 @@ export default function AdminGroups() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className="text-sm font-medium">{order.botType.name}</span>
+                      <span className="text-sm font-medium">{order.notes || order.botType.name}</span>
                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-500/10 text-green-400">Aktif</span>
                     </div>
-                    <p className="text-xs text-[var(--primary)] truncate">{order.groupLink.replace("https://chat.whatsapp.com/", "wa.me/...")}</p>
-                    <p className="text-xs text-[var(--muted)] mt-1">{order.orderCode} - {order.contactPhone || "-"}</p>
+                    <p className="text-xs text-[var(--muted)]">{order.botType.name}</p>
+                    <p className="text-xs text-[var(--muted)] mt-1">{order.orderCode}</p>
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-[10px] text-[var(--muted)]">Sisa</p>
@@ -137,9 +138,15 @@ export default function AdminGroups() {
             </div>
 
             <div className="space-y-3 text-sm">
+              {selectedOrder.notes && (
+                <div className="flex justify-between">
+                  <span className="text-[var(--muted)]">Nama Grup</span>
+                  <span className="font-medium">{selectedOrder.notes}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-[var(--muted)]">Order ID</span>
-                <span className="font-mono">{selectedOrder.orderCode}</span>
+                <span className="font-mono text-xs">{selectedOrder.orderCode}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[var(--muted)]">Tipe Bot</span>
@@ -147,7 +154,11 @@ export default function AdminGroups() {
               </div>
               <div className="flex justify-between">
                 <span className="text-[var(--muted)]">Durasi</span>
-                <span>{selectedOrder.duration === "WEEKLY" ? "1 Minggu" : selectedOrder.duration === "MONTHLY" ? "1 Bulan" : `${selectedOrder.customDays} Hari`}</span>
+                <span>{selectedOrder.duration === "WEEKLY" ? "1 Minggu" : selectedOrder.duration === "MONTHLY" ? "1 Bulan" : `${selectedOrder.customDays || "-"} Hari`}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[var(--muted)]">Sisa Waktu</span>
+                <span className="font-medium">{selectedOrder.expiresAt ? (() => { const d = new Date(selectedOrder.expiresAt).getTime() - Date.now(); if (d <= 0) return "Expired"; const days = Math.floor(d / 86400000); const hrs = Math.floor((d % 86400000) / 3600000); return `${days}h ${hrs}j`; })() : "-"}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[var(--muted)]">Harga</span>
