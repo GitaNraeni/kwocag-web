@@ -49,7 +49,7 @@ export default function Home() {
       {/* Hero */}
       <section className="relative z-10 flex-1 flex items-center px-6 py-16 md:py-20">
         <div className="max-w-5xl mx-auto w-full grid md:grid-cols-2 gap-10 md:gap-16 items-center">
-          <div>
+          <div className="animate-slide-up">
             {totalActive > 0 && (
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/20 text-xs text-[var(--primary)] mb-6">
                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" />
@@ -81,7 +81,7 @@ export default function Home() {
           </div>
 
           {/* Right visual */}
-          <div className="hidden md:block">
+          <div className="hidden md:block animate-fade-in" style={{ animationDelay: "200ms", animationFillMode: "both" }}>
             <div className="relative">
               <div className="absolute -inset-4 bg-gradient-to-br from-[var(--primary)]/5 to-transparent rounded-3xl blur-2xl" />
               <div className="relative bg-[var(--card)] border border-[var(--card-border)] rounded-2xl p-6 card-glow">

@@ -73,7 +73,7 @@ export default function OrderTypePage() {
             <p className="text-[var(--muted)] text-xs mt-1">Silakan hubungi admin untuk informasi lebih lanjut.</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3 stagger">
             {bots.map((bot) => {
               const lowest = bot.prices.length > 0
                 ? (bot.prices.find((p: any) => p.duration === "WEEKLY")?.price || Math.min(...bot.prices.map((p: any) => p.price)))

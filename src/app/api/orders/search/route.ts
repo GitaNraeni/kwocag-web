@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { normalizePhone } from "@/lib/utils";
 
 // GET /api/orders/search?phone=08xxx - Cari order by phone (semua order)
 export async function GET(req: NextRequest) {
@@ -10,8 +11,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: false, message: "Parameter phone wajib" }, { status: 400 });
   }
 
+  // Normalize phone untuk search
+  const normalized = normalizePhone(phone);
+
   const orders = await prisma.order.findMany({
-    where: { contactPhone: { contains: phone } },
+    where: { contactPhone: { contains: normalized } },
     include: { botType: { select: { name: true } } },
     orderBy: { createdAt: "desc" },
     take: 20,

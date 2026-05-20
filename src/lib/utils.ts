@@ -8,6 +8,19 @@ export function generateOrderCode(): string {
   return `${prefix}-${code}`;
 }
 
+/**
+ * Normalize phone number ke format 628xxx
+ * Support: 081xxx, 628xxx, +628xxx, 08xxx, 8xxx
+ */
+export function normalizePhone(phone: string): string {
+  if (!phone) return phone;
+  let cleaned = phone.replace(/[\s\-\+\(\)]/g, "");
+  if (cleaned.startsWith("0")) cleaned = "62" + cleaned.slice(1);
+  else if (cleaned.startsWith("8")) cleaned = "62" + cleaned;
+  else if (cleaned.startsWith("+62")) cleaned = cleaned.slice(1);
+  return cleaned;
+}
+
 export function formatRupiah(amount: number): string {
   return new Intl.NumberFormat("id-ID", {
     style: "currency",

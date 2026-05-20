@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createPayment, getPaymentUrl } from "@/lib/pakasir";
 import { sendTelegramNotification, formatOrderNotification } from "@/lib/telegram";
-import { generateOrderCode, getDurationLabel } from "@/lib/utils";
+import { generateOrderCode, getDurationLabel, normalizePhone } from "@/lib/utils";
 import { z } from "zod";
 
 const orderSchema = z.object({
@@ -27,7 +27,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { botTypeId, duration, customDays, groupLink, contactPhone, contactEmail } = parsed.data;
+    const { botTypeId, duration, customDays, groupLink, contactPhone: rawPhone, contactEmail } = parsed.data;
+    const contactPhone = normalizePhone(rawPhone);
 
     // Cek apakah user masih punya order PENDING (jangan buat baru)
     if (contactPhone) {
