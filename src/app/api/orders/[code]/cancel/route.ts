@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { cancelTransaction } from "@/lib/pakasir";
+import { sendTelegramNotification, formatOrderCancelled } from "@/lib/telegram";
 
 // POST /api/orders/[code]/cancel - Batalkan order (user)
 export async function POST(
@@ -10,7 +11,10 @@ export async function POST(
   try {
     const { code } = await params;
 
-    const order = await prisma.order.findUnique({ where: { orderCode: code } });
+    const order = await prisma.order.findUnique({
+      where: { orderCode: code },
+      include: { botType: true },
+    });
     if (!order) {
       return NextResponse.json({ success: false, message: "Order tidak ditemukan" }, { status: 404 });
     }
@@ -19,7 +23,7 @@ export async function POST(
       return NextResponse.json({ success: false, message: "Order tidak bisa dibatalkan" }, { status: 400 });
     }
 
-    // Cancel di Pakasir
+    // Cancel di payment provider
     await cancelTransaction(code, order.totalPrice);
 
     // Update status
@@ -35,6 +39,15 @@ export async function POST(
         details: "Dibatalkan oleh user",
       },
     });
+
+    // Notifikasi Telegram
+    await sendTelegramNotification(
+      formatOrderCancelled({
+        orderCode: order.orderCode,
+        botTypeName: order.botType.name,
+        reason: "Dibatalkan oleh user",
+      })
+    );
 
     return NextResponse.json({ success: true });
   } catch (error) {

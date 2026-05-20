@@ -127,10 +127,10 @@ async function syncSewaToWebsite(sock) {
   } catch {}
 }
 
-async function confirmJoined(orderId) {
+async function confirmJoined(orderId, groupName) {
   await fetch(`${API_URL}/api/bot-integration/webhook`, {
     method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
-    body: JSON.stringify({ orderId }),
+    body: JSON.stringify({ orderId, groupName }),
   });
 }
 

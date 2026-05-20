@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { orderId } = await req.json();
+    const { orderId, groupName } = await req.json();
 
     if (!orderId) {
       return NextResponse.json({ success: false, message: "orderId wajib diisi" }, { status: 400 });
@@ -75,8 +75,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: "Order tidak ditemukan" }, { status: 404 });
     }
 
+    // Simpan nama grup ke notes
+    const updates: Record<string, unknown> = {};
+    if (groupName) updates.notes = groupName;
+
+    if (Object.keys(updates).length > 0) {
+      await prisma.order.update({ where: { id: orderId }, data: updates });
+    }
+
     await prisma.orderLog.create({
-      data: { orderId, action: "BOT_JOINED", details: "Bot berhasil join ke grup" },
+      data: { orderId, action: "BOT_JOINED", details: groupName ? `Bot join: ${groupName}` : "Bot berhasil join ke grup" },
     });
 
     return NextResponse.json({ success: true, message: "Marked as joined" });

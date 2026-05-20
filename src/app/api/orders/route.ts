@@ -10,8 +10,8 @@ const orderSchema = z.object({
   duration: z.enum(["WEEKLY", "MONTHLY", "CUSTOM"]),
   customDays: z.number().min(1).optional(),
   groupLink: z.string().url("Link grup harus berupa URL valid"),
-  contactPhone: z.string().optional(),
-  contactEmail: z.string().email().optional(),
+  contactPhone: z.string().min(1, "No telepon wajib diisi"),
+  contactEmail: z.string().email().optional().or(z.literal("")),
 });
 
 // POST /api/orders - Buat order baru

@@ -252,9 +252,10 @@ export default function OrderPage() {
             {/* Kontak */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium mb-2">No. HP</label>
+                <label className="block text-sm font-medium mb-2">No. HP <span className="text-[var(--danger)]">*</span></label>
                 <input
                   type="tel"
+                  required
                   placeholder="08xxx"
                   value={contactPhone}
                   onChange={(e) => setContactPhone(e.target.value)}
