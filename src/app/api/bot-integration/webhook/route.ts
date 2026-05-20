@@ -16,19 +16,23 @@ export async function GET(req: NextRequest) {
   const instance = searchParams.get("instance");
   const slug = searchParams.get("slug");
 
+  // WAJIB kirim slug — supaya bot hanya ambil order untuk tipe-nya sendiri
+  if (!slug) {
+    return NextResponse.json({
+      success: true,
+      data: [], // Gak return apa-apa kalau gak ada slug filter
+    });
+  }
+
   const where: Record<string, unknown> = {
     status: "ACTIVE",
     logs: { none: { action: "BOT_JOINED" } },
+    botType: { slug }, // FILTER BY SLUG — ini yang bikin bot cuma ambil order tipe-nya
   };
 
   // Filter by instance number
   if (instance) {
     where.botInstance = parseInt(instance);
-  }
-
-  // Filter by bot type slug
-  if (slug) {
-    where.botType = { slug };
   }
 
   const orders = await prisma.order.findMany({

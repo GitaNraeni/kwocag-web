@@ -34,7 +34,7 @@ export default function OrderPage() {
   // Form
   const [step, setStep] = useState<"form" | "payment">("form");
   const [duration, setDuration] = useState<string>("");
-  const [customDays, setCustomDays] = useState<number>(30);
+  const [customDays, setCustomDays] = useState<number>(1);
   const [groupLink, setGroupLink] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [contactEmail, setContactEmail] = useState("");
@@ -61,15 +61,24 @@ export default function OrderPage() {
       .finally(() => setLoading(false));
   }, [slug]);
 
+  const [adminFeeConfig, setAdminFeeConfig] = useState({ flat: 0, percent: 0 });
+
+  useEffect(() => {
+    fetch("/api/site").then(r => r.json()).then(d => {
+      if (d.success) setAdminFeeConfig({ flat: d.data.adminFee || 0, percent: d.data.adminFeePercent || 0 });
+    }).catch(() => {});
+  }, []);
+
   const getTotal = () => {
     if (!bot) return 0;
     const priceRecord = bot.prices.find((p) => p.duration === duration);
     if (!priceRecord) return 0;
-    if (duration === "CUSTOM") {
-      return priceRecord.price * customDays; // price = per hari
-    }
+    if (duration === "CUSTOM") return priceRecord.price * customDays;
     return priceRecord.price;
   };
+
+  const getFee = () => adminFeeConfig.flat + Math.ceil(getTotal() * adminFeeConfig.percent / 100);
+  const getGrandTotal = () => getTotal() + getFee();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -192,7 +201,7 @@ export default function OrderPage() {
                           <p className="text-xs text-[var(--muted)]">Auto VIP/Premium</p>
                         )}
                         {p.duration === "CUSTOM" && (
-                          <p className="text-xs text-[var(--muted)]">Rp {p.price.toLocaleString("id-ID")}/hari (min 30 hari)</p>
+                          <p className="text-xs text-[var(--muted)]">Rp {p.price.toLocaleString("id-ID")}/hari</p>
                         )}
                       </div>
                     </div>
@@ -212,10 +221,10 @@ export default function OrderPage() {
                 <label className="block text-sm font-medium mb-2">Jumlah Hari</label>
                 <input
                   type="number"
-                  min={30}
+                  min={1}
                   max={365}
                   value={customDays}
-                  onChange={(e) => setCustomDays(Math.max(30, parseInt(e.target.value) || 30))}
+                  onChange={(e) => setCustomDays(Math.max(1, parseInt(e.target.value) || 1))}
                   className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--primary)]"
                 />
                 <p className="text-xs text-[var(--muted)] mt-1">Minimal 30 hari untuk custom</p>
@@ -265,9 +274,21 @@ export default function OrderPage() {
             </div>
 
             {/* Total */}
-            <div className="bg-[var(--background)] rounded-xl p-4 flex justify-between items-center">
-              <span className="text-[var(--muted)] text-sm">Total (QRIS)</span>
-              <span className="text-xl font-bold">Rp {getTotal().toLocaleString("id-ID")}</span>
+            <div className="bg-[var(--background)] rounded-xl p-4 space-y-1">
+              <div className="flex justify-between text-sm">
+                <span className="text-[var(--muted)]">Harga</span>
+                <span>Rp {getTotal().toLocaleString("id-ID")}</span>
+              </div>
+              {getFee() > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-[var(--muted)]">Biaya layanan</span>
+                  <span>Rp {getFee().toLocaleString("id-ID")}</span>
+                </div>
+              )}
+              <div className="flex justify-between pt-2 border-t border-[var(--card-border)]">
+                <span className="text-[var(--muted)] text-sm font-medium">Total</span>
+                <span className="text-xl font-bold">Rp {getGrandTotal().toLocaleString("id-ID")}</span>
+              </div>
             </div>
 
             {error && (

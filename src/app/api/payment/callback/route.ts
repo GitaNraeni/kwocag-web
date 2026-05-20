@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { sendTelegramNotification } from "@/lib/telegram";
+import { sendTelegramNotification, formatPaymentSuccess } from "@/lib/telegram";
 import { calculateExpiryDate, getDurationLabel } from "@/lib/utils";
 
 // POST /api/payment/callback - Webhook dari Pakasir
@@ -59,12 +59,14 @@ export async function POST(req: NextRequest) {
 
       // Notifikasi Telegram
       await sendTelegramNotification(
-        `<b>Pembayaran Berhasil</b>\n\n` +
-          `Kode: <code>${order.orderCode}</code>\n` +
-          `Bot: ${order.botType.name}\n` +
-          `Durasi: ${getDurationLabel(order.duration, order.customDays)}\n` +
-          `Grup: ${order.groupLink}\n` +
-          `Aktif sampai: ${expiresAt.toLocaleDateString("id-ID")}`
+        formatPaymentSuccess({
+          orderCode: order.orderCode,
+          botTypeName: order.botType.name,
+          duration: getDurationLabel(order.duration, order.customDays),
+          groupLink: order.groupLink,
+          totalPrice: order.totalPrice,
+          expiresAt: expiresAt.toLocaleDateString("id-ID"),
+        })
       );
     } else if (status === "expired" || status === "failed" || status === "cancelled") {
       if (order.status === "PENDING") {

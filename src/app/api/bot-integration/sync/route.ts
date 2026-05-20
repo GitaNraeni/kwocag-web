@@ -25,8 +25,8 @@ export async function POST(req: NextRequest) {
     let synced = 0;
 
     for (const entry of entries) {
-      const { groupId, groupLink, expired, contactPhone } = entry;
-      if (!groupLink || !expired) continue;
+      const { groupId, groupLink, groupName, expired, contactPhone } = entry;
+      if (!expired) continue;
 
       // Cek apakah sudah ada order aktif untuk grup ini
       const existing = await prisma.order.findFirst({
@@ -34,13 +34,13 @@ export async function POST(req: NextRequest) {
       });
 
       if (existing) {
-        // Update expiresAt kalau beda
+        // Update expiresAt dan notes (nama grup)
         const newExpiry = new Date(expired);
-        if (existing.expiresAt?.getTime() !== newExpiry.getTime()) {
-          await prisma.order.update({
-            where: { id: existing.id },
-            data: { expiresAt: newExpiry },
-          });
+        const updates: Record<string, unknown> = {};
+        if (existing.expiresAt?.getTime() !== newExpiry.getTime()) updates.expiresAt = newExpiry;
+        if (groupName && existing.notes !== groupName) updates.notes = groupName;
+        if (Object.keys(updates).length > 0) {
+          await prisma.order.update({ where: { id: existing.id }, data: updates });
         }
       } else {
         // Buat order baru (dari sync bot)
@@ -50,13 +50,13 @@ export async function POST(req: NextRequest) {
             orderCode,
             botTypeId: botType.id,
             duration: "CUSTOM",
-            groupLink,
+            groupLink: groupLink || `group://${groupId}`,
             contactPhone: contactPhone || null,
             totalPrice: 0,
             status: "ACTIVE",
             paidAt: new Date(),
             expiresAt: new Date(expired),
-            notes: `Synced from bot (${groupId || "unknown"})`,
+            notes: groupName || `Synced (${groupId || "unknown"})`,
           },
         });
         synced++;

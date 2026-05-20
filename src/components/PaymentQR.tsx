@@ -18,6 +18,7 @@ export default function PaymentQR({ orderCode, amount, basePrice, adminFee, qrUr
   const [checking, setChecking] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(300); // 5 menit = 300 detik
 
   useEffect(() => {
     if (status !== "PENDING") return;
@@ -40,6 +41,22 @@ export default function PaymentQR({ orderCode, amount, basePrice, adminFee, qrUr
     }, 5000);
     return () => clearInterval(interval);
   }, [orderCode, status]);
+
+  // Timer countdown
+  useEffect(() => {
+    if (status !== "PENDING") return;
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleCancel(); // auto cancel
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [status]);
 
   const handleCancel = async () => {
     setCancelling(true);
@@ -106,10 +123,13 @@ export default function PaymentQR({ orderCode, amount, basePrice, adminFee, qrUr
           <p className="text-xs text-[var(--muted)] mb-1">Scan dengan e-wallet atau m-banking</p>
           <p className="text-xs text-[var(--muted)] mb-4 font-mono">{orderCode}</p>
 
-          <div className="flex items-center justify-center gap-2 text-xs text-[var(--muted)] mb-5">
+          <div className="flex items-center justify-center gap-2 text-xs text-[var(--muted)] mb-1">
             <span className="w-2 h-2 rounded-full bg-[var(--warning)] animate-pulse" />
             Menunggu pembayaran...
           </div>
+          <p className="text-xs text-[var(--muted)] mb-5">
+            Batas waktu: <span className={`font-mono font-medium ${timeLeft < 60 ? "text-[var(--danger)]" : ""}`}>{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, "0")}</span>
+          </p>
 
           <button
             onClick={() => setShowCancelModal(true)}

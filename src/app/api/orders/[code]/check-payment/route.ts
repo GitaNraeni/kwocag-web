@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getTransactionDetail } from "@/lib/pakasir";
-import { sendTelegramNotification } from "@/lib/telegram";
+import { sendTelegramNotification, formatPaymentSuccess } from "@/lib/telegram";
 import { calculateExpiryDate, getDurationLabel } from "@/lib/utils";
 
 // GET /api/orders/[code]/check-payment - Poll payment status dari Pakasir
@@ -62,12 +62,14 @@ export async function GET(
       });
 
       await sendTelegramNotification(
-        `<b>Pembayaran Berhasil</b>\n\n` +
-          `Kode: <code>${order.orderCode}</code>\n` +
-          `Bot: ${order.botType.name}\n` +
-          `Durasi: ${getDurationLabel(order.duration, order.customDays)}\n` +
-          `Grup: ${order.groupLink}\n` +
-          `Aktif sampai: ${expiresAt.toLocaleDateString("id-ID")}`
+        formatPaymentSuccess({
+          orderCode: order.orderCode,
+          botTypeName: order.botType.name,
+          duration: getDurationLabel(order.duration, order.customDays),
+          groupLink: order.groupLink,
+          totalPrice: order.totalPrice,
+          expiresAt: expiresAt.toLocaleDateString("id-ID"),
+        })
       );
 
       return NextResponse.json({ success: true, status: "ACTIVE" });

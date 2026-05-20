@@ -45,15 +45,63 @@ export function formatOrderNotification(order: {
   totalPrice: number;
   status: string;
 }) {
-  return `<b>Order Baru</b>
+  const now = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
 
-Kode: <code>${order.orderCode}</code>
-Bot: ${order.botTypeName}
-Durasi: ${order.duration}
-Harga: Rp ${order.totalPrice.toLocaleString("id-ID")}
-Grup: ${order.groupLink}
-HP: ${order.contactPhone || "-"}
-Email: ${order.contactEmail || "-"}
-Status: ${order.status}
-Waktu: ${new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })}`;
+  return `━━━━━━━━━━━━━━━━━━
+📋 <b>ORDER BARU</b>
+━━━━━━━━━━━━━━━━━━
+
+🆔 Kode: <code>${order.orderCode}</code>
+🤖 Bot: <b>${order.botTypeName}</b>
+⏱ Durasi: ${order.duration}
+💰 Total: <b>Rp ${order.totalPrice.toLocaleString("id-ID")}</b>
+
+🔗 Grup: ${order.groupLink}
+📱 HP: ${order.contactPhone || "-"}
+📧 Email: ${order.contactEmail || "-"}
+
+📊 Status: ${order.status}
+🕐 Waktu: ${now}
+━━━━━━━━━━━━━━━━━━`;
+}
+
+export function formatPaymentSuccess(order: {
+  orderCode: string;
+  botTypeName: string;
+  duration: string;
+  groupLink: string;
+  totalPrice: number;
+  expiresAt: string;
+}) {
+  const now = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
+
+  return `━━━━━━━━━━━━━━━━━━
+✅ <b>PEMBAYARAN BERHASIL</b>
+━━━━━━━━━━━━━━━━━━
+
+🆔 Kode: <code>${order.orderCode}</code>
+🤖 Bot: <b>${order.botTypeName}</b>
+⏱ Durasi: ${order.duration}
+💰 Total: <b>Rp ${order.totalPrice.toLocaleString("id-ID")}</b>
+
+🔗 Grup: ${order.groupLink}
+📅 Aktif sampai: <b>${order.expiresAt}</b>
+
+🕐 Dibayar: ${now}
+━━━━━━━━━━━━━━━━━━`;
+}
+
+export function formatOrderCancelled(order: {
+  orderCode: string;
+  botTypeName: string;
+  reason: string;
+}) {
+  return `━━━━━━━━━━━━━━━━━━
+❌ <b>ORDER DIBATALKAN</b>
+━━━━━━━━━━━━━━━━━━
+
+🆔 Kode: <code>${order.orderCode}</code>
+🤖 Bot: ${order.botTypeName}
+📝 Alasan: ${order.reason}
+━━━━━━━━━━━━━━━━━━`;
 }
