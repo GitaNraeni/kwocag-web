@@ -134,7 +134,6 @@ export async function POST(req: NextRequest) {
         customDays: duration === "CUSTOM" ? customDays : null,
         groupLink,
         contactPhone,
-        normalizedPhone,
         contactEmail,
         totalPrice: finalPrice,
         status: "PENDING",
