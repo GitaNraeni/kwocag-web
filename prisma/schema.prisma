@@ -46,6 +46,7 @@ model Order {
   customDays    Int?
   groupLink     String
   contactPhone  String?
+  normalizedPhone String? // untuk search/matching
   contactEmail  String?
   totalPrice    Int
   status        OrderStatus @default(PENDING)

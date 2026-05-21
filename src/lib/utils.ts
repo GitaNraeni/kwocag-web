@@ -9,15 +9,17 @@ export function generateOrderCode(): string {
 }
 
 /**
- * Normalize phone number ke format 628xxx
- * Support: 081xxx, 628xxx, +628xxx, 08xxx, 8xxx
+ * Normalize phone number ke format 0xxx (tanpa +62, tanpa spasi, tanpa strip)
+ * Support: 081xxx, 628xxx, +628xxx, 08xxx, 8xxx, +62 895-xxx
  */
 export function normalizePhone(phone: string): string {
   if (!phone) return phone;
-  let cleaned = phone.replace(/[\s\-\+\(\)]/g, "");
-  if (cleaned.startsWith("0")) cleaned = "62" + cleaned.slice(1);
-  else if (cleaned.startsWith("8")) cleaned = "62" + cleaned;
-  else if (cleaned.startsWith("+62")) cleaned = cleaned.slice(1);
+  // Hapus semua selain angka
+  let cleaned = phone.replace(/[^0-9]/g, "");
+  // Ubah awalan 62 jadi 0
+  if (cleaned.startsWith("62")) cleaned = "0" + cleaned.slice(2);
+  // Kalau mulai dari 8 (tanpa 0), tambah 0
+  if (cleaned.startsWith("8")) cleaned = "0" + cleaned;
   return cleaned;
 }
 

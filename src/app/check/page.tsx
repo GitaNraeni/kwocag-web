@@ -29,8 +29,6 @@ export default function CheckPage() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<OrderResult[] | null>(null);
 
-  const [results, setResults] = useState<OrderResult[] | null>(null);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const q = query.trim();

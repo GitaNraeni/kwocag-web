@@ -15,7 +15,12 @@ export async function GET(req: NextRequest) {
   const normalized = normalizePhone(phone);
 
   const orders = await prisma.order.findMany({
-    where: { contactPhone: { contains: normalized } },
+    where: {
+      OR: [
+        { normalizedPhone: normalized },
+        { contactPhone: { contains: phone } },
+      ],
+    },
     include: { botType: { select: { name: true } } },
     orderBy: { createdAt: "desc" },
     take: 20,
