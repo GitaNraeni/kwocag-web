@@ -11,14 +11,19 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: false, message: "Parameter phone wajib" }, { status: 400 });
   }
 
-  // Normalize phone untuk search
+  // Normalize input
   const normalized = normalizePhone(phone);
+  // Juga format 62xxx untuk data lama
+  const format62 = normalized.startsWith("0") ? "62" + normalized.slice(1) : normalized;
+  // Raw digits
+  const rawDigits = phone.replace(/[^0-9]/g, "");
 
   const orders = await prisma.order.findMany({
     where: {
       OR: [
-        { normalizedPhone: normalized },
-        { contactPhone: { contains: phone } },
+        { contactPhone: { contains: normalized } },
+        { contactPhone: { contains: format62 } },
+        { contactPhone: { contains: rawDigits } },
       ],
     },
     include: { botType: { select: { name: true } } },
