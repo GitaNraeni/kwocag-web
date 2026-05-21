@@ -43,6 +43,7 @@ export async function GET() {
       telegramChatId: settings.telegramChatId || "",
       contactWhatsapp: settings.contactWhatsapp || "",
       contactTelegram: (settings as any).contactTelegram || "",
+      channelWhatsapp: (settings as any).channelWhatsapp || "",
       username: admin?.username || "",
     },
   });
@@ -69,6 +70,7 @@ export async function PUT(req: NextRequest) {
     telegramChatId,
     contactWhatsapp,
     contactTelegram,
+    channelWhatsapp,
     username,
     currentPassword,
     newPassword,
@@ -90,6 +92,7 @@ export async function PUT(req: NextRequest) {
       ...(telegramChatId !== undefined && { telegramChatId }),
       ...(contactWhatsapp !== undefined && { contactWhatsapp }),
       ...(contactTelegram !== undefined && { contactTelegram }),
+      ...(channelWhatsapp !== undefined && { channelWhatsapp }),
     },
     create: {
       id: "main",

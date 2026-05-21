@@ -15,6 +15,7 @@ export default function AdminSettings() {
   const [siteLogo, setSiteLogo] = useState("");
   const [contactWhatsapp, setContactWhatsapp] = useState("");
   const [contactTelegram, setContactTelegram] = useState("");
+  const [channelWhatsapp, setChannelWhatsapp] = useState("");
 
   // Pakasir
   const [pakasirApiKey, setPakasirApiKey] = useState("");
@@ -48,6 +49,7 @@ export default function AdminSettings() {
           setSiteLogo(data.data.siteLogo || "");
           setContactWhatsapp(data.data.contactWhatsapp || "");
           setContactTelegram(data.data.contactTelegram || "");
+          setChannelWhatsapp(data.data.channelWhatsapp || "");
           setPakasirApiKey(data.data.pakasirApiKey || "");
           setPakasirSlug(data.data.pakasirSlug || "");
           setRamashopApiKey(data.data.ramashopApiKey || "");
@@ -78,7 +80,7 @@ export default function AdminSettings() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          siteName, siteLogo, contactWhatsapp, contactTelegram,
+          siteName, siteLogo, contactWhatsapp, contactTelegram, channelWhatsapp,
           pakasirApiKey, pakasirSlug,
           ramashopApiKey, paymentProvider,
           adminFee, adminFeePercent,
@@ -131,6 +133,11 @@ export default function AdminSettings() {
             <div>
               <label className="block text-xs text-[var(--muted)] mb-1">Telegram Contact (username tanpa @)</label>
               <input type="text" value={contactTelegram} onChange={(e) => setContactTelegram(e.target.value)} placeholder="username"
+                className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[var(--primary)]" />
+            </div>
+            <div>
+              <label className="block text-xs text-[var(--muted)] mb-1">Channel WhatsApp (link lengkap)</label>
+              <input type="url" value={channelWhatsapp} onChange={(e) => setChannelWhatsapp(e.target.value)} placeholder="https://whatsapp.com/channel/xxx"
                 className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[var(--primary)]" />
             </div>
           </div>

@@ -13,6 +13,7 @@ export async function GET() {
         siteLogo: data?.siteLogo || null,
         contactWhatsapp: data?.contactWhatsapp || null,
         contactTelegram: data?.contactTelegram || null,
+        channelWhatsapp: data?.channelWhatsapp || null,
         adminFee: data?.adminFee || 0,
         adminFeePercent: data?.adminFeePercent || 0,
       },

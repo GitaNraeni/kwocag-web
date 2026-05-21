@@ -7,14 +7,19 @@ export default function Home() {
   const [siteName, setSiteName] = useState("KWOCAG");
   const [contact, setContact] = useState("");
   const [telegram, setTelegram] = useState("");
+  const [channelWa, setChannelWa] = useState("");
   const [totalActive, setTotalActive] = useState(0);
+  const [bots, setBots] = useState<any[]>([]);
 
   useEffect(() => {
     fetch("/api/site").then(r => r.json()).then(d => {
-      if (d.success) { setSiteName(d.data.siteName); setContact(d.data.contactWhatsapp || ""); setTelegram(d.data.contactTelegram || ""); }
+      if (d.success) { setSiteName(d.data.siteName); setContact(d.data.contactWhatsapp || ""); setTelegram(d.data.contactTelegram || ""); setChannelWa(d.data.channelWhatsapp || ""); }
     }).catch(() => {});
     fetch("/api/bots/stats").then(r => r.json()).then(d => {
       if (d.success) setTotalActive(d.totalActive);
+    }).catch(() => {});
+    fetch("/api/bots").then(r => r.json()).then(d => {
+      if (d.success) setBots(d.data);
     }).catch(() => {});
   }, []);
 
@@ -99,20 +104,37 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="space-y-3 mt-4">
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-[var(--background)] border border-[var(--card-border)]/50">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-[var(--success)]" />
-                      <span className="text-sm">Bot Store</span>
-                    </div>
-                    <span className="text-xs text-[var(--primary)] font-medium">Rp 5.000/minggu</span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-[var(--background)] border border-[var(--card-border)]/50">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-[var(--success)]" />
-                      <span className="text-sm">Bot Jaga Grup</span>
-                    </div>
-                    <span className="text-xs text-[var(--primary)] font-medium">Rp 5.000/minggu</span>
-                  </div>
+                  {bots.length > 0 ? bots.map((bot: any) => {
+                    const weeklyPrice = bot.prices?.find((p: any) => p.duration === "WEEKLY");
+                    return (
+                      <div key={bot.id} className="flex items-center justify-between p-3 rounded-lg bg-[var(--background)] border border-[var(--card-border)]/50">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-[var(--success)]" />
+                          <span className="text-sm">{bot.name}</span>
+                        </div>
+                        {weeklyPrice && (
+                          <span className="text-xs text-[var(--primary)] font-medium">Rp {weeklyPrice.price.toLocaleString("id-ID")}/minggu</span>
+                        )}
+                      </div>
+                    );
+                  }) : (
+                    <>
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-[var(--background)] border border-[var(--card-border)]/50">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-[var(--success)]" />
+                          <span className="text-sm">Bot Store</span>
+                        </div>
+                        <span className="text-xs text-[var(--primary)] font-medium">Rp 2.000/minggu</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-[var(--background)] border border-[var(--card-border)]/50">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-[var(--success)]" />
+                          <span className="text-sm">Bot Guardian</span>
+                        </div>
+                        <span className="text-xs text-[var(--primary)] font-medium">Rp 3.000/minggu</span>
+                      </div>
+                    </>
+                  )}
                 </div>
                 <div className="mt-4 pt-3 border-t border-[var(--card-border)] flex items-center gap-2 text-xs text-[var(--muted)]">
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -188,6 +210,15 @@ export default function Home() {
                       <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
                     </svg>
                     Telegram
+                  </a>
+                )}
+                {channelWa && (
+                  <a href={channelWa} target="_blank" rel="noopener noreferrer"
+                    className="text-xs text-[var(--muted)] hover:text-green-400 transition inline-flex items-center gap-1.5">
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                    </svg>
+                    Channel WA
                   </a>
                 )}
               </div>
