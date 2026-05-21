@@ -5,15 +5,16 @@ import { prisma } from "@/lib/prisma";
 export async function GET() {
   try {
     const settings = await prisma.siteSettings.findUnique({ where: { id: "main" } });
+    const data = settings as any;
     return NextResponse.json({
       success: true,
       data: {
-        siteName: settings?.siteName || "KWOCAG",
-        siteLogo: settings?.siteLogo || null,
-        contactWhatsapp: settings?.contactWhatsapp || null,
-        contactTelegram: settings?.contactTelegram || null,
-        adminFee: settings?.adminFee || 0,
-        adminFeePercent: settings?.adminFeePercent || 0,
+        siteName: data?.siteName || "KWOCAG",
+        siteLogo: data?.siteLogo || null,
+        contactWhatsapp: data?.contactWhatsapp || null,
+        contactTelegram: data?.contactTelegram || null,
+        adminFee: data?.adminFee || 0,
+        adminFeePercent: data?.adminFeePercent || 0,
       },
     });
   } catch {

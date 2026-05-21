@@ -227,7 +227,7 @@ export default function OrderPage() {
                   onChange={(e) => setCustomDays(Math.max(1, parseInt(e.target.value) || 1))}
                   className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--primary)]"
                 />
-                <p className="text-xs text-[var(--muted)] mt-1">Minimal 30 hari untuk custom</p>
+                <p className="text-xs text-[var(--muted)] mt-1">Minimal 1 hari</p>
               </div>
             )}
 
