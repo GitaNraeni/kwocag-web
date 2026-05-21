@@ -11,8 +11,9 @@ export async function GET() {
         siteName: settings?.siteName || "KWOCAG",
         siteLogo: settings?.siteLogo || null,
         contactWhatsapp: settings?.contactWhatsapp || null,
-        adminFee: (settings as any)?.adminFee || 0,
-        adminFeePercent: (settings as any)?.adminFeePercent || 0,
+        contactTelegram: settings?.contactTelegram || null,
+        adminFee: settings?.adminFee || 0,
+        adminFeePercent: settings?.adminFeePercent || 0,
       },
     });
   } catch {

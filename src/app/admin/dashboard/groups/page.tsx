@@ -34,13 +34,7 @@ export default function AdminGroups() {
     fetch("/api/admin/orders?status=ACTIVE&limit=100")
       .then((res) => { if (res.status === 401) { router.push("/admin"); return null; } return res.json(); })
       .then((data) => {
-        if (data?.success) {
-          // Hanya tampilkan yang bot sudah join atau dari sync
-          const joined = data.data.filter((o: any) =>
-            o.orderCode?.startsWith("SYNC-") || o.logs?.some((l: any) => l.action === "BOT_JOINED")
-          );
-          setOrders(joined);
-        }
+        if (data?.success) setOrders(data.data);
       })
       .finally(() => setLoading(false));
   }, []);

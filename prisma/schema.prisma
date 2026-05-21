@@ -86,6 +86,7 @@ model SiteSettings {
   telegramToken   String?
   telegramChatId  String?
   contactWhatsapp String?
+  contactTelegram String? // username telegram untuk kontak publik
   // Payment gateway
   paymentProvider String  @default("pakasir") // "pakasir" atau "ramashop"
   ramashopApiKey  String?

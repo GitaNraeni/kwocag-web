@@ -42,6 +42,7 @@ export async function GET() {
       telegramToken: settings.telegramToken || "",
       telegramChatId: settings.telegramChatId || "",
       contactWhatsapp: settings.contactWhatsapp || "",
+      contactTelegram: (settings as any).contactTelegram || "",
       username: admin?.username || "",
     },
   });
@@ -67,6 +68,7 @@ export async function PUT(req: NextRequest) {
     telegramToken,
     telegramChatId,
     contactWhatsapp,
+    contactTelegram,
     username,
     currentPassword,
     newPassword,
@@ -87,6 +89,7 @@ export async function PUT(req: NextRequest) {
       ...(telegramToken !== undefined && { telegramToken }),
       ...(telegramChatId !== undefined && { telegramChatId }),
       ...(contactWhatsapp !== undefined && { contactWhatsapp }),
+      ...(contactTelegram !== undefined && { contactTelegram }),
     },
     create: {
       id: "main",
