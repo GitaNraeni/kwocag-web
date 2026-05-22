@@ -15,6 +15,10 @@ export default function AddBotPage() {
   const [customPrice, setCustomPrice] = useState(0);
   const [maxSlots, setMaxSlots] = useState(0);
   const [totalInstances, setTotalInstances] = useState(1);
+  const [hasPremiumTier, setHasPremiumTier] = useState(false);
+  const [premiumWeeklyPrice, setPremiumWeeklyPrice] = useState(0);
+  const [premiumMonthlyPrice, setPremiumMonthlyPrice] = useState(0);
+  const [premiumCustomPrice, setPremiumCustomPrice] = useState(0);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -22,10 +26,16 @@ export default function AddBotPage() {
     e.preventDefault();
     setError(""); setSubmitting(true);
 
-    const prices = [];
-    if (weeklyPrice > 0) prices.push({ duration: "WEEKLY" as const, price: weeklyPrice });
-    if (monthlyPrice > 0) prices.push({ duration: "MONTHLY" as const, price: monthlyPrice });
-    if (customPrice > 0) prices.push({ duration: "CUSTOM" as const, price: customPrice });
+    const prices: { duration: "WEEKLY" | "MONTHLY" | "CUSTOM"; price: number; tier: string }[] = [];
+    if (weeklyPrice > 0) prices.push({ duration: "WEEKLY", price: weeklyPrice, tier: "basic" });
+    if (monthlyPrice > 0) prices.push({ duration: "MONTHLY", price: monthlyPrice, tier: "basic" });
+    if (customPrice > 0) prices.push({ duration: "CUSTOM", price: customPrice, tier: "basic" });
+
+    if (hasPremiumTier) {
+      if (premiumWeeklyPrice > 0) prices.push({ duration: "WEEKLY", price: premiumWeeklyPrice, tier: "premium" });
+      if (premiumMonthlyPrice > 0) prices.push({ duration: "MONTHLY", price: premiumMonthlyPrice, tier: "premium" });
+      if (premiumCustomPrice > 0) prices.push({ duration: "CUSTOM", price: premiumCustomPrice, tier: "premium" });
+    }
 
     if (prices.length === 0) { setError("Minimal 1 harga harus diisi"); setSubmitting(false); return; }
 
@@ -33,7 +43,13 @@ export default function AddBotPage() {
       const res = await fetch("/api/admin/bots", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, slug, description, features: features.split("\n").filter(f => f.trim()), prices, maxSlots: maxSlots || 0, totalInstances: totalInstances || 1 }),
+        body: JSON.stringify({
+          name, slug, description,
+          features: features.split("\n").filter(f => f.trim()),
+          prices, maxSlots: maxSlots || 0,
+          totalInstances: totalInstances || 1,
+          hasPremiumTier,
+        }),
       });
       const data = await res.json();
       if (data.success) router.push("/admin/dashboard/bots");
@@ -74,23 +90,65 @@ export default function AddBotPage() {
           <textarea required value={features} onChange={(e) => setFeatures(e.target.value)} rows={4}
             className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[var(--primary)]" />
         </div>
-        <div className="grid grid-cols-3 gap-3">
-          <div>
-            <label className="block text-xs text-[var(--muted)] mb-1">Harga /Minggu</label>
-            <input type="number" min={0} value={weeklyPrice} onChange={(e) => setWeeklyPrice(parseInt(e.target.value) || 0)}
-              className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[var(--primary)]" />
-          </div>
-          <div>
-            <label className="block text-xs text-[var(--muted)] mb-1">Harga /Bulan</label>
-            <input type="number" min={0} value={monthlyPrice} onChange={(e) => setMonthlyPrice(parseInt(e.target.value) || 0)}
-              className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[var(--primary)]" />
-          </div>
-          <div>
-            <label className="block text-xs text-[var(--muted)] mb-1">Harga /Hari</label>
-            <input type="number" min={0} value={customPrice} onChange={(e) => setCustomPrice(parseInt(e.target.value) || 0)}
-              className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[var(--primary)]" />
+
+        {/* Basic prices */}
+        <div>
+          <label className="block text-xs text-[var(--muted)] mb-2">Harga Basic</label>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block text-[10px] text-[var(--muted)] mb-1">/Minggu</label>
+              <input type="number" min={0} value={weeklyPrice} onChange={(e) => setWeeklyPrice(parseInt(e.target.value) || 0)}
+                className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[var(--primary)]" />
+            </div>
+            <div>
+              <label className="block text-[10px] text-[var(--muted)] mb-1">/Bulan</label>
+              <input type="number" min={0} value={monthlyPrice} onChange={(e) => setMonthlyPrice(parseInt(e.target.value) || 0)}
+                className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[var(--primary)]" />
+            </div>
+            <div>
+              <label className="block text-[10px] text-[var(--muted)] mb-1">/Hari (Custom)</label>
+              <input type="number" min={0} value={customPrice} onChange={(e) => setCustomPrice(parseInt(e.target.value) || 0)}
+                className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[var(--primary)]" />
+            </div>
           </div>
         </div>
+
+        {/* Premium tier toggle */}
+        <div className="border-t border-[var(--card-border)] pt-4">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input type="checkbox" checked={hasPremiumTier} onChange={(e) => setHasPremiumTier(e.target.checked)}
+              className="accent-purple-500 w-4 h-4" />
+            <div>
+              <span className="text-sm font-medium">Punya Tier Premium</span>
+              <p className="text-xs text-[var(--muted)]">Aktifkan jika bot ini punya opsi premium (fitur grup premium)</p>
+            </div>
+          </label>
+        </div>
+
+        {/* Premium prices */}
+        {hasPremiumTier && (
+          <div>
+            <label className="block text-xs text-purple-400 mb-2">Harga Premium</label>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="block text-[10px] text-[var(--muted)] mb-1">/Minggu</label>
+                <input type="number" min={0} value={premiumWeeklyPrice} onChange={(e) => setPremiumWeeklyPrice(parseInt(e.target.value) || 0)}
+                  className="w-full bg-[var(--background)] border border-purple-500/30 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-purple-500" />
+              </div>
+              <div>
+                <label className="block text-[10px] text-[var(--muted)] mb-1">/Bulan</label>
+                <input type="number" min={0} value={premiumMonthlyPrice} onChange={(e) => setPremiumMonthlyPrice(parseInt(e.target.value) || 0)}
+                  className="w-full bg-[var(--background)] border border-purple-500/30 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-purple-500" />
+              </div>
+              <div>
+                <label className="block text-[10px] text-[var(--muted)] mb-1">/Hari (Custom)</label>
+                <input type="number" min={0} value={premiumCustomPrice} onChange={(e) => setPremiumCustomPrice(parseInt(e.target.value) || 0)}
+                  className="w-full bg-[var(--background)] border border-purple-500/30 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-purple-500" />
+              </div>
+            </div>
+          </div>
+        )}
+
         <div>
           <label className="block text-xs text-[var(--muted)] mb-1">Max Slot (0 = unlimited)</label>
           <input type="number" min={0} value={maxSlots} onChange={(e) => setMaxSlots(parseInt(e.target.value) || 0)}

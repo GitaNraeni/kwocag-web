@@ -9,10 +9,12 @@ const botTypeSchema = z.object({
   description: z.string().min(1),
   features: z.array(z.string()),
   maxSlots: z.number().min(0).optional(),
+  hasPremiumTier: z.boolean().optional(),
   prices: z.array(
     z.object({
       duration: z.enum(["WEEKLY", "MONTHLY", "CUSTOM"]),
       price: z.number().min(0),
+      tier: z.string().default("basic"),
       customDays: z.number().optional(),
     })
   ),
@@ -51,7 +53,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { name, slug, description, features, prices, maxSlots: parsedMaxSlots } = parsed.data;
+    const { name, slug, description, features, prices, maxSlots: parsedMaxSlots, hasPremiumTier } = parsed.data;
     const maxSlots = parsedMaxSlots ?? (body.maxSlots as number) ?? 0;
     const totalInstances = (body.totalInstances as number) || 1;
 
@@ -72,10 +74,12 @@ export async function POST(req: NextRequest) {
         features,
         maxSlots,
         totalInstances,
+        hasPremiumTier: hasPremiumTier || false,
         prices: {
           create: prices.map((p) => ({
             duration: p.duration,
             price: p.price,
+            tier: p.tier || "basic",
             customDays: p.customDays,
           })),
         },
