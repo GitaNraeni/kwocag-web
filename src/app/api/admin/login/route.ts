@@ -1,12 +1,113 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createToken, hashPassword, verifyPassword } from "@/lib/auth";
+import { createToken, verifyPassword } from "@/lib/auth";
+import { sendTelegramNotification } from "@/lib/telegram";
 import { cookies } from "next/headers";
+
+// Rate limiting (in-memory, resets on redeploy)
+const loginAttempts = new Map<string, { count: number; blockedUntil: number }>();
+const MAX_ATTEMPTS = 5;
+const BLOCK_DURATION = 15 * 60 * 1000; // 15 menit
+
+// 2FA codes (in-memory, expire after 5 min)
+const tfaCodes = new Map<string, { code: string; expiresAt: number; adminId: string; username: string }>();
+
+function getClientIP(req: NextRequest): string {
+  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "unknown";
+}
+
+function isBlocked(ip: string): boolean {
+  const data = loginAttempts.get(ip);
+  if (!data) return false;
+  if (data.blockedUntil > Date.now()) return true;
+  if (data.blockedUntil > 0 && data.blockedUntil <= Date.now()) {
+    loginAttempts.delete(ip);
+    return false;
+  }
+  return false;
+}
+
+function recordFailedAttempt(ip: string): number {
+  const data = loginAttempts.get(ip) || { count: 0, blockedUntil: 0 };
+  data.count++;
+  if (data.count >= MAX_ATTEMPTS) {
+    data.blockedUntil = Date.now() + BLOCK_DURATION;
+  }
+  loginAttempts.set(ip, data);
+  return MAX_ATTEMPTS - data.count;
+}
+
+function clearAttempts(ip: string) {
+  loginAttempts.delete(ip);
+}
+
+function generateCode(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
 
 export async function POST(req: NextRequest) {
   try {
-    const { username, password } = await req.json();
+    const ip = getClientIP(req);
+    const body = await req.json();
+    const { username, password, tfaCode } = body;
 
+    // Check rate limit
+    if (isBlocked(ip)) {
+      const data = loginAttempts.get(ip)!;
+      const remainingMin = Math.ceil((data.blockedUntil - Date.now()) / 60000);
+      return NextResponse.json(
+        { success: false, message: `Terlalu banyak percobaan. Coba lagi dalam ${remainingMin} menit.` },
+        { status: 429 }
+      );
+    }
+
+    // Step 2: Verify 2FA code
+    if (tfaCode) {
+      const pending = tfaCodes.get(ip);
+      if (!pending) {
+        return NextResponse.json(
+          { success: false, message: "Kode verifikasi expired. Login ulang." },
+          { status: 401 }
+        );
+      }
+      if (Date.now() > pending.expiresAt) {
+        tfaCodes.delete(ip);
+        return NextResponse.json(
+          { success: false, message: "Kode verifikasi expired. Login ulang." },
+          { status: 401 }
+        );
+      }
+      if (tfaCode !== pending.code) {
+        return NextResponse.json(
+          { success: false, message: "Kode verifikasi salah." },
+          { status: 401 }
+        );
+      }
+
+      // 2FA verified — create session
+      tfaCodes.delete(ip);
+      clearAttempts(ip);
+
+      const token = createToken({ id: pending.adminId, username: pending.username });
+      const cookieStore = await cookies();
+      cookieStore.set("admin_token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24,
+        path: "/",
+      });
+
+      // Notify login success
+      const now = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
+      await sendTelegramNotification(
+        `🔓 <b>LOGIN BERHASIL</b>\n\n👤 User: <code>${pending.username}</code>\n🌐 IP: <code>${ip}</code>\n🕐 Waktu: ${now}`
+      );
+
+      return NextResponse.json({ success: true, message: "Login berhasil" });
+    }
+
+    // Step 1: Verify username + password
     if (!username || !password) {
       return NextResponse.json(
         { success: false, message: "Username dan password wajib diisi" },
@@ -14,37 +115,42 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const admin = await prisma.admin.findUnique({
-      where: { username },
-    });
-
+    const admin = await prisma.admin.findUnique({ where: { username } });
     if (!admin) {
+      const remaining = recordFailedAttempt(ip);
       return NextResponse.json(
-        { success: false, message: "Username atau password salah" },
+        { success: false, message: `Username atau password salah.${remaining <= 2 ? ` (${remaining} percobaan tersisa)` : ""}` },
         { status: 401 }
       );
     }
 
     const isValid = await verifyPassword(password, admin.password);
     if (!isValid) {
+      const remaining = recordFailedAttempt(ip);
       return NextResponse.json(
-        { success: false, message: "Username atau password salah" },
+        { success: false, message: `Username atau password salah.${remaining <= 2 ? ` (${remaining} percobaan tersisa)` : ""}` },
         { status: 401 }
       );
     }
 
-    const token = createToken({ id: admin.id, username: admin.username });
-
-    const cookieStore = await cookies();
-    cookieStore.set("admin_token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24, // 1 day
-      path: "/",
+    // Password correct — send 2FA code via Telegram
+    const code = generateCode();
+    tfaCodes.set(ip, {
+      code,
+      expiresAt: Date.now() + 5 * 60 * 1000, // 5 menit
+      adminId: admin.id,
+      username: admin.username,
     });
 
-    return NextResponse.json({ success: true, message: "Login berhasil" });
+    await sendTelegramNotification(
+      `🔐 <b>KODE LOGIN 2FA</b>\n\n🔑 Kode: <code>${code}</code>\n🌐 IP: <code>${ip}</code>\n⏰ Expired: 5 menit\n\n⚠️ Jangan bagikan kode ini ke siapapun.`
+    );
+
+    return NextResponse.json({
+      success: true,
+      requires2FA: true,
+      message: "Kode verifikasi dikirim ke Telegram.",
+    });
   } catch (error) {
     console.error("Login error:", error);
     return NextResponse.json(
