@@ -200,7 +200,7 @@ export default function Home() {
 
             {/* Links */}
             <div>
-              <p className="text-xs font-medium text-[var(--foreground)] mb-2">Halaman</p>
+              <p className="text-xs font-medium text-[var(--foreground)] mb-2">Layanan</p>
               <div className="flex flex-col gap-1">
                 <Link href="/about" className="text-xs text-[var(--muted)] hover:text-white transition">Tentang Kami</Link>
                 <Link href="/privacy" className="text-xs text-[var(--muted)] hover:text-white transition">Kebijakan Privasi</Link>
