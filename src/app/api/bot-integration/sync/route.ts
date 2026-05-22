@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+// Permanent threshold: kalau expired > 10 tahun dari sekarang, anggap permanent
+const PERMANENT_THRESHOLD_YEARS = 10;
+
+function isPermanent(expired: number | string): boolean {
+  const expDate = new Date(expired);
+  const threshold = new Date();
+  threshold.setFullYear(threshold.getFullYear() + PERMANENT_THRESHOLD_YEARS);
+  return expDate.getTime() > threshold.getTime();
+}
+
 // POST /api/bot-integration/sync - Bot push data sewa dari JSON ke website
 // Ini supaya sewa manual (via command bot) juga tampil di dashboard website
-// Body: { botTypeSlug, entries: [{ groupId, groupLink, expired, contactPhone? }] }
+// Body: { botTypeSlug, entries: [{ groupId, groupLink, expired, contactPhone?, groupName? }] }
 export async function POST(req: NextRequest) {
   const apiKey = req.headers.get("x-api-key");
   if (apiKey !== process.env.PAKASIR_API_KEY) {
@@ -28,6 +38,8 @@ export async function POST(req: NextRequest) {
       const { groupId, groupLink, groupName, expired, contactPhone } = entry;
       if (!expired) continue;
 
+      const permanent = isPermanent(expired);
+
       // Cek apakah sudah ada order aktif untuk grup ini (dedup agresif)
       const groupIdClean = groupId ? groupId.replace("@g.us", "") : "";
 
@@ -47,15 +59,21 @@ export async function POST(req: NextRequest) {
       }
 
       if (existing) {
-        // Update expiresAt, groupLink, dan notes (nama grup)
+        // Update expiresAt, groupLink, notes, dan contactPhone
         const newExpiry = new Date(expired);
         const updates: Record<string, unknown> = {};
         if (existing.expiresAt?.getTime() !== newExpiry.getTime()) updates.expiresAt = newExpiry;
         if (groupName && existing.notes !== groupName) updates.notes = groupName;
         if (groupLink && groupLink.startsWith("http") && existing.groupLink !== groupLink) updates.groupLink = groupLink;
-        // Hitung customDays
-        const days = Math.ceil((newExpiry.getTime() - Date.now()) / 86400000);
-        if (days > 0) updates.customDays = days;
+        if (contactPhone && !existing.contactPhone) updates.contactPhone = contactPhone;
+        // Hitung customDays (permanent = 9999)
+        if (permanent) {
+          updates.customDays = 9999;
+          updates.duration = "CUSTOM";
+        } else {
+          const days = Math.ceil((newExpiry.getTime() - Date.now()) / 86400000);
+          if (days > 0) updates.customDays = days;
+        }
         if (Object.keys(updates).length > 0) {
           await prisma.order.update({ where: { id: existing.id }, data: updates });
         }
@@ -63,7 +81,7 @@ export async function POST(req: NextRequest) {
         // Buat order baru (dari sync bot)
         const orderCode = `SYNC-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
         const expiryDate = new Date(expired);
-        const days = Math.ceil((expiryDate.getTime() - Date.now()) / 86400000);
+        const days = permanent ? 9999 : Math.ceil((expiryDate.getTime() - Date.now()) / 86400000);
         await prisma.order.create({
           data: {
             orderCode,

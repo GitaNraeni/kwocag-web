@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Modal from "@/components/Modal";
 
 interface Order {
   id: string;
@@ -21,6 +20,14 @@ interface Order {
 }
 
 const PAGE_SIZE = 10;
+
+// Helper: detect permanent (expiresAt > 10 tahun dari sekarang)
+function isPermanent(expiresAt: string | null | undefined): boolean {
+  if (!expiresAt) return false;
+  const threshold = new Date();
+  threshold.setFullYear(threshold.getFullYear() + 10);
+  return new Date(expiresAt).getTime() > threshold.getTime();
+}
 
 export default function AdminGroups() {
   const router = useRouter();
@@ -96,13 +103,16 @@ export default function AdminGroups() {
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className="text-sm font-medium">{order.notes || order.botType.name}</span>
                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-500/10 text-green-400">Aktif</span>
+                      {isPermanent(order.expiresAt) && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400">Permanen</span>
+                      )}
                     </div>
                     <p className="text-xs text-[var(--muted)]">{order.botType.name}</p>
                     <p className="text-xs text-[var(--muted)] mt-1">{order.orderCode}</p>
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-[10px] text-[var(--muted)]">Sisa</p>
-                    <p className="text-xs sm:text-sm font-medium">{order.expiresAt ? (() => { const d = new Date(order.expiresAt).getTime() - Date.now(); if (d <= 0) return "Expired"; const days = Math.floor(d / 86400000); const hrs = Math.floor((d % 86400000) / 3600000); return days > 0 ? `${days}h ${hrs}j` : `${hrs}j`; })() : "-"}</p>
+                    <p className="text-xs sm:text-sm font-medium">{isPermanent(order.expiresAt) ? "Selamanya" : order.expiresAt ? (() => { const d = new Date(order.expiresAt).getTime() - Date.now(); if (d <= 0) return "Expired"; const days = Math.floor(d / 86400000); const hrs = Math.floor((d % 86400000) / 3600000); return days > 0 ? `${days}h ${hrs}j` : `${hrs}j`; })() : "-"}</p>
                   </div>
                 </div>
               </button>
@@ -156,11 +166,11 @@ export default function AdminGroups() {
               </div>
               <div className="flex justify-between">
                 <span className="text-[var(--muted)]">Durasi</span>
-                <span>{selectedOrder.duration === "WEEKLY" ? "1 Minggu" : selectedOrder.duration === "MONTHLY" ? "1 Bulan" : `${selectedOrder.customDays || "-"} Hari`}</span>
+                <span>{isPermanent(selectedOrder.expiresAt) ? "Permanen" : selectedOrder.duration === "WEEKLY" ? "1 Minggu" : selectedOrder.duration === "MONTHLY" ? "1 Bulan" : `${selectedOrder.customDays || "-"} Hari`}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[var(--muted)]">Sisa Waktu</span>
-                <span className="font-medium">{selectedOrder.expiresAt ? (() => { const d = new Date(selectedOrder.expiresAt).getTime() - Date.now(); if (d <= 0) return "Expired"; const days = Math.floor(d / 86400000); const hrs = Math.floor((d % 86400000) / 3600000); return `${days}h ${hrs}j`; })() : "-"}</span>
+                <span className="font-medium">{isPermanent(selectedOrder.expiresAt) ? "Selamanya" : selectedOrder.expiresAt ? (() => { const d = new Date(selectedOrder.expiresAt).getTime() - Date.now(); if (d <= 0) return "Expired"; const days = Math.floor(d / 86400000); const hrs = Math.floor((d % 86400000) / 3600000); return `${days}h ${hrs}j`; })() : "-"}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[var(--muted)]">Harga</span>
@@ -180,7 +190,7 @@ export default function AdminGroups() {
               </div>
               <div className="flex justify-between">
                 <span className="text-[var(--muted)]">Expired</span>
-                <span className="font-medium">{selectedOrder.expiresAt ? new Date(selectedOrder.expiresAt).toLocaleDateString("id-ID") : "-"}</span>
+                <span className="font-medium">{isPermanent(selectedOrder.expiresAt) ? "Tidak pernah" : selectedOrder.expiresAt ? new Date(selectedOrder.expiresAt).toLocaleDateString("id-ID") : "-"}</span>
               </div>
               <div>
                 <span className="text-[var(--muted)] text-xs">Link Grup</span>
