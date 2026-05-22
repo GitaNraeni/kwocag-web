@@ -1,7 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+
+// Hook for scroll-triggered animations
+function useScrollReveal() {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => { entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("visible"); observer.unobserve(e.target); } }); },
+      { threshold: 0.15 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  return ref;
+}
 
 export default function Home() {
   const [siteName, setSiteName] = useState("KWOCAG");
@@ -10,6 +26,8 @@ export default function Home() {
   const [channelWa, setChannelWa] = useState("");
   const [totalActive, setTotalActive] = useState(0);
   const [bots, setBots] = useState<any[]>([]);
+  const statsRef = useScrollReveal();
+  const footerRef = useScrollReveal();
 
   useEffect(() => {
     fetch("/api/site").then(r => r.json()).then(d => {
@@ -150,7 +168,7 @@ export default function Home() {
 
       {/* Stats */}
       <section className="relative z-10 border-t border-[var(--card-border)] px-6 py-12">
-        <div className="max-w-3xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+        <div ref={statsRef} className="max-w-3xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-6 text-center scroll-fade">
           <div>
             <p className="text-2xl font-bold text-[var(--primary)]">QRIS</p>
             <p className="text-xs text-[var(--muted)] mt-1">Bayar instan</p>
@@ -172,7 +190,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="relative z-10 border-t border-[var(--card-border)] px-6 py-8">
-        <div className="max-w-5xl mx-auto">
+        <div ref={footerRef} className="max-w-5xl mx-auto scroll-fade">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
             {/* Brand */}
             <div>

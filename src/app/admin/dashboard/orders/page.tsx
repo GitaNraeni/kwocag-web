@@ -12,6 +12,7 @@ interface Order {
   contactEmail?: string | null;
   totalPrice: number;
   status: string;
+  isPremium?: boolean;
   createdAt: string;
 }
 
@@ -92,6 +93,7 @@ export default function AdminOrders() {
                   <div className="flex items-center gap-2 flex-wrap min-w-0">
                     <span className="font-mono text-xs sm:text-sm">{order.orderCode}</span>
                     <span className={`px-1.5 py-0.5 rounded text-[10px] sm:text-xs ${statusStyles[order.status] || ""}`}>{order.status}</span>
+                    {order.isPremium && <span className="px-1.5 py-0.5 rounded text-[10px] bg-purple-500/10 text-purple-400">Premium</span>}
                   </div>
                   <span className="text-xs sm:text-sm font-medium shrink-0">Rp {order.totalPrice.toLocaleString("id-ID")}</span>
                 </div>
