@@ -7,6 +7,7 @@ export default function AboutPage() {
   const [siteName, setSiteName] = useState("KWOCAG");
   const [contact, setContact] = useState("");
   const [telegram, setTelegram] = useState("");
+  const [lowestPrice, setLowestPrice] = useState(5000);
 
   useEffect(() => {
     fetch("/api/site").then(r => r.json()).then(d => {
@@ -14,6 +15,12 @@ export default function AboutPage() {
         setSiteName(d.data.siteName);
         setContact(d.data.contactWhatsapp || "");
         setTelegram(d.data.contactTelegram || "");
+      }
+    }).catch(() => {});
+    fetch("/api/bots").then(r => r.json()).then(d => {
+      if (d.success && d.data.length > 0) {
+        const weeklyPrices = d.data.flatMap((b: any) => b.prices.filter((p: any) => p.duration === "WEEKLY" && p.tier === "basic").map((p: any) => p.price));
+        if (weeklyPrices.length > 0) setLowestPrice(Math.min(...weeklyPrices));
       }
     }).catch(() => {});
   }, []);
@@ -84,7 +91,7 @@ export default function AboutPage() {
                     </svg>
                   </div>
                   <p className="text-sm font-medium text-[var(--foreground)]">Murah</p>
-                  <p className="text-xs mt-1">Mulai dari Rp 5.000/minggu</p>
+                  <p className="text-xs mt-1">Mulai dari Rp {lowestPrice.toLocaleString("id-ID")}/minggu</p>
                 </div>
                 <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-xl p-4">
                   <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center mb-3">
