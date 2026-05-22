@@ -12,11 +12,13 @@ const updateBotSchema = z.object({
   acceptingOrders: z.boolean().optional(),
   maxSlots: z.number().min(0).optional(),
   totalInstances: z.number().min(1).optional(),
+  hasPremiumTier: z.boolean().optional(),
   prices: z
     .array(
       z.object({
         duration: z.enum(["WEEKLY", "MONTHLY", "CUSTOM"]),
         price: z.number().min(0),
+        tier: z.string().default("basic"),
         customDays: z.number().optional(),
       })
     )
@@ -62,6 +64,7 @@ export async function PUT(
           botTypeId: id,
           duration: p.duration,
           price: p.price,
+          tier: p.tier || "basic",
           customDays: p.customDays,
         })),
       });
