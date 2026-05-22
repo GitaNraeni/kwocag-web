@@ -8,6 +8,7 @@ import { z } from "zod";
 const orderSchema = z.object({
   botTypeId: z.string().min(1),
   duration: z.enum(["WEEKLY", "MONTHLY", "CUSTOM"]),
+  tier: z.enum(["basic", "premium"]).default("basic"),
   customDays: z.number().min(1).optional(),
   groupLink: z.string().url("Link grup harus berupa URL valid"),
   contactPhone: z.string().min(1, "No telepon wajib diisi"),
@@ -27,8 +28,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { botTypeId, duration, customDays, groupLink, contactPhone: rawPhone, contactEmail } = parsed.data;
+    const { botTypeId, duration, tier, customDays, groupLink, contactPhone: rawPhone, contactEmail } = parsed.data;
     const contactPhone = normalizePhone(rawPhone);
+    const isPremium = tier === "premium";
 
     // Cek apakah user masih punya order PENDING (jangan buat baru)
     if (contactPhone) {
@@ -79,19 +81,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Cari harga sesuai durasi
-    const priceRecord = botType.prices.find((p: any) => p.duration === duration);
+    // Cari harga sesuai durasi dan tier
+    const priceRecord = botType.prices.find((p: any) => p.duration === duration && p.tier === tier);
     if (!priceRecord) {
-      return NextResponse.json(
-        { success: false, message: "Harga untuk durasi ini belum tersedia" },
-        { status: 400 }
-      );
+      // Fallback: cari tanpa tier filter (untuk bot yang ga punya premium)
+      const fallbackPrice = botType.prices.find((p: any) => p.duration === duration);
+      if (!fallbackPrice) {
+        return NextResponse.json(
+          { success: false, message: "Harga untuk durasi ini belum tersedia" },
+          { status: 400 }
+        );
+      }
+      // Use fallback
+      var selectedPrice = fallbackPrice;
+    } else {
+      var selectedPrice = priceRecord;
     }
 
-    let totalPrice = priceRecord.price;
+    let totalPrice = selectedPrice.price;
     // Untuk custom, harga = price per hari * jumlah hari
     if (duration === "CUSTOM" && customDays) {
-      totalPrice = priceRecord.price * customDays;
+      totalPrice = selectedPrice.price * customDays;
     }
 
     // Tambah admin fee
@@ -132,6 +142,7 @@ export async function POST(req: NextRequest) {
         botInstance: assignedInstance,
         duration: duration as "WEEKLY" | "MONTHLY" | "CUSTOM",
         customDays: duration === "CUSTOM" ? customDays : null,
+        isPremium,
         groupLink,
         contactPhone,
         contactEmail,

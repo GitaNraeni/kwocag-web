@@ -53,6 +53,7 @@ export async function GET(req: NextRequest) {
       groupLink: o.groupLink,
       expiresAt: o.expiresAt,
       contactPhone: o.contactPhone,
+      isPremium: (o as any).isPremium || false,
     })),
   });
 }

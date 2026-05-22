@@ -8,6 +8,7 @@ import PaymentQR from "@/components/PaymentQR";
 interface Price {
   id: string;
   duration: string;
+  tier: string;
   price: number;
 }
 
@@ -18,6 +19,7 @@ interface BotType {
   description: string;
   features: string[];
   prices: Price[];
+  hasPremiumTier?: boolean;
 }
 
 export default function OrderPage() {
@@ -33,6 +35,7 @@ export default function OrderPage() {
 
   // Form
   const [step, setStep] = useState<"form" | "payment">("form");
+  const [tier, setTier] = useState<"basic" | "premium">("basic");
   const [duration, setDuration] = useState<string>("");
   const [customDays, setCustomDays] = useState<number>(1);
   const [groupLink, setGroupLink] = useState("");
@@ -54,7 +57,9 @@ export default function OrderPage() {
           const found = data.data.find((b: BotType) => b.slug === slug);
           if (found) {
             setBot(found);
-            if (found.prices.length > 0) setDuration(found.prices[0].duration);
+            // Set default duration dari harga pertama yang sesuai tier
+            const firstPrice = found.prices.find((p: Price) => p.tier === "basic");
+            if (firstPrice) setDuration(firstPrice.duration);
           }
         }
       })
@@ -69,9 +74,20 @@ export default function OrderPage() {
     }).catch(() => {});
   }, []);
 
+  // Filter prices by current tier
+  const currentPrices = bot?.prices.filter((p) => p.tier === tier) || [];
+
+  // When tier changes, reset duration to first available
+  useEffect(() => {
+    if (bot) {
+      const firstPrice = bot.prices.find((p) => p.tier === tier);
+      if (firstPrice) setDuration(firstPrice.duration);
+    }
+  }, [tier, bot]);
+
   const getTotal = () => {
     if (!bot) return 0;
-    const priceRecord = bot.prices.find((p) => p.duration === duration);
+    const priceRecord = currentPrices.find((p) => p.duration === duration);
     if (!priceRecord) return 0;
     if (duration === "CUSTOM") return priceRecord.price * customDays;
     return priceRecord.price;
@@ -93,6 +109,7 @@ export default function OrderPage() {
         body: JSON.stringify({
           botTypeId: bot.id,
           duration,
+          tier,
           customDays: duration === "CUSTOM" ? customDays : undefined,
           groupLink,
           contactPhone: contactPhone || undefined,
@@ -131,11 +148,9 @@ export default function OrderPage() {
     );
   }
 
-  // Payment step - show QR image
+  // Payment step
   if (step === "payment") {
-    // Kalau ada qrImage langsung (Ramashop), pakai itu. Kalau gak, generate dari paymentUrl (Pakasir)
     const qrImageUrl = qrImage || `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(paymentUrl)}`;
-
     return <PaymentQR orderCode={orderCode} amount={finalAmount} adminFee={adminFeeAmount} basePrice={getTotal()} qrUrl={qrImageUrl} />;
   }
 
@@ -168,11 +183,45 @@ export default function OrderPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Tier selector - only show if bot has premium tier */}
+            {bot.hasPremiumTier && (
+              <div>
+                <label className="block text-sm font-medium mb-2">Pilih Tipe</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setTier("basic")}
+                    className={`py-2.5 rounded-xl text-sm font-medium transition border ${
+                      tier === "basic"
+                        ? "border-[var(--primary)] bg-[var(--primary)]/10 text-[var(--primary)]"
+                        : "border-[var(--card-border)] text-[var(--muted)] hover:border-[var(--muted)]"
+                    }`}
+                  >
+                    Basic
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTier("premium")}
+                    className={`py-2.5 rounded-xl text-sm font-medium transition border ${
+                      tier === "premium"
+                        ? "border-purple-500 bg-purple-500/10 text-purple-400"
+                        : "border-[var(--card-border)] text-[var(--muted)] hover:border-[var(--muted)]"
+                    }`}
+                  >
+                    Premium
+                  </button>
+                </div>
+                {tier === "premium" && (
+                  <p className="text-xs text-purple-400 mt-1.5">Fitur premium grup aktif selama durasi sewa</p>
+                )}
+              </div>
+            )}
+
             {/* Durasi */}
             <div>
               <label className="block text-sm font-medium mb-2">Pilih Durasi</label>
               <div className="space-y-2">
-                {bot.prices.map((p) => (
+                {currentPrices.map((p) => (
                   <label
                     key={p.id}
                     className={`flex items-center justify-between p-3.5 rounded-xl border cursor-pointer transition ${
@@ -194,12 +243,6 @@ export default function OrderPage() {
                         <p className="text-sm font-medium">
                           {p.duration === "WEEKLY" ? "1 Minggu" : p.duration === "MONTHLY" ? "1 Bulan" : "Custom"}
                         </p>
-                        {p.duration === "WEEKLY" && slug === "bot-resbot" && (
-                          <p className="text-xs text-[var(--muted)]">Sewa biasa</p>
-                        )}
-                        {p.duration === "MONTHLY" && slug === "bot-resbot" && (
-                          <p className="text-xs text-[var(--muted)]">Auto VIP/Premium</p>
-                        )}
                         {p.duration === "CUSTOM" && (
                           <p className="text-xs text-[var(--muted)]">Rp {p.price.toLocaleString("id-ID")}/hari</p>
                         )}
@@ -277,7 +320,7 @@ export default function OrderPage() {
             {/* Total */}
             <div className="bg-[var(--background)] rounded-xl p-4 space-y-1">
               <div className="flex justify-between text-sm">
-                <span className="text-[var(--muted)]">Harga</span>
+                <span className="text-[var(--muted)]">Harga {tier === "premium" ? "(Premium)" : ""}</span>
                 <span>Rp {getTotal().toLocaleString("id-ID")}</span>
               </div>
               {getFee() > 0 && (

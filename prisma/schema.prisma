@@ -19,6 +19,7 @@ model BotType {
   maxSlots    Int      @default(0) // 0 = unlimited (per bot instance)
   totalInstances Int   @default(1) // jumlah nomor bot yang handle tipe ini
   acceptingOrders Boolean @default(true)
+  hasPremiumTier Boolean @default(false) // apakah bot ini punya opsi premium
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -28,12 +29,13 @@ model Price {
   botTypeId String
   botType   BotType  @relation(fields: [botTypeId], references: [id], onDelete: Cascade)
   duration  Duration
+  tier      String   @default("basic") // "basic" atau "premium"
   customDays Int?    // untuk durasi custom
   price     Int      // harga dalam rupiah
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([botTypeId, duration])
+  @@unique([botTypeId, duration, tier])
 }
 
 model Order {
@@ -44,6 +46,7 @@ model Order {
   botInstance   Int         @default(1) // nomor bot mana yang handle (1, 2, 3...)
   duration      Duration
   customDays    Int?
+  isPremium     Boolean     @default(false) // apakah order ini premium (set premium grup)
   groupLink     String
   contactPhone  String?
   normalizedPhone String? // untuk search/matching
