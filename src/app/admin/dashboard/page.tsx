@@ -77,7 +77,7 @@ export default function AdminOverview() {
       <h2 className="text-2xl font-bold mb-6">Overview</h2>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 stagger">
         {statCards.map((s) => (
           <div key={s.label} className="bg-[var(--card)] border border-[var(--card-border)] rounded-xl p-3 sm:p-4">
             <p className="text-[10px] sm:text-xs text-[var(--muted)] mb-1">{s.label}</p>
@@ -87,7 +87,7 @@ export default function AdminOverview() {
       </div>
 
       {/* Donut Charts */}
-      <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 mb-6">
+      <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 mb-6 stagger">
         {/* Sewa Donut */}
         <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-xl p-4 sm:p-5">
           <h3 className="text-sm font-medium mb-4">Status Sewa</h3>
@@ -160,7 +160,7 @@ export default function AdminOverview() {
       </div>
 
       {/* Recent Lists */}
-      <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
+      <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 stagger">
         {/* Sewa Bot Terbaru */}
         <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-xl p-4 sm:p-5">
           <div className="flex items-center justify-between mb-4">
