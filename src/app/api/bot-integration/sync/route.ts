@@ -115,17 +115,27 @@ export async function POST(req: NextRequest) {
       })
       .filter((link: string) => link.length > 0);
 
-    if (syncedGroupIds.length > 0) {
-      // Cari SEMUA order ACTIVE untuk botType ini (bukan cuma SYNC-)
-      const activeOrders = await prisma.order.findMany({
-        where: {
-          botTypeId: botType.id,
-          status: "ACTIVE",
-        },
-        select: { id: true, orderCode: true, groupLink: true, notes: true },
-      });
+    // Cari SEMUA order ACTIVE untuk botType ini
+    const activeOrders = await prisma.order.findMany({
+      where: {
+        botTypeId: botType.id,
+        status: "ACTIVE",
+      },
+      select: { id: true, orderCode: true, groupLink: true, notes: true },
+    });
 
-      let expiredCount = 0;
+    let expiredCount = 0;
+
+    // Kalau entries dari bot kosong (semua sewa dihapus), expire semua order ACTIVE
+    if (syncedGroupIds.length === 0) {
+      for (const order of activeOrders) {
+        await prisma.order.update({
+          where: { id: order.id },
+          data: { status: "EXPIRED" },
+        });
+        expiredCount++;
+      }
+    } else {
       for (const order of activeOrders) {
         // Extract groupId dari groupLink format group://xxxxx@g.us atau group://xxxxx
         const groupProtoMatch = order.groupLink?.match(/group:\/\/([^@\s]+)/);
@@ -137,13 +147,11 @@ export async function POST(req: NextRequest) {
 
         // Cek apakah order ini masih ada di data bot
         const stillExists = syncedGroupIds.some((id: string) => {
-          // Match by groupId numerik
           if (groupIdFromLink && groupIdFromLink.includes(id)) return true;
           if (order.groupLink && order.groupLink.includes(id)) return true;
           if (order.notes && order.notes.includes(id)) return true;
           return false;
         }) || syncedGroupLinks.some((link: string) => {
-          // Match by invite link
           if (inviteCode && inviteCode === link) return true;
           if (order.groupLink && order.groupLink.includes(link)) return true;
           return false;
@@ -157,13 +165,13 @@ export async function POST(req: NextRequest) {
           expiredCount++;
         }
       }
-
-      if (expiredCount > 0) {
-        console.log(`[Sync] Expired ${expiredCount} orders yang sudah tidak ada di bot`);
-      }
     }
 
-    return NextResponse.json({ success: true, message: `Synced ${synced} new entries` });
+    if (expiredCount > 0) {
+      console.log(`[Sync] Expired ${expiredCount} orders yang sudah tidak ada di bot`);
+    }
+
+    return NextResponse.json({ success: true, message: `Synced ${synced} new, expired ${expiredCount} removed` });
   } catch (error) {
     console.error("Sync error:", error);
     return NextResponse.json({ success: false, message: "Server error" }, { status: 500 });
