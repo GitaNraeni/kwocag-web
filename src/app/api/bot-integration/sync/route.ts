@@ -101,6 +101,51 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Cleanup: hapus order SYNC yang groupId-nya sudah tidak ada di bot
+    // Ini handle case ketika owner hapus sewa manual dari bot
+    const syncedGroupIds = entries
+      .map((e: { groupId?: string }) => e.groupId?.replace("@g.us", "") || "")
+      .filter((id: string) => id.length > 0);
+
+    if (syncedGroupIds.length > 0) {
+      // Cari semua order ACTIVE yang dibuat dari sync (orderCode starts with SYNC-)
+      const activeSyncOrders = await prisma.order.findMany({
+        where: {
+          botTypeId: botType.id,
+          status: "ACTIVE",
+          orderCode: { startsWith: "SYNC-" },
+        },
+        select: { id: true, groupLink: true, notes: true },
+      });
+
+      let expired = 0;
+      for (const order of activeSyncOrders) {
+        // Extract groupId dari groupLink atau notes
+        const linkMatch = order.groupLink?.match(/group:\/\/(\d+)/);
+        const groupIdFromLink = linkMatch ? linkMatch[1] : null;
+
+        // Cek apakah groupId masih ada di entries dari bot
+        const stillExists = syncedGroupIds.some((id: string) => {
+          if (groupIdFromLink && groupIdFromLink.includes(id)) return true;
+          if (order.groupLink && order.groupLink.includes(id)) return true;
+          if (order.notes && order.notes.includes(id)) return true;
+          return false;
+        });
+
+        if (!stillExists) {
+          await prisma.order.update({
+            where: { id: order.id },
+            data: { status: "EXPIRED" },
+          });
+          expired++;
+        }
+      }
+
+      if (expired > 0) {
+        console.log(`[Sync] Expired ${expired} orders yang sudah tidak ada di bot`);
+      }
+    }
+
     return NextResponse.json({ success: true, message: `Synced ${synced} new entries` });
   } catch (error) {
     console.error("Sync error:", error);
