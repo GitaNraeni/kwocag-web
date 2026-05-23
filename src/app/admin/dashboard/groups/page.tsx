@@ -50,7 +50,7 @@ export default function AdminGroups() {
   const [rentals, setRentals] = useState<Rental[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedType, setSelectedType] = useState<string>("all");
-  const [selectedStatus, setSelectedStatus] = useState<string>("ACTIVE");
+  const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
   const [selectedRental, setSelectedRental] = useState<Rental | null>(null);
   const [page, setPage] = useState(1);
 
@@ -66,7 +66,7 @@ export default function AdminGroups() {
   const botTypes = Array.from(new Set(rentals.map(r => r.botType.slug)));
   const filtered = rentals
     .filter(r => selectedType === "all" || r.botType.slug === selectedType)
-    .filter(r => r.status === selectedStatus);
+    .filter(r => selectedStatus === "ALL" || r.status === selectedStatus);
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
@@ -75,16 +75,21 @@ export default function AdminGroups() {
 
   return (
     <div className="max-w-4xl">
-      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <h2 className="text-2xl font-bold">Sewa Bot</h2>
-        <span className="text-sm text-[var(--muted)]">{activeCount} aktif</span>
-      </div>
+      <h2 className="text-2xl font-bold mb-5">Sewa Bot</h2>
 
-      {/* Status tabs */}
-      <div className="flex items-center gap-2 mb-4">
+      {/* Filter row */}
+      <div className="flex items-center gap-2 mb-5 overflow-x-auto pb-1 -mx-1 px-1">
+        <button
+          onClick={() => { setSelectedStatus("ALL"); setPage(1); }}
+          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition shrink-0 ${
+            selectedStatus === "ALL" ? "bg-[var(--primary)] text-white" : "bg-[var(--card)] border border-[var(--card-border)] text-[var(--muted)]"
+          }`}
+        >
+          Semua ({rentals.filter(r => selectedType === "all" || r.botType.slug === selectedType).length})
+        </button>
         <button
           onClick={() => { setSelectedStatus("ACTIVE"); setPage(1); }}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition shrink-0 ${
             selectedStatus === "ACTIVE" ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-[var(--card)] border border-[var(--card-border)] text-[var(--muted)]"
           }`}
         >
@@ -92,31 +97,22 @@ export default function AdminGroups() {
         </button>
         <button
           onClick={() => { setSelectedStatus("ENDED"); setPage(1); }}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition shrink-0 ${
             selectedStatus === "ENDED" ? "bg-gray-500/10 text-gray-400 border border-gray-500/20" : "bg-[var(--card)] border border-[var(--card-border)] text-[var(--muted)]"
           }`}
         >
           Selesai ({endedCount})
         </button>
-      </div>
 
-      {/* Filter by bot type */}
-      <div className="flex items-center gap-2 mb-5 flex-wrap">
-        <button
-          onClick={() => { setSelectedType("all"); setPage(1); }}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-            selectedType === "all" ? "bg-[var(--primary)] text-white" : "bg-[var(--card)] border border-[var(--card-border)] text-[var(--muted)]"
-          }`}
-        >
-          Semua
-        </button>
+        {botTypes.length > 0 && <span className="w-px h-5 bg-[var(--card-border)] shrink-0" />}
+
         {botTypes.map(slug => {
           const name = rentals.find(r => r.botType.slug === slug)?.botType.name || slug;
           return (
             <button
               key={slug}
-              onClick={() => { setSelectedType(slug); setPage(1); }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+              onClick={() => { setSelectedType(selectedType === slug ? "all" : slug); setPage(1); }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition shrink-0 ${
                 selectedType === slug ? "bg-[var(--primary)] text-white" : "bg-[var(--card)] border border-[var(--card-border)] text-[var(--muted)]"
               }`}
             >
@@ -129,7 +125,9 @@ export default function AdminGroups() {
       {loading ? (
         <p className="text-[var(--muted)]">Memuat...</p>
       ) : filtered.length === 0 ? (
-        <p className="text-[var(--muted)]">Tidak ada data.</p>
+        <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-xl p-8 text-center">
+          <p className="text-[var(--muted)] text-sm">Tidak ada data sewa {selectedStatus === "ACTIVE" ? "aktif" : "selesai"}.</p>
+        </div>
       ) : (
         <>
           <div className="space-y-2">
@@ -143,11 +141,13 @@ export default function AdminGroups() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className="text-sm font-medium">{rental.groupName || rental.groupId}</span>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${
-                        rental.status === "ACTIVE" ? "bg-green-500/10 text-green-400" : "bg-gray-500/10 text-gray-400"
-                      }`}>
-                        {rental.status === "ACTIVE" ? "Aktif" : "Selesai"}
-                      </span>
+                      {selectedStatus === "ALL" && (
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                          rental.status === "ACTIVE" ? "bg-green-500/10 text-green-400" : "bg-gray-500/10 text-gray-400"
+                        }`}>
+                          {rental.status === "ACTIVE" ? "Aktif" : "Selesai"}
+                        </span>
+                      )}
                       {rental.isPremium && (
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400">Premium</span>
                       )}

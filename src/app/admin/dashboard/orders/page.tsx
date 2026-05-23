@@ -74,16 +74,20 @@ export default function AdminOrders() {
         />
       </div>
 
-      <div className="flex items-center gap-2 mb-4 flex-wrap">
+      <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1 -mx-1 px-1">
         {["", "PENDING", "SUCCESS", "EXPIRED", "CANCELLED"].map((s) => (
           <button key={s} onClick={() => setFilter(s)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${filter === s ? "bg-[var(--primary)] text-white" : "bg-[var(--card)] border border-[var(--card-border)] text-[var(--muted)] hover:text-white"}`}>
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition shrink-0 ${filter === s ? "bg-[var(--primary)] text-white" : "bg-[var(--card)] border border-[var(--card-border)] text-[var(--muted)] hover:text-white"}`}>
             {s === "" ? "Semua" : s === "SUCCESS" ? "Sukses" : s === "PENDING" ? "Pending" : s === "EXPIRED" ? "Expired" : "Dibatalkan"}
           </button>
         ))}
       </div>
 
-      {loading ? <p className="text-[var(--muted)]">Memuat...</p> : paged.length === 0 ? <p className="text-[var(--muted)]">Tidak ada order.</p> : (
+      {loading ? <p className="text-[var(--muted)]">Memuat...</p> : paged.length === 0 ? (
+        <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-xl p-8 text-center">
+          <p className="text-[var(--muted)] text-sm">Tidak ada transaksi.</p>
+        </div>
+      ) : (
         <>
           <div className="space-y-2">
             {paged.map((order) => (
