@@ -119,6 +119,8 @@ model SiteSettings {
   ramashopApiKey  String?
   adminFee        Int     @default(0)
   adminFeePercent Float   @default(0)
+  maintenance     Boolean @default(false)
+  maintenanceMsg  String? // custom message saat maintenance
 }
 
 enum Duration {

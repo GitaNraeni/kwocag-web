@@ -40,6 +40,10 @@ export default function AdminSettings() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
 
+  // Maintenance
+  const [maintenance, setMaintenance] = useState(false);
+  const [maintenanceMsg, setMaintenanceMsg] = useState("");
+
   useEffect(() => {
     fetch("/api/admin/settings")
       .then((res) => { if (res.status === 401) { router.push("/admin"); return null; } return res.json(); })
@@ -59,6 +63,8 @@ export default function AdminSettings() {
           setTelegramToken(data.data.telegramToken || "");
           setTelegramChatId(data.data.telegramChatId || "");
           setUsername(data.data.username || "");
+          setMaintenance(data.data.maintenance || false);
+          setMaintenanceMsg(data.data.maintenanceMsg || "");
         }
       })
       .finally(() => setLoading(false));
@@ -85,6 +91,7 @@ export default function AdminSettings() {
           ramashopApiKey, paymentProvider,
           adminFee, adminFeePercent,
           telegramToken, telegramChatId,
+          maintenance, maintenanceMsg,
           username,
           currentPassword: currentPassword || undefined,
           newPassword: newPassword || undefined,
@@ -242,6 +249,34 @@ export default function AdminSettings() {
               <input type="text" value={telegramChatId} onChange={(e) => setTelegramChatId(e.target.value)}
                 className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-[var(--primary)]" />
             </div>
+          </div>
+        </section>
+
+        {/* Maintenance */}
+        <section className="bg-[var(--card)] border border-[var(--card-border)] rounded-xl p-5">
+          <h3 className="font-medium mb-4">Maintenance Mode</h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm">Mode Maintenance</p>
+                <p className="text-xs text-[var(--muted)]">Semua halaman publik akan redirect ke halaman maintenance</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMaintenance(!maintenance)}
+                className={`relative w-11 h-6 rounded-full transition ${maintenance ? "bg-[var(--warning)]" : "bg-[var(--card-border)]"}`}
+              >
+                <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${maintenance ? "translate-x-5" : ""}`} />
+              </button>
+            </div>
+            {maintenance && (
+              <div>
+                <label className="block text-xs text-[var(--muted)] mb-1">Pesan Maintenance (opsional)</label>
+                <input type="text" value={maintenanceMsg} onChange={(e) => setMaintenanceMsg(e.target.value)}
+                  placeholder="Website sedang dalam perbaikan..."
+                  className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[var(--primary)]" />
+              </div>
+            )}
           </div>
         </section>
 

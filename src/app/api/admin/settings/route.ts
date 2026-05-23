@@ -44,6 +44,8 @@ export async function GET() {
       contactWhatsapp: settings.contactWhatsapp || "",
       contactTelegram: (settings as any).contactTelegram || "",
       channelWhatsapp: (settings as any).channelWhatsapp || "",
+      maintenance: (settings as any).maintenance || false,
+      maintenanceMsg: (settings as any).maintenanceMsg || "",
       username: admin?.username || "",
     },
   });
@@ -71,6 +73,8 @@ export async function PUT(req: NextRequest) {
     contactWhatsapp,
     contactTelegram,
     channelWhatsapp,
+    maintenance,
+    maintenanceMsg,
     username,
     currentPassword,
     newPassword,
@@ -93,6 +97,8 @@ export async function PUT(req: NextRequest) {
       ...(contactWhatsapp !== undefined && { contactWhatsapp }),
       ...(contactTelegram !== undefined && { contactTelegram }),
       ...(channelWhatsapp !== undefined && { channelWhatsapp }),
+      ...(maintenance !== undefined && { maintenance: Boolean(maintenance) }),
+      ...(maintenanceMsg !== undefined && { maintenanceMsg }),
     },
     create: {
       id: "main",

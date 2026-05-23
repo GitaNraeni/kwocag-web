@@ -16,6 +16,8 @@ export async function GET() {
         channelWhatsapp: data?.channelWhatsapp || null,
         adminFee: data?.adminFee || 0,
         adminFeePercent: data?.adminFeePercent || 0,
+        maintenance: data?.maintenance || false,
+        maintenanceMsg: data?.maintenanceMsg || null,
       },
     });
   } catch {
