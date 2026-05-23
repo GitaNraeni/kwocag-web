@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { SkeletonList } from "@/components/Skeleton";
 
 interface Order {
   id: string;
@@ -83,7 +84,7 @@ export default function AdminOrders() {
         ))}
       </div>
 
-      {loading ? <p className="text-[var(--muted)]">Memuat...</p> : paged.length === 0 ? (
+      {loading ? <SkeletonList count={4} /> : paged.length === 0 ? (
         <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-xl p-8 text-center">
           <p className="text-[var(--muted)] text-sm">Tidak ada transaksi.</p>
         </div>

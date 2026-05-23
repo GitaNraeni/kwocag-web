@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { SkeletonList } from "@/components/Skeleton";
 
 interface Rental {
   id: string;
@@ -123,7 +124,7 @@ export default function AdminGroups() {
       </div>
 
       {loading ? (
-        <p className="text-[var(--muted)]">Memuat...</p>
+        <SkeletonList count={4} />
       ) : filtered.length === 0 ? (
         <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-xl p-8 text-center">
           <p className="text-[var(--muted)] text-sm">Tidak ada data sewa {selectedStatus === "ACTIVE" ? "aktif" : "selesai"}.</p>

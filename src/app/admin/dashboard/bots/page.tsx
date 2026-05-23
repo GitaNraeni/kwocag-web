@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Modal from "@/components/Modal";
+import { SkeletonList } from "@/components/Skeleton";
 
 interface BotType {
   id: string;
@@ -71,7 +72,7 @@ export default function AdminBotsPage() {
         </Link>
       </div>
 
-      {loading ? <p className="text-[var(--muted)]">Memuat...</p> : bots.length === 0 ? (
+      {loading ? <SkeletonList count={3} /> : bots.length === 0 ? (
         <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-xl p-8 text-center">
           <p className="text-[var(--muted)] text-sm">Belum ada bot.</p>
         </div>

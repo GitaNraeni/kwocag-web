@@ -113,7 +113,22 @@ export default function AdminSettings() {
     finally { setSaving(false); }
   };
 
-  if (loading) return <p className="text-[var(--muted)]">Memuat...</p>;
+  if (loading) return (
+    <div className="max-w-2xl animate-fade-in">
+      <div className="skeleton h-8 w-32 mb-6" />
+      <div className="space-y-6">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="bg-[var(--card)] border border-[var(--card-border)] rounded-xl p-5">
+            <div className="skeleton h-5 w-24 mb-4" />
+            <div className="space-y-3">
+              <div className="skeleton h-9 w-full" />
+              <div className="skeleton h-9 w-full" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <div className="max-w-2xl">

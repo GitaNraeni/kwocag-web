@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { SkeletonOverview } from "@/components/Skeleton";
 
 interface Stats {
   totalRentals: number;
@@ -71,6 +72,8 @@ export default function AdminOverview() {
     { label: "Total Transaksi", value: stats.totalOrders, color: "text-white" },
     { label: "Revenue", value: `Rp ${stats.totalRevenue.toLocaleString("id-ID")}`, color: "text-[var(--primary)]" },
   ] : [];
+
+  if (!stats) return <SkeletonOverview />;
 
   return (
     <div className="max-w-5xl">
