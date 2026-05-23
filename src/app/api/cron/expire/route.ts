@@ -27,8 +27,8 @@ export async function GET() {
       rentalCount++;
     }
 
-    // 2. Expire pending orders yang sudah > 24 jam
-    const expireThreshold = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    // 2. Expire pending orders yang sudah > 10 menit
+    const expireThreshold = new Date(now.getTime() - 10 * 60 * 1000);
     const expiredOrders = await prisma.order.updateMany({
       where: {
         status: "PENDING",

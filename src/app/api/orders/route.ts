@@ -32,16 +32,25 @@ export async function POST(req: NextRequest) {
     const contactPhone = normalizePhone(rawPhone);
     const isPremium = tier === "premium";
 
-    // Cek apakah user masih punya order PENDING (jangan buat baru)
+    // Cek apakah user masih punya order PENDING
     if (contactPhone) {
       const pendingOrder = await prisma.order.findFirst({
         where: { contactPhone, status: "PENDING" },
       });
       if (pendingOrder) {
-        return NextResponse.json(
-          { success: false, message: `Kamu masih punya order pending (${pendingOrder.orderCode}). Selesaikan atau batalkan dulu.` },
-          { status: 400 }
-        );
+        // Kalau pending udah > 5 menit, auto-cancel
+        const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+        if (pendingOrder.createdAt < fiveMinAgo) {
+          await prisma.order.update({
+            where: { id: pendingOrder.id },
+            data: { status: "EXPIRED" },
+          });
+        } else {
+          return NextResponse.json(
+            { success: false, message: `Kamu masih punya order pending (${pendingOrder.orderCode}). Selesaikan atau tunggu 5 menit.` },
+            { status: 400 }
+          );
+        }
       }
     }
 
