@@ -38,13 +38,9 @@ export default function MaintenancePage() {
         </div>
         <h1 className="text-2xl font-bold mb-2">{siteName}</h1>
         <h2 className="text-lg text-[var(--muted)] mb-4">Sedang Maintenance</h2>
-        <p className="text-sm text-[var(--muted)] leading-relaxed mb-6">
+        <p className="text-sm text-[var(--muted)] leading-relaxed">
           {message || "Website sedang dalam perbaikan. Silakan kembali beberapa saat lagi."}
         </p>
-        <div className="flex items-center justify-center gap-2 text-xs text-[var(--muted)]">
-          <span className="w-2 h-2 rounded-full bg-[var(--warning)] animate-pulse" />
-          Halaman akan kembali otomatis
-        </div>
       </div>
     </div>
   );
