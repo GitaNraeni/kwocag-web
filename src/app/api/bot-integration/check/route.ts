@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// GET /api/bot-integration/check?group=linkgrup - Cek apakah grup masih aktif sewa
+// GET /api/bot-integration/check?group=linkgrup&groupId=xxx - Cek apakah grup masih aktif sewa
 export async function GET(req: NextRequest) {
   const apiKey = req.headers.get("x-api-key");
   if (apiKey !== process.env.PAKASIR_API_KEY) {
@@ -10,25 +10,29 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const groupLink = searchParams.get("group");
+  const groupId = searchParams.get("groupId");
 
-  if (!groupLink) {
+  if (!groupLink && !groupId) {
     return NextResponse.json(
-      { success: false, message: "Parameter 'group' wajib diisi" },
+      { success: false, message: "Parameter 'group' atau 'groupId' wajib diisi" },
       { status: 400 }
     );
   }
 
-  const order = await prisma.order.findFirst({
-    where: {
-      groupLink: { contains: groupLink },
-      status: "ACTIVE",
-      expiresAt: { gt: new Date() },
-    },
+  const where: any = { status: "ACTIVE", expiresAt: { gt: new Date() } };
+  if (groupId) {
+    where.groupId = groupId.replace("@g.us", "");
+  } else if (groupLink) {
+    where.groupLink = { contains: groupLink };
+  }
+
+  const rental = await prisma.rental.findFirst({
+    where,
     include: { botType: true },
     orderBy: { expiresAt: "desc" },
   });
 
-  if (!order) {
+  if (!rental) {
     return NextResponse.json({
       success: true,
       active: false,
@@ -40,10 +44,11 @@ export async function GET(req: NextRequest) {
     success: true,
     active: true,
     data: {
-      orderCode: order.orderCode,
-      botType: order.botType.slug,
-      botTypeName: order.botType.name,
-      expiresAt: order.expiresAt,
+      groupId: rental.groupId,
+      groupName: rental.groupName,
+      botType: rental.botType.slug,
+      botTypeName: rental.botType.name,
+      expiresAt: rental.expiresAt,
     },
   });
 }

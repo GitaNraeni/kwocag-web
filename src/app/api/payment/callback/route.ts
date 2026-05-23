@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     // Hanya proses jika status completed
     if (status === "completed") {
       // Cek apakah sudah diproses
-      if (order.status === "ACTIVE") {
+      if (order.status === "SUCCESS") {
         return NextResponse.json({ received: true });
       }
 
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
       await prisma.order.update({
         where: { id: order.id },
         data: {
-          status: "ACTIVE",
+          status: "SUCCESS",
           paidAt: completed_at ? new Date(completed_at) : now,
           expiresAt,
         },

@@ -40,14 +40,14 @@ export async function GET(
     else if (detail.data?.status) txStatus = detail.data.status.toLowerCase();
 
     if (txStatus === "completed" || txStatus === "paid" || txStatus === "success" || txStatus === "settlement") {
-      // Payment berhasil - activate order
+      // Payment berhasil - set order SUCCESS
       const now = new Date();
       const expiresAt = calculateExpiryDate(now, order.duration, order.customDays);
 
       await prisma.order.update({
         where: { id: order.id },
         data: {
-          status: "ACTIVE",
+          status: "SUCCESS",
           paidAt: now,
           expiresAt,
         },
@@ -72,7 +72,7 @@ export async function GET(
         })
       );
 
-      return NextResponse.json({ success: true, status: "ACTIVE" });
+      return NextResponse.json({ success: true, status: "SUCCESS" });
     }
 
     if (txStatus === "expired" || txStatus === "failed" || txStatus === "cancelled") {

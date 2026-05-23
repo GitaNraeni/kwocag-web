@@ -15,7 +15,7 @@ interface BotType {
   acceptingOrders: boolean;
   maxSlots: number;
   prices: { id: string; duration: string; price: number }[];
-  _count: { orders: number };
+  _count: { rentals: number };
 }
 
 export default function AdminBotsPage() {
@@ -78,7 +78,7 @@ export default function AdminBotsPage() {
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="min-w-0">
                   <h4 className="font-semibold">{bot.name}</h4>
-                  <p className="text-xs text-[var(--muted)]">/{bot.slug} - {bot._count.orders} sewa aktif</p>
+                  <p className="text-xs text-[var(--muted)]">/{bot.slug} - {bot._count.rentals} sewa aktif</p>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
                   {bot.acceptingOrders ? (
@@ -96,7 +96,7 @@ export default function AdminBotsPage() {
 
               {/* Slot */}
               <p className="text-xs text-[var(--muted)] mb-3">
-                Slot: {bot._count.orders}/{bot.maxSlots === 0 ? "Unlimited" : bot.maxSlots}
+                Slot: {bot._count.rentals}/{bot.maxSlots === 0 ? "Unlimited" : bot.maxSlots}
               </p>
 
               {/* Prices */}

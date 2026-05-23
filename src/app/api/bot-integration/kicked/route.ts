@@ -11,42 +11,33 @@ export async function POST(req: NextRequest) {
 
   try {
     const { groupId, botTypeSlug } = await req.json();
+    const groupIdClean = groupId.replace("@g.us", "");
 
-    // Cari order aktif untuk grup ini
-    const orders = await prisma.order.findMany({
-      where: {
-        status: "ACTIVE",
-        botType: botTypeSlug ? { slug: botTypeSlug } : undefined,
-        OR: [
-          { groupLink: { contains: groupId.replace("@g.us", "") } },
-          { notes: { contains: groupId } },
-        ],
-      },
+    // Cari rental aktif untuk grup ini
+    const where: any = { groupId: groupIdClean, status: "ACTIVE" };
+    if (botTypeSlug) {
+      const botType = await prisma.botType.findUnique({ where: { slug: botTypeSlug } });
+      if (botType) where.botTypeId = botType.id;
+    }
+
+    const rental = await prisma.rental.findFirst({
+      where,
       include: { botType: true },
     });
 
-    for (const order of orders) {
-      // Update status
-      await prisma.order.update({
-        where: { id: order.id },
-        data: { status: "CANCELLED" },
-      });
-
-      await prisma.orderLog.create({
-        data: {
-          orderId: order.id,
-          action: "BOT_KICKED",
-          details: "Bot dikeluarkan dari grup oleh admin grup",
-        },
+    if (rental) {
+      await prisma.rental.update({
+        where: { id: rental.id },
+        data: { status: "ENDED" },
       });
 
       // Notifikasi Telegram
       await sendTelegramNotification(
-        `━━━━━━━━━━━━━━━━━━\n⚠️ <b>BOT DI-KICK</b>\n━━━━━━━━━━━━━━━━━━\n\n🆔 Order: <code>${order.orderCode}</code>\n🤖 Bot: ${order.botType.name}\n👥 Grup: ${order.notes || groupId}\n📝 Bot dikeluarkan dari grup\n━━━━━━━━━━━━━━━━━━`
+        `━━━━━━━━━━━━━━━━━━\n⚠️ <b>BOT DI-KICK</b>\n━━━━━━━━━━━━━━━━━━\n\n🤖 Bot: ${rental.botType.name}\n👥 Grup: ${rental.groupName || rental.groupId}\n📝 Bot dikeluarkan dari grup\n━━━━━━━━━━━━━━━━━━`
       );
     }
 
-    return NextResponse.json({ success: true, affected: orders.length });
+    return NextResponse.json({ success: true, affected: rental ? 1 : 0 });
   } catch (error) {
     console.error("Kicked endpoint error:", error);
     return NextResponse.json({ success: false, message: "Server error" }, { status: 500 });

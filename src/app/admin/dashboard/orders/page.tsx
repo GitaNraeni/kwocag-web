@@ -18,7 +18,7 @@ interface Order {
 
 const statusStyles: Record<string, string> = {
   PENDING: "bg-yellow-500/10 text-yellow-400",
-  ACTIVE: "bg-green-500/10 text-green-400",
+  SUCCESS: "bg-green-500/10 text-green-400",
   EXPIRED: "bg-red-500/10 text-red-400",
   CANCELLED: "bg-gray-500/10 text-gray-400",
 };
@@ -62,7 +62,7 @@ export default function AdminOrders() {
 
   return (
     <div className="max-w-5xl">
-      <h2 className="text-2xl font-bold mb-6">Orders</h2>
+      <h2 className="text-2xl font-bold mb-6">Transaksi</h2>
 
       <div className="mb-4">
         <input
@@ -75,10 +75,10 @@ export default function AdminOrders() {
       </div>
 
       <div className="flex items-center gap-2 mb-4 flex-wrap">
-        {["", "PENDING", "ACTIVE", "EXPIRED", "CANCELLED"].map((s) => (
+        {["", "PENDING", "SUCCESS", "EXPIRED", "CANCELLED"].map((s) => (
           <button key={s} onClick={() => setFilter(s)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${filter === s ? "bg-[var(--primary)] text-white" : "bg-[var(--card)] border border-[var(--card-border)] text-[var(--muted)] hover:text-white"}`}>
-            {s || "Semua"}
+            {s === "" ? "Semua" : s === "SUCCESS" ? "Sukses" : s === "PENDING" ? "Pending" : s === "EXPIRED" ? "Expired" : "Dibatalkan"}
           </button>
         ))}
       </div>

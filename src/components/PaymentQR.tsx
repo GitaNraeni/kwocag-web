@@ -28,8 +28,8 @@ export default function PaymentQR({ orderCode, amount, basePrice, adminFee, qrUr
       try {
         const res = await fetch(`/api/orders/${orderCode}/check-payment`);
         const data = await res.json();
-        if (data.status === "ACTIVE") {
-          setStatus("ACTIVE");
+        if (data.status === "SUCCESS") {
+          setStatus("SUCCESS");
           clearInterval(interval);
           setTimeout(() => router.push(`/order/status/${orderCode}`), 1500);
         } else if (data.status === "CANCELLED") {
@@ -67,7 +67,7 @@ export default function PaymentQR({ orderCode, amount, basePrice, adminFee, qrUr
     finally { setCancelling(false); }
   };
 
-  if (status === "ACTIVE") {
+  if (status === "SUCCESS") {
     return (
       <div className="min-h-screen flex items-center justify-center px-6">
         <div className="max-w-sm w-full text-center">

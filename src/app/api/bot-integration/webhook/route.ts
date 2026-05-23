@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// GET /api/bot-integration/webhook - Ambil order yang baru aktif (belum di-join)
+// GET /api/bot-integration/webhook - Ambil order yang sudah SUCCESS tapi belum di-join bot
 // Query params:
 //   ?instance=1 → hanya ambil order untuk bot instance 1
 //   ?slug=bot-store → hanya ambil order untuk tipe bot tertentu
-// Header: x-api-key
 export async function GET(req: NextRequest) {
   const apiKey = req.headers.get("x-api-key");
   if (apiKey !== process.env.PAKASIR_API_KEY) {
@@ -16,22 +15,16 @@ export async function GET(req: NextRequest) {
   const instance = searchParams.get("instance");
   const slug = searchParams.get("slug");
 
-  // WAJIB kirim slug — supaya bot hanya ambil order untuk tipe-nya sendiri
   if (!slug) {
-    return NextResponse.json({
-      success: true,
-      data: [], // Gak return apa-apa kalau gak ada slug filter
-    });
+    return NextResponse.json({ success: true, data: [] });
   }
 
   const where: Record<string, unknown> = {
-    status: "ACTIVE",
+    status: "SUCCESS",
     logs: { none: { action: "BOT_JOINED" } },
     botType: { slug },
-    NOT: { orderCode: { startsWith: "SYNC-" } },
   };
 
-  // Filter by instance number
   if (instance) {
     where.botInstance = parseInt(instance);
   }
@@ -49,16 +42,16 @@ export async function GET(req: NextRequest) {
       orderCode: o.orderCode,
       botType: o.botType.slug,
       botTypeName: o.botType.name,
-      botInstance: (o as any).botInstance || 1,
+      botInstance: o.botInstance || 1,
       groupLink: o.groupLink,
       expiresAt: o.expiresAt,
       contactPhone: o.contactPhone,
-      isPremium: (o as any).isPremium || false,
+      isPremium: o.isPremium || false,
     })),
   });
 }
 
-// POST /api/bot-integration/webhook - Konfirmasi bot sudah join grup
+// POST /api/bot-integration/webhook - Konfirmasi bot sudah join grup + bikin Rental
 export async function POST(req: NextRequest) {
   const apiKey = req.headers.get("x-api-key");
   if (apiKey !== process.env.PAKASIR_API_KEY) {
@@ -66,23 +59,62 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { orderId, groupName } = await req.json();
+    const { orderId, groupName, groupId } = await req.json();
 
     if (!orderId) {
       return NextResponse.json({ success: false, message: "orderId wajib diisi" }, { status: 400 });
     }
 
-    const order = await prisma.order.findUnique({ where: { id: orderId } });
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { botType: true },
+    });
     if (!order) {
       return NextResponse.json({ success: false, message: "Order tidak ditemukan" }, { status: 404 });
     }
 
-    // Simpan nama grup ke notes
-    const updates: Record<string, unknown> = {};
-    if (groupName) updates.notes = groupName;
+    // Update order notes
+    if (groupName) {
+      await prisma.order.update({ where: { id: orderId }, data: { notes: groupName } });
+    }
 
-    if (Object.keys(updates).length > 0) {
-      await prisma.order.update({ where: { id: orderId }, data: updates });
+    // Bikin atau update Rental kalau groupId dikirim
+    if (groupId) {
+      const groupIdClean = groupId.replace("@g.us", "");
+      const existing = await prisma.rental.findUnique({
+        where: { groupId_botTypeId: { groupId: groupIdClean, botTypeId: order.botTypeId } },
+      });
+
+      if (existing) {
+        // Update/perpanjang
+        await prisma.rental.update({
+          where: { id: existing.id },
+          data: {
+            status: "ACTIVE",
+            expiresAt: order.expiresAt,
+            groupName: groupName || existing.groupName,
+            groupLink: order.groupLink.startsWith("http") ? order.groupLink : existing.groupLink,
+            isPremium: order.isPremium || existing.isPremium,
+          },
+        });
+        await prisma.order.update({ where: { id: orderId }, data: { rentalId: existing.id } });
+      } else {
+        // Bikin rental baru
+        const rental = await prisma.rental.create({
+          data: {
+            groupId: groupIdClean,
+            groupName: groupName || null,
+            groupLink: order.groupLink.startsWith("http") ? order.groupLink : null,
+            botTypeId: order.botTypeId,
+            status: "ACTIVE",
+            source: "WEBSITE",
+            isPremium: order.isPremium,
+            expiresAt: order.expiresAt,
+            contactPhone: order.contactPhone,
+          },
+        });
+        await prisma.order.update({ where: { id: orderId }, data: { rentalId: rental.id } });
+      }
     }
 
     await prisma.orderLog.create({

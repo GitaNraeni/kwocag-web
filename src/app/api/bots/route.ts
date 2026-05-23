@@ -11,7 +11,7 @@ export async function GET() {
           orderBy: { duration: "asc" },
         },
         _count: {
-          select: { orders: { where: { status: "ACTIVE" } } },
+          select: { rentals: { where: { status: "ACTIVE" } } },
         },
       },
       orderBy: { createdAt: "asc" },

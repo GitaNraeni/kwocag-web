@@ -39,7 +39,7 @@ export async function PUT(
 
         await prisma.order.update({
           where: { id },
-          data: { status: "ACTIVE", paidAt: now, expiresAt },
+          data: { status: "SUCCESS", paidAt: now, expiresAt },
         });
 
         await prisma.orderLog.create({
@@ -64,7 +64,7 @@ export async function PUT(
 
         await prisma.order.update({
           where: { id },
-          data: { expiresAt: newExpiry, status: "ACTIVE" },
+          data: { expiresAt: newExpiry, status: "SUCCESS" },
         });
 
         await prisma.orderLog.create({

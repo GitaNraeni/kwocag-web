@@ -1,47 +1,47 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// GET /api/cron/expire - Auto-expire orders yang sudah lewat expiresAt
-// Bisa dipanggil via Vercel Cron atau manual
-// Skip permanent orders (expiresAt > 10 tahun dari sekarang)
+// GET /api/cron/expire - Auto-end rentals yang sudah lewat expiresAt
+// + Auto-expire pending orders yang sudah lama (> 24 jam)
 export async function GET() {
   try {
     const now = new Date();
     const permanentThreshold = new Date();
     permanentThreshold.setFullYear(permanentThreshold.getFullYear() + 10);
 
-    // Cari order ACTIVE yang sudah lewat expiresAt, tapi BUKAN permanent
-    const expired = await prisma.order.findMany({
+    // 1. End rentals yang sudah expired
+    const expiredRentals = await prisma.rental.findMany({
       where: {
         status: "ACTIVE",
-        expiresAt: {
-          lt: now,
-          // Exclude null (shouldn't happen) — permanent punya expiresAt jauh di masa depan jadi ga match lt:now
-        },
+        expiresAt: { lt: now },
       },
     });
 
-    let count = 0;
-    for (const order of expired) {
-      // Double check: skip kalau expiresAt > 10 tahun (permanent)
-      if (order.expiresAt && order.expiresAt.getTime() > permanentThreshold.getTime()) continue;
-
-      await prisma.order.update({
-        where: { id: order.id },
-        data: { status: "EXPIRED" },
+    let rentalCount = 0;
+    for (const rental of expiredRentals) {
+      if (rental.expiresAt && rental.expiresAt.getTime() > permanentThreshold.getTime()) continue;
+      await prisma.rental.update({
+        where: { id: rental.id },
+        data: { status: "ENDED" },
       });
-
-      await prisma.orderLog.create({
-        data: {
-          orderId: order.id,
-          action: "AUTO_EXPIRED",
-          details: "Sewa berakhir otomatis",
-        },
-      });
-      count++;
+      rentalCount++;
     }
 
-    return NextResponse.json({ success: true, expired: count });
+    // 2. Expire pending orders yang sudah > 24 jam
+    const expireThreshold = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const expiredOrders = await prisma.order.updateMany({
+      where: {
+        status: "PENDING",
+        createdAt: { lt: expireThreshold },
+      },
+      data: { status: "EXPIRED" },
+    });
+
+    return NextResponse.json({
+      success: true,
+      rentalsEnded: rentalCount,
+      ordersExpired: expiredOrders.count,
+    });
   } catch (error) {
     console.error("Cron expire error:", error);
     return NextResponse.json({ success: false }, { status: 500 });

@@ -28,7 +28,7 @@ export async function GET() {
   }
 
   const bots = await prisma.botType.findMany({
-    include: { prices: true, _count: { select: { orders: { where: { status: "ACTIVE" } } } } },
+    include: { prices: true, _count: { select: { rentals: { where: { status: "ACTIVE" } } } } },
     orderBy: { createdAt: "desc" },
   });
 

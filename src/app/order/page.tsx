@@ -12,7 +12,7 @@ interface BotType {
   prices: { id: string; duration: string; price: number }[];
   acceptingOrders?: boolean;
   maxSlots?: number;
-  _count?: { orders: number };
+  _count?: { rentals: number };
 }
 
 export default function OrderTypePage() {
@@ -81,7 +81,7 @@ export default function OrderTypePage() {
               const href = mode === "new" ? `/order/${bot.slug}` : `/order/${bot.slug}?mode=extend`;
               const isClosed = bot.acceptingOrders === false;
               const hasSlotLimit = bot.maxSlots !== undefined && bot.maxSlots > 0;
-              const activeCount = bot._count?.orders || 0;
+              const activeCount = bot._count?.rentals || 0;
               const slotsFull = hasSlotLimit && activeCount >= (bot.maxSlots || 0);
               // Perpanjang selalu bisa (bypass slot + tutup)
               const disabled = mode === "new" && (isClosed || slotsFull);

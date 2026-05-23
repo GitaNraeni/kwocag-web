@@ -21,16 +21,14 @@ interface OrderData {
 
 const statusColors: Record<string, string> = {
   PENDING: "text-[var(--warning)]",
-  PAID: "text-[var(--success)]",
-  ACTIVE: "text-[var(--success)]",
+  SUCCESS: "text-[var(--success)]",
   EXPIRED: "text-[var(--danger)]",
   CANCELLED: "text-[var(--muted)]",
 };
 
 const statusLabels: Record<string, string> = {
   PENDING: "Menunggu Pembayaran",
-  PAID: "Sudah Dibayar",
-  ACTIVE: "Aktif",
+  SUCCESS: "Pembayaran Berhasil",
   EXPIRED: "Kadaluarsa",
   CANCELLED: "Dibatalkan",
 };

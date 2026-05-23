@@ -99,19 +99,20 @@ export async function DELETE(
     const { id } = await params;
 
     // Cek apakah masih ada sewa aktif
-    const activeOrders = await prisma.order.count({
+    const activeRentals = await prisma.rental.count({
       where: { botTypeId: id, status: "ACTIVE" },
     });
 
-    if (activeOrders > 0) {
+    if (activeRentals > 0) {
       return NextResponse.json(
-        { success: false, message: `Tidak bisa dihapus. Masih ada ${activeOrders} sewa aktif di bot ini. Expire atau batalkan dulu.` },
+        { success: false, message: `Tidak bisa dihapus. Masih ada ${activeRentals} sewa aktif di bot ini. Selesaikan dulu.` },
         { status: 400 }
       );
     }
 
     await prisma.orderLog.deleteMany({ where: { order: { botTypeId: id } } });
     await prisma.order.deleteMany({ where: { botTypeId: id } });
+    await prisma.rental.deleteMany({ where: { botTypeId: id } });
     await prisma.price.deleteMany({ where: { botTypeId: id } });
     await prisma.botType.delete({ where: { id } });
 

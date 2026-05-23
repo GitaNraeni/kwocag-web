@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     // Cari bot type dan harga
     const botType = await prisma.botType.findUnique({
       where: { id: botTypeId },
-      include: { prices: true, _count: { select: { orders: { where: { status: "ACTIVE" } } } } },
+      include: { prices: true, _count: { select: { rentals: { where: { status: "ACTIVE" } } } } },
     });
 
     if (!botType) {
@@ -59,10 +59,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Cek apakah ini perpanjang (grup sudah punya sewa aktif) — bypass slot check
-    const existingActiveOrder = await prisma.order.findFirst({
+    const existingRental = await prisma.rental.findFirst({
       where: { groupLink, botTypeId, status: "ACTIVE" },
     });
-    const isExtend = !!existingActiveOrder;
+    const isExtend = !!existingRental;
 
     // Cek apakah bot menerima order (skip kalau perpanjang)
     if (!isExtend && !(botType as any).acceptingOrders && (botType as any).acceptingOrders !== undefined) {
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
 
     // Cek slot (skip kalau perpanjang — bot sudah di grup)
     const maxSlots = (botType as any).maxSlots || 0;
-    if (!isExtend && maxSlots > 0 && botType._count.orders >= maxSlots) {
+    if (!isExtend && maxSlots > 0 && botType._count.rentals >= maxSlots) {
       return NextResponse.json(
         { success: false, message: "Slot penuh. Bot ini sudah mencapai batas maksimal sewa." },
         { status: 400 }
@@ -121,8 +121,8 @@ export async function POST(req: NextRequest) {
     if (totalInstances > 1) {
       // Hitung order aktif per instance
       for (let i = 1; i <= totalInstances; i++) {
-        const count = await prisma.order.count({
-          where: { botTypeId, status: "ACTIVE", botInstance: i },
+        const count = await prisma.rental.count({
+          where: { botTypeId, status: "ACTIVE" },
         });
         const maxPerInstance = (botType as any).maxSlots || 0;
         if (maxPerInstance === 0 || count < maxPerInstance) {

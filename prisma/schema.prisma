@@ -15,6 +15,7 @@ model BotType {
   features    String[] // list fitur bot
   prices      Price[]
   orders      Order[]
+  rentals     Rental[]
   isActive    Boolean  @default(true)
   maxSlots    Int      @default(0) // 0 = unlimited (per bot instance)
   totalInstances Int   @default(1) // jumlah nomor bot yang handle tipe ini
@@ -43,25 +44,48 @@ model Order {
   orderCode     String      @unique
   botTypeId     String
   botType       BotType     @relation(fields: [botTypeId], references: [id])
-  botInstance   Int         @default(1) // nomor bot mana yang handle (1, 2, 3...)
+  botInstance   Int         @default(1)
   duration      Duration
   customDays    Int?
-  isPremium     Boolean     @default(false) // apakah order ini premium (set premium grup)
+  isPremium     Boolean     @default(false)
   groupLink     String
   contactPhone  String?
-  normalizedPhone String? // untuk search/matching
+  normalizedPhone String?
   contactEmail  String?
   totalPrice    Int
   status        OrderStatus @default(PENDING)
-  paymentId     String?     // ID dari Pakasir
-  paymentUrl    String?     // URL pembayaran Pakasir
+  paymentId     String?
+  paymentUrl    String?
   paidAt        DateTime?
-  expiresAt     DateTime?   // kapan sewa berakhir
+  expiresAt     DateTime?
   notes         String?
+  rentalId      String?     // link ke rental yang dibuat dari order ini
+  rental        Rental?     @relation(fields: [rentalId], references: [id])
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
   logs          OrderLog[]
+}
+
+// Tabel terpisah untuk sewa bot per grup
+model Rental {
+  id          String       @id @default(cuid())
+  groupId     String       // WhatsApp group ID (tanpa @g.us)
+  groupName   String?      // nama grup
+  groupLink   String?      // invite link grup
+  botTypeId   String
+  botType     BotType      @relation(fields: [botTypeId], references: [id])
+  status      RentalStatus @default(ACTIVE)
+  source      RentalSource @default(MANUAL) // dari mana sewa ini
+  isPremium   Boolean      @default(false)
+  expiresAt   DateTime?    // kapan sewa berakhir
+  contactPhone String?
+  notes       String?
+  orders      Order[]      // order yang terkait
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@unique([groupId, botTypeId]) // 1 grup cuma bisa 1 sewa per bot type
 }
 
 model OrderLog {
@@ -89,14 +113,12 @@ model SiteSettings {
   telegramToken   String?
   telegramChatId  String?
   contactWhatsapp String?
-  contactTelegram String? // username telegram untuk kontak publik
-  channelWhatsapp String? // link channel WhatsApp
-  // Payment gateway
-  paymentProvider String  @default("pakasir") // "pakasir" atau "ramashop"
+  contactTelegram String?
+  channelWhatsapp String?
+  paymentProvider String  @default("pakasir")
   ramashopApiKey  String?
-  // Admin fee
-  adminFee        Int     @default(0) // fee tetap (rupiah), 0 = tidak ada
-  adminFeePercent Float   @default(0) // fee persen, 0 = tidak ada
+  adminFee        Int     @default(0)
+  adminFeePercent Float   @default(0)
 }
 
 enum Duration {
@@ -107,8 +129,18 @@ enum Duration {
 
 enum OrderStatus {
   PENDING
-  PAID
-  ACTIVE
+  SUCCESS
   EXPIRED
   CANCELLED
+}
+
+enum RentalStatus {
+  ACTIVE
+  ENDED
+}
+
+enum RentalSource {
+  MANUAL
+  BOT
+  WEBSITE
 }

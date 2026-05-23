@@ -54,11 +54,11 @@ export default function OrderDetailPage() {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold font-mono">{order.orderCode}</h2>
           <span className={`px-3 py-1 rounded-lg text-xs font-medium ${
-            order.status === "ACTIVE" ? "bg-green-500/10 text-green-400" :
+            order.status === "SUCCESS" ? "bg-green-500/10 text-green-400" :
             order.status === "PENDING" ? "bg-yellow-500/10 text-yellow-400" :
             order.status === "EXPIRED" ? "bg-red-500/10 text-red-400" :
             "bg-gray-500/10 text-gray-400"
-          }`}>{order.status}</span>
+          }`}>{order.status === "SUCCESS" ? "Sukses" : order.status}</span>
         </div>
 
         <div className="grid grid-cols-2 gap-4 text-sm mb-6">
@@ -108,13 +108,13 @@ export default function OrderDetailPage() {
               Aktifkan Manual
             </button>
           )}
-          {order.status === "ACTIVE" && (
+          {order.status === "SUCCESS" && (
             <button onClick={() => handleAction("expire")} disabled={actionLoading}
               className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm rounded-lg transition disabled:opacity-50">
               Expire
             </button>
           )}
-          {(order.status === "PENDING" || order.status === "ACTIVE") && (
+          {(order.status === "PENDING" || order.status === "SUCCESS") && (
             <button onClick={() => handleAction("cancel")} disabled={actionLoading}
               className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-xs sm:text-sm rounded-lg transition disabled:opacity-50">
               Batalkan

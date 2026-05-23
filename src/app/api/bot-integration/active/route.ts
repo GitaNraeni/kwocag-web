@@ -2,11 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 // GET /api/bot-integration/active - List sewa aktif (untuk script bot)
-// Query params: ?botType=slug atau tanpa filter = semua
 export async function GET(req: NextRequest) {
   const apiKey = req.headers.get("x-api-key");
   if (apiKey !== process.env.PAKASIR_API_KEY) {
-    // Pakai API key yang sama untuk simplicity, bisa diganti nanti
     return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
   }
 
@@ -18,7 +16,7 @@ export async function GET(req: NextRequest) {
     where.botType = { slug: botTypeSlug };
   }
 
-  const activeOrders = await prisma.order.findMany({
+  const activeRentals = await prisma.rental.findMany({
     where,
     include: { botType: true },
     orderBy: { expiresAt: "asc" },
@@ -26,13 +24,14 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     success: true,
-    data: activeOrders.map((o) => ({
-      orderCode: o.orderCode,
-      botType: o.botType.slug,
-      botTypeName: o.botType.name,
-      groupLink: o.groupLink,
-      expiresAt: o.expiresAt,
-      contactPhone: o.contactPhone,
+    data: activeRentals.map((r) => ({
+      groupId: r.groupId,
+      groupName: r.groupName,
+      botType: r.botType.slug,
+      botTypeName: r.botType.name,
+      groupLink: r.groupLink,
+      expiresAt: r.expiresAt,
+      contactPhone: r.contactPhone,
     })),
   });
 }

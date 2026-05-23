@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   const page = parseInt(searchParams.get("page") || "1");
   const limit = parseInt(searchParams.get("limit") || "20");
 
-  const where = status ? { status: status as "PENDING" | "PAID" | "ACTIVE" | "EXPIRED" | "CANCELLED" } : {};
+  const where = status ? { status: status as "PENDING" | "SUCCESS" | "EXPIRED" | "CANCELLED" } : {};
 
   const [orders, total] = await Promise.all([
     prisma.order.findMany({
