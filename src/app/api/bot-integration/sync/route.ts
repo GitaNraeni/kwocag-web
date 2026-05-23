@@ -101,34 +101,51 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Cleanup: hapus order SYNC yang groupId-nya sudah tidak ada di bot
+    // Cleanup: expire order ACTIVE yang groupId-nya sudah tidak ada di bot
     // Ini handle case ketika owner hapus sewa manual dari bot
+    // Collect semua groupId dan groupLink dari entries bot
     const syncedGroupIds = entries
       .map((e: { groupId?: string }) => e.groupId?.replace("@g.us", "") || "")
       .filter((id: string) => id.length > 0);
 
+    const syncedGroupLinks = entries
+      .map((e: { groupLink?: string }) => {
+        if (!e.groupLink || !e.groupLink.startsWith("http")) return "";
+        return e.groupLink.replace("https://chat.whatsapp.com/", "");
+      })
+      .filter((link: string) => link.length > 0);
+
     if (syncedGroupIds.length > 0) {
-      // Cari semua order ACTIVE yang dibuat dari sync (orderCode starts with SYNC-)
-      const activeSyncOrders = await prisma.order.findMany({
+      // Cari SEMUA order ACTIVE untuk botType ini (bukan cuma SYNC-)
+      const activeOrders = await prisma.order.findMany({
         where: {
           botTypeId: botType.id,
           status: "ACTIVE",
-          orderCode: { startsWith: "SYNC-" },
         },
-        select: { id: true, groupLink: true, notes: true },
+        select: { id: true, orderCode: true, groupLink: true, notes: true },
       });
 
-      let expired = 0;
-      for (const order of activeSyncOrders) {
-        // Extract groupId dari groupLink atau notes
-        const linkMatch = order.groupLink?.match(/group:\/\/(\d+)/);
-        const groupIdFromLink = linkMatch ? linkMatch[1] : null;
+      let expiredCount = 0;
+      for (const order of activeOrders) {
+        // Extract groupId dari groupLink format group://xxxxx@g.us atau group://xxxxx
+        const groupProtoMatch = order.groupLink?.match(/group:\/\/([^@\s]+)/);
+        const groupIdFromLink = groupProtoMatch ? groupProtoMatch[1] : null;
 
-        // Cek apakah groupId masih ada di entries dari bot
+        // Extract invite code dari groupLink format https://chat.whatsapp.com/xxx
+        const inviteMatch = order.groupLink?.match(/chat\.whatsapp\.com\/([^\s]+)/);
+        const inviteCode = inviteMatch ? inviteMatch[1] : null;
+
+        // Cek apakah order ini masih ada di data bot
         const stillExists = syncedGroupIds.some((id: string) => {
+          // Match by groupId numerik
           if (groupIdFromLink && groupIdFromLink.includes(id)) return true;
           if (order.groupLink && order.groupLink.includes(id)) return true;
           if (order.notes && order.notes.includes(id)) return true;
+          return false;
+        }) || syncedGroupLinks.some((link: string) => {
+          // Match by invite link
+          if (inviteCode && inviteCode === link) return true;
+          if (order.groupLink && order.groupLink.includes(link)) return true;
           return false;
         });
 
@@ -137,12 +154,12 @@ export async function POST(req: NextRequest) {
             where: { id: order.id },
             data: { status: "EXPIRED" },
           });
-          expired++;
+          expiredCount++;
         }
       }
 
-      if (expired > 0) {
-        console.log(`[Sync] Expired ${expired} orders yang sudah tidak ada di bot`);
+      if (expiredCount > 0) {
+        console.log(`[Sync] Expired ${expiredCount} orders yang sudah tidak ada di bot`);
       }
     }
 
