@@ -71,7 +71,11 @@ export default function AdminBotsPage() {
         </Link>
       </div>
 
-      {loading ? <p className="text-[var(--muted)]">Memuat...</p> : bots.length === 0 ? <p className="text-[var(--muted)]">Belum ada bot.</p> : (
+      {loading ? <p className="text-[var(--muted)]">Memuat...</p> : bots.length === 0 ? (
+        <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-xl p-8 text-center">
+          <p className="text-[var(--muted)] text-sm">Belum ada bot.</p>
+        </div>
+      ) : (
         <div className="space-y-4">
           {bots.map((bot) => (
             <div key={bot.id} className={`bg-[var(--card)] border border-[var(--card-border)] rounded-xl p-4 sm:p-5 ${!bot.isActive ? "opacity-50" : ""}`}>
