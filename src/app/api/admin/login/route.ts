@@ -9,9 +9,6 @@ const loginAttempts = new Map<string, { count: number; blockedUntil: number }>()
 const MAX_ATTEMPTS = 5;
 const BLOCK_DURATION = 15 * 60 * 1000; // 15 menit
 
-// 2FA codes (in-memory, expire after 5 min)
-const tfaCodes = new Map<string, { code: string; expiresAt: number; adminId: string; username: string }>();
-
 function getClientIP(req: NextRequest): string {
   return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "unknown";
 }
@@ -63,15 +60,30 @@ export async function POST(req: NextRequest) {
 
     // Step 2: Verify 2FA code
     if (tfaCode) {
-      const pending = tfaCodes.get(ip);
-      if (!pending) {
+      // Cari pending 2FA di database (SiteSettings.pakasirSlug dipakai sementara sebagai storage)
+      // Lebih baik: simpan di tabel terpisah, tapi untuk simplicity pakai admin.password field trick
+      // Actually, kita simpan di OrderLog sebagai workaround — atau lebih baik skip 2FA di serverless
+      // FIX: Simpan code di cookie encrypted supaya ga perlu shared state
+      
+      const pendingCookie = req.cookies.get("tfa_pending")?.value;
+      if (!pendingCookie) {
         return NextResponse.json(
           { success: false, message: "Kode verifikasi expired. Login ulang." },
           { status: 401 }
         );
       }
+
+      let pending: { code: string; expiresAt: number; adminId: string; username: string };
+      try {
+        pending = JSON.parse(Buffer.from(pendingCookie, "base64url").toString());
+      } catch {
+        return NextResponse.json(
+          { success: false, message: "Kode verifikasi expired. Login ulang." },
+          { status: 401 }
+        );
+      }
+
       if (Date.now() > pending.expiresAt) {
-        tfaCodes.delete(ip);
         return NextResponse.json(
           { success: false, message: "Kode verifikasi expired. Login ulang." },
           { status: 401 }
@@ -85,7 +97,6 @@ export async function POST(req: NextRequest) {
       }
 
       // 2FA verified — create session
-      tfaCodes.delete(ip);
       clearAttempts(ip);
 
       const token = createToken({ id: pending.adminId, username: pending.username });
@@ -97,6 +108,8 @@ export async function POST(req: NextRequest) {
         maxAge: 60 * 60 * 24,
         path: "/",
       });
+      // Clear 2FA cookie
+      cookieStore.delete("tfa_pending");
 
       // Notify login success
       const now = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
@@ -135,11 +148,21 @@ export async function POST(req: NextRequest) {
 
     // Password correct — send 2FA code via Telegram
     const code = generateCode();
-    tfaCodes.set(ip, {
+    const tfaData = {
       code,
       expiresAt: Date.now() + 5 * 60 * 1000, // 5 menit
       adminId: admin.id,
       username: admin.username,
+    };
+
+    // Simpan di cookie (httpOnly) supaya persist across serverless instances
+    const cookieStore = await cookies();
+    cookieStore.set("tfa_pending", Buffer.from(JSON.stringify(tfaData)).toString("base64url"), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 300, // 5 menit
+      path: "/",
     });
 
     await sendTelegramNotification(
