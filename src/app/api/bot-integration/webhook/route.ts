@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
   const orders = await prisma.order.findMany({
     where,
     include: { botType: true },
-    orderBy: { paidAt: "asc" },
+    orderBy: [{ isPremium: "desc" }, { paidAt: "asc" }],
   });
 
   return NextResponse.json({
