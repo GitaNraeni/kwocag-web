@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
       });
 
       if (existing) {
-        // Update/perpanjang
+        // Update/perpanjang — isPremium ikut order terakhir (bukan sticky)
         await prisma.rental.update({
           where: { id: existing.id },
           data: {
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
             expiresAt: order.expiresAt,
             groupName: groupName || existing.groupName,
             groupLink: order.groupLink.startsWith("http") ? order.groupLink : existing.groupLink,
-            isPremium: order.isPremium || existing.isPremium,
+            isPremium: order.isPremium,
           },
         });
         await prisma.order.update({ where: { id: orderId }, data: { rentalId: existing.id } });
