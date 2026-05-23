@@ -103,9 +103,11 @@ export default function AdminSettings() {
         setMsgType("ok");
         setCurrentPassword("");
         setNewPassword("");
+        setTimeout(() => setMsg(""), 3000);
       } else {
         setMsg(data.message || "Gagal menyimpan");
         setMsgType("err");
+        setTimeout(() => setMsg(""), 5000);
       }
     } catch { setMsg("Gagal"); setMsgType("err"); }
     finally { setSaving(false); }
@@ -303,9 +305,6 @@ export default function AdminSettings() {
         </section>
 
         {/* Save */}
-        {msg && (
-          <p className={`text-sm ${msgType === "ok" ? "text-[var(--success)]" : "text-[var(--danger)]"}`}>{msg}</p>
-        )}
         <button
           onClick={handleSave}
           disabled={saving}
@@ -314,6 +313,15 @@ export default function AdminSettings() {
           {saving ? "Menyimpan..." : "Simpan Semua"}
         </button>
       </div>
+
+      {/* Toast */}
+      {msg && (
+        <div className={`fixed top-4 right-4 z-[200] px-4 py-3 rounded-xl text-sm shadow-lg animate-[fadeIn_0.2s] border ${
+          msgType === "ok" ? "bg-[var(--success)]/10 border-[var(--success)]/30 text-[var(--success)]" : "bg-[var(--danger)]/10 border-[var(--danger)]/30 text-[var(--danger)]"
+        }`}>
+          {msg}
+        </div>
+      )}
     </div>
   );
 }

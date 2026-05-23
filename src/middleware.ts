@@ -21,10 +21,10 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Cek maintenance mode via API (cached di edge)
+  // Cek maintenance mode via API (no cache)
   try {
     const siteUrl = new URL("/api/site", req.url);
-    const res = await fetch(siteUrl, { next: { revalidate: 30 } });
+    const res = await fetch(siteUrl, { cache: "no-store" });
     const data = await res.json();
 
     if (data.success && data.data.maintenance) {

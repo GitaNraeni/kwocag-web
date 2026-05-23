@@ -1,23 +1,35 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function MaintenancePage() {
+  const router = useRouter();
   const [siteName, setSiteName] = useState("KWOCAG");
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    fetch("/api/site").then(r => r.json()).then(d => {
-      if (d.success) {
-        setSiteName(d.data.siteName);
-        if (d.data.maintenanceMsg) setMessage(d.data.maintenanceMsg);
-      }
-    }).catch(() => {});
+    const check = () => {
+      fetch("/api/site").then(r => r.json()).then(d => {
+        if (d.success) {
+          setSiteName(d.data.siteName);
+          if (d.data.maintenanceMsg) setMessage(d.data.maintenanceMsg);
+          // Kalau maintenance udah off, redirect ke home
+          if (!d.data.maintenance) {
+            router.push("/");
+          }
+        }
+      }).catch(() => {});
+    };
+
+    check();
+    const interval = setInterval(check, 10000); // cek tiap 10 detik
+    return () => clearInterval(interval);
   }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6">
-      <div className="text-center max-w-md">
+      <div className="text-center max-w-md animate-fade-in">
         <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-[var(--warning)]/10 flex items-center justify-center">
           <svg className="w-8 h-8 text-[var(--warning)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -26,9 +38,13 @@ export default function MaintenancePage() {
         </div>
         <h1 className="text-2xl font-bold mb-2">{siteName}</h1>
         <h2 className="text-lg text-[var(--muted)] mb-4">Sedang Maintenance</h2>
-        <p className="text-sm text-[var(--muted)] leading-relaxed">
+        <p className="text-sm text-[var(--muted)] leading-relaxed mb-6">
           {message || "Website sedang dalam perbaikan. Silakan kembali beberapa saat lagi."}
         </p>
+        <div className="flex items-center justify-center gap-2 text-xs text-[var(--muted)]">
+          <span className="w-2 h-2 rounded-full bg-[var(--warning)] animate-pulse" />
+          Otomatis redirect saat selesai
+        </div>
       </div>
     </div>
   );
