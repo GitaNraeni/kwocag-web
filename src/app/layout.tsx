@@ -14,10 +14,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "KWOCAG - Sewa Bot WhatsApp",
+  metadataBase: new URL("https://kwocag-web.vercel.app"),
+  title: {
+    default: "KWOCAG - Sewa Bot WhatsApp",
+    template: "%s | KWOCAG",
+  },
   description: "Sewa bot WhatsApp otomatis untuk toko online dan manajemen grup. Bayar QRIS, bot langsung join. Tanpa ribet.",
-  keywords: ["sewa bot whatsapp", "bot whatsapp otomatis", "bot grup whatsapp", "KWOCAG", "rental bot WA"],
+  keywords: ["sewa bot whatsapp", "bot whatsapp otomatis", "bot grup whatsapp", "KWOCAG", "rental bot WA", "bot jaga grup", "bot store whatsapp"],
   authors: [{ name: "KWOCAG" }],
+  alternates: {
+    canonical: "https://kwocag-web.vercel.app",
+  },
   openGraph: {
     title: "KWOCAG - Sewa Bot WhatsApp",
     description: "Bot otomatis untuk toko online dan manajemen grup. Bayar QRIS, bot langsung join dalam 1 menit.",
@@ -28,14 +35,14 @@ export const metadata: Metadata = {
     images: [
       {
         url: "https://files.catbox.moe/vms1wj.jpg",
-        width: 512,
-        height: 512,
-        alt: "KWOCAG - Sewa Bot WhatsApp",
+        width: 1200,
+        height: 630,
+        alt: "KWOCAG - Sewa Bot WhatsApp Otomatis",
       },
     ],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "KWOCAG - Sewa Bot WhatsApp",
     description: "Bot otomatis untuk toko online dan manajemen grup. Bayar QRIS, bot langsung join.",
     images: ["https://files.catbox.moe/vms1wj.jpg"],
@@ -43,6 +50,10 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
   },
   icons: [],
 };
