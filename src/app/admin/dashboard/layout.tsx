@@ -80,7 +80,7 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
   return (
     <div className="min-h-screen flex">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex w-60 flex-col border-r border-[var(--card-border)] bg-[var(--card)] shrink-0">
+      <aside className="hidden lg:flex w-60 flex-col border-r border-[var(--card-border)] bg-[var(--card)] shrink-0 sticky top-0 h-screen overflow-y-auto">
         <div className="p-5 border-b border-[var(--card-border)]">
           <h1 className="text-lg font-bold">{siteName}</h1>
           <p className="text-xs text-[var(--muted)]">Admin Panel</p>

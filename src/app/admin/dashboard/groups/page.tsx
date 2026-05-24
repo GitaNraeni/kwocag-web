@@ -53,6 +53,7 @@ export default function AdminGroups() {
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
   const [selectedRental, setSelectedRental] = useState<Rental | null>(null);
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
   useEffect(() => {
@@ -67,7 +68,17 @@ export default function AdminGroups() {
   const botTypes = Array.from(new Set(rentals.map(r => r.botType.slug)));
   const filtered = rentals
     .filter(r => selectedType === "all" || r.botType.slug === selectedType)
-    .filter(r => selectedStatus === "ALL" || r.status === selectedStatus);
+    .filter(r => selectedStatus === "ALL" || r.status === selectedStatus)
+    .filter(r => {
+      if (!search.trim()) return true;
+      const q = search.toLowerCase();
+      return (
+        (r.groupName || "").toLowerCase().includes(q) ||
+        r.groupId.toLowerCase().includes(q) ||
+        (r.groupLink || "").toLowerCase().includes(q) ||
+        (r.contactPhone || "").toLowerCase().includes(q)
+      );
+    });
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
@@ -77,6 +88,17 @@ export default function AdminGroups() {
   return (
     <div className="max-w-4xl">
       <h2 className="text-2xl font-bold mb-5">Sewa Bot</h2>
+
+      {/* Search */}
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Cari nama grup, group ID, no telepon..."
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          className="w-full sm:w-80 bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-[var(--primary)]"
+        />
+      </div>
 
       {/* Filter row */}
       <div className="flex items-center gap-2 mb-5 overflow-x-auto pb-1 -mx-1 px-1">
