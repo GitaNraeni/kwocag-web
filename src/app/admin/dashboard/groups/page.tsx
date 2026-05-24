@@ -74,9 +74,7 @@ export default function AdminGroups() {
       const q = search.toLowerCase();
       return (
         (r.groupName || "").toLowerCase().includes(q) ||
-        r.groupId.toLowerCase().includes(q) ||
-        (r.groupLink || "").toLowerCase().includes(q) ||
-        (r.contactPhone || "").toLowerCase().includes(q)
+        r.groupId.toLowerCase().includes(q)
       );
     });
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
@@ -93,7 +91,7 @@ export default function AdminGroups() {
       <div className="mb-4">
         <input
           type="text"
-          placeholder="Cari nama grup, group ID, no telepon..."
+          placeholder="Cari nama grup, group ID..."
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           className="w-full sm:w-80 bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-[var(--primary)]"

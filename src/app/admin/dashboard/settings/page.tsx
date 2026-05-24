@@ -162,7 +162,7 @@ export default function AdminSettings() {
                 className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[var(--primary)]" />
             </div>
             <div>
-              <label className="block text-xs text-[var(--muted)] mb-1">Channel WhatsApp (link lengkap)</label>
+              <label className="block text-xs text-[var(--muted)] mb-1">Channel WhatsApp</label>
               <input type="url" value={channelWhatsapp} onChange={(e) => setChannelWhatsapp(e.target.value)} placeholder="https://whatsapp.com/channel/xxx"
                 className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[var(--primary)]" />
             </div>
