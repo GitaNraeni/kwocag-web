@@ -25,6 +25,7 @@ export default function Home() {
   const [telegram, setTelegram] = useState("");
   const [channelWa, setChannelWa] = useState("");
   const [totalActive, setTotalActive] = useState(0);
+  const [totalServed, setTotalServed] = useState(0);
   const [bots, setBots] = useState<any[]>([]);
   const statsRef = useScrollReveal();
   const footerRef = useScrollReveal();
@@ -34,7 +35,7 @@ export default function Home() {
       if (d.success) { setSiteName(d.data.siteName); setContact(d.data.contactWhatsapp || ""); setTelegram(d.data.contactTelegram || ""); setChannelWa(d.data.channelWhatsapp || ""); }
     }).catch(() => {});
     fetch("/api/bots/stats").then(r => r.json()).then(d => {
-      if (d.success) setTotalActive(d.totalActive);
+      if (d.success) { setTotalActive(d.totalActive); setTotalServed(d.totalServed || 0); }
     }).catch(() => {});
     fetch("/api/bots").then(r => r.json()).then(d => {
       if (d.success) setBots(d.data);
@@ -184,6 +185,10 @@ export default function Home() {
           <div>
             <p className="text-2xl font-bold text-[var(--success)]">{totalActive}+</p>
             <p className="text-xs text-[var(--muted)] mt-1">Grup aktif</p>
+          </div>
+          <div>
+            <p className="text-2xl font-bold">{totalServed}+</p>
+            <p className="text-xs text-[var(--muted)] mt-1">Grup dilayani</p>
           </div>
         </div>
       </section>
