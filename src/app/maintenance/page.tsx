@@ -14,31 +14,41 @@ export default function MaintenancePage() {
         if (d.success) {
           setSiteName(d.data.siteName);
           if (d.data.maintenanceMsg) setMessage(d.data.maintenanceMsg);
-          // Kalau maintenance udah off, redirect ke home
-          if (!d.data.maintenance) {
-            router.push("/");
-          }
+          if (!d.data.maintenance) router.push("/");
         }
       }).catch(() => {});
     };
-
     check();
-    const interval = setInterval(check, 10000); // cek tiap 10 detik
+    const interval = setInterval(check, 10000);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6">
-      <div className="text-center max-w-md animate-fade-in">
-        <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-[var(--warning)]/10 flex items-center justify-center">
-          <svg className="w-8 h-8 text-[var(--warning)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
+    <div className="min-h-screen flex items-center justify-center px-6 relative overflow-hidden">
+      {/* Background glow */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-[var(--warning)]/[0.03] blur-[120px]" />
+      </div>
+
+      <div className="text-center max-w-md relative z-10 animate-fade-in">
+        {/* Icon — wrench + screwdriver crossed */}
+        <div className="w-20 h-20 mx-auto mb-8 relative">
+          <div className="absolute inset-0 rounded-full bg-[var(--warning)]/5 animate-pulse" />
+          <div className="absolute inset-2 rounded-full bg-[var(--card)] border border-[var(--warning)]/20 flex items-center justify-center">
+            <svg className="w-8 h-8 text-[var(--warning)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11.42 15.17l-5.71 5.71a2.121 2.121 0 01-3-3l5.71-5.71M18.36 8.64l-1.42-1.42a2 2 0 010-2.83l.71-.71a2 2 0 012.83 0l.71.71a2 2 0 010 2.83l-.71.71a2 2 0 01-2.83 0zM5.64 15.36l1.42 1.42a2 2 0 010 2.83l-.71.71a2 2 0 01-2.83 0l-.71-.71a2 2 0 010-2.83l.71-.71a2 2 0 012.83 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7.5 7.5l9 9" />
+            </svg>
+          </div>
         </div>
-        <h1 className="text-2xl font-bold mb-2">{siteName}</h1>
-        <h2 className="text-lg text-[var(--muted)] mb-4">Sedang Maintenance</h2>
-        <p className="text-sm text-[var(--muted)] leading-relaxed">
+
+        {/* Text */}
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">{siteName}</h1>
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--warning)]/10 border border-[var(--warning)]/20 text-xs text-[var(--warning)] mb-5">
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--warning)] animate-pulse" />
+          Maintenance
+        </div>
+        <p className="text-sm text-[var(--muted)] leading-relaxed max-w-sm mx-auto">
           {message || "Website sedang dalam perbaikan. Silakan kembali beberapa saat lagi."}
         </p>
       </div>
