@@ -34,6 +34,7 @@ export default function AdminSettings() {
   // Telegram
   const [telegramToken, setTelegramToken] = useState("");
   const [telegramChatId, setTelegramChatId] = useState("");
+  const [telegramLogChatId, setTelegramLogChatId] = useState("");
 
   // Account
   const [username, setUsername] = useState("");
@@ -62,6 +63,7 @@ export default function AdminSettings() {
           setAdminFeePercent(data.data.adminFeePercent || 0);
           setTelegramToken(data.data.telegramToken || "");
           setTelegramChatId(data.data.telegramChatId || "");
+          setTelegramLogChatId(data.data.telegramLogChatId || "");
           setUsername(data.data.username || "");
           setMaintenance(data.data.maintenance || false);
           setMaintenanceMsg(data.data.maintenanceMsg || "");
@@ -90,7 +92,7 @@ export default function AdminSettings() {
           pakasirApiKey, pakasirSlug,
           ramashopApiKey, paymentProvider,
           adminFee, adminFeePercent,
-          telegramToken, telegramChatId,
+          telegramToken, telegramChatId, telegramLogChatId,
           maintenance, maintenanceMsg,
           username,
           currentPassword: currentPassword || undefined,
@@ -262,8 +264,13 @@ export default function AdminSettings() {
               </div>
             </div>
             <div>
-              <label className="block text-xs text-[var(--muted)] mb-1">Chat ID</label>
+              <label className="block text-xs text-[var(--muted)] mb-1">Chat ID (Notifikasi Order)</label>
               <input type="text" value={telegramChatId} onChange={(e) => setTelegramChatId(e.target.value)}
+                className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-[var(--primary)]" />
+            </div>
+            <div>
+              <label className="block text-xs text-[var(--muted)] mb-1">Chat ID Log (Error & Login) — kosongkan jika sama</label>
+              <input type="text" value={telegramLogChatId} onChange={(e) => setTelegramLogChatId(e.target.value)} placeholder="Opsional, default sama dengan di atas"
                 className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-[var(--primary)]" />
             </div>
           </div>

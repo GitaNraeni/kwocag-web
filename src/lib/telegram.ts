@@ -35,6 +35,29 @@ export async function sendTelegramNotification(message: string) {
   }
 }
 
+export async function sendLogNotification(message: string) {
+  try {
+    const settings = await prisma.siteSettings.findUnique({ where: { id: "main" } });
+    const token = settings?.telegramToken || process.env.TELEGRAM_BOT_TOKEN || "";
+    const chatId = (settings as any)?.telegramLogChatId || settings?.telegramChatId || process.env.TELEGRAM_CHAT_ID || "";
+    if (!token || !chatId) return false;
+
+    const url = `https://api.telegram.org/bot${token}/sendMessage`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: message,
+        parse_mode: "HTML",
+      }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 export function formatOrderNotification(order: {
   orderCode: string;
   botTypeName: string;

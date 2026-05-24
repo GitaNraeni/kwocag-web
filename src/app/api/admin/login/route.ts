@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createToken, verifyPassword } from "@/lib/auth";
-import { sendTelegramNotification } from "@/lib/telegram";
+import { sendTelegramNotification, sendLogNotification } from "@/lib/telegram";
 import { cookies } from "next/headers";
 
 // Rate limiting (in-memory, resets on redeploy)
@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
 
       // Notify login success
       const now = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
-      await sendTelegramNotification(
+      await sendLogNotification(
         `🔓 <b>LOGIN BERHASIL</b>\n\n👤 User: <code>${pending.username}</code>\n🌐 IP: <code>${ip}</code>\n🕐 Waktu: ${now}`
       );
 
@@ -165,7 +165,7 @@ export async function POST(req: NextRequest) {
       path: "/",
     });
 
-    await sendTelegramNotification(
+    await sendLogNotification(
       `🔐 <b>KODE LOGIN 2FA</b>\n\n🔑 Kode: <code>${code}</code>\n🌐 IP: <code>${ip}</code>\n⏰ Expired: 5 menit\n\n⚠️ Jangan bagikan kode ini ke siapapun.`
     );
 

@@ -112,6 +112,7 @@ model SiteSettings {
   pakasirSlug     String?
   telegramToken   String?
   telegramChatId  String?
+  telegramLogChatId String? // chat ID terpisah untuk error & login log
   contactWhatsapp String?
   contactTelegram String?
   channelWhatsapp String?

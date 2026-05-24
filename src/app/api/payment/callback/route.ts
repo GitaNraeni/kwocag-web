@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { sendTelegramNotification, formatPaymentSuccess } from "@/lib/telegram";
+import { sendTelegramNotification, formatPaymentSuccess, sendLogNotification } from "@/lib/telegram";
 import { calculateExpiryDate, getDurationLabel } from "@/lib/utils";
 
 // POST /api/payment/callback - Webhook dari Pakasir
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error("Payment callback error:", error);
-    // Tetap respond 200 supaya Pakasir gak retry terus
+    await sendLogNotification(`❌ <b>PAYMENT CALLBACK ERROR</b>\n\n${(error as Error).message || "Unknown error"}`);
     return NextResponse.json({ received: true });
   }
 }
