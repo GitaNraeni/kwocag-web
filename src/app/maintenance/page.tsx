@@ -31,13 +31,12 @@ export default function MaintenancePage() {
       </div>
 
       <div className="text-center max-w-md relative z-10 animate-fade-in">
-        {/* Icon — wrench + screwdriver crossed */}
+        {/* Icon — wrench */}
         <div className="w-20 h-20 mx-auto mb-8 relative">
           <div className="absolute inset-0 rounded-full bg-[var(--warning)]/5 animate-pulse" />
           <div className="absolute inset-2 rounded-full bg-[var(--card)] border border-[var(--warning)]/20 flex items-center justify-center">
             <svg className="w-8 h-8 text-[var(--warning)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11.42 15.17l-5.71 5.71a2.121 2.121 0 01-3-3l5.71-5.71M18.36 8.64l-1.42-1.42a2 2 0 010-2.83l.71-.71a2 2 0 012.83 0l.71.71a2 2 0 010 2.83l-.71.71a2 2 0 01-2.83 0zM5.64 15.36l1.42 1.42a2 2 0 010 2.83l-.71.71a2 2 0 01-2.83 0l-.71-.71a2 2 0 010-2.83l.71-.71a2 2 0 012.83 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7.5 7.5l9 9" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21.75 6.75a4.5 4.5 0 01-4.884 4.484c-1.076-.091-2.264.071-2.95.904l-7.152 8.684a2.548 2.548 0 11-3.586-3.586l8.684-7.152c.833-.686.995-1.874.904-2.95a4.5 4.5 0 016.336-4.486l-3.276 3.276a3.004 3.004 0 002.25 2.25l3.276-3.276c.256.565.398 1.192.398 1.852z" />
             </svg>
           </div>
         </div>
