@@ -84,12 +84,12 @@ export default function OrderStatusPage() {
         </Link>
 
         <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold">Order</h1>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-lg sm:text-xl font-bold">Order</h1>
               <button
                 onClick={() => { navigator.clipboard.writeText(order.orderCode); }}
-                className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[var(--card-border)] hover:bg-[var(--muted)]/20 text-xs font-mono transition"
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[var(--card-border)] hover:bg-[var(--muted)]/20 text-[10px] sm:text-xs font-mono transition"
                 title="Copy kode order"
               >
                 {order.orderCode}
@@ -140,11 +140,20 @@ export default function OrderStatusPage() {
             </a>
           )}
 
-          {/* Success message */}
+          {/* Success message - check if bot already joined */}
           {order.status === "SUCCESS" && (
             <div className="mt-6 p-4 rounded-xl bg-[var(--success)]/5 border border-[var(--success)]/20 text-center">
-              <p className="text-sm text-[var(--success)] font-medium">Bot akan segera join ke grup kamu</p>
-              <p className="text-xs text-[var(--muted)] mt-1">Biasanya kurang dari 2 menit</p>
+              {order.logs.some((l: any) => l.action === "BOT_JOINED") ? (
+                <>
+                  <p className="text-sm text-[var(--success)] font-medium">Bot sudah aktif di grup kamu</p>
+                  <p className="text-xs text-[var(--muted)] mt-1">Ketik .menu di grup untuk melihat fitur</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-[var(--success)] font-medium">Bot akan segera join ke grup kamu</p>
+                  <p className="text-xs text-[var(--muted)] mt-1">Biasanya kurang dari 2 menit</p>
+                </>
+              )}
             </div>
           )}
 
