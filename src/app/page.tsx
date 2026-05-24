@@ -169,7 +169,7 @@ export default function Home() {
 
       {/* Stats */}
       <section className="relative z-10 border-t border-[var(--card-border)] px-6 py-12">
-        <div ref={statsRef} className="max-w-3xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-6 text-center scroll-fade">
+        <div ref={statsRef} className="max-w-4xl mx-auto grid grid-cols-2 sm:grid-cols-5 gap-6 text-center scroll-fade">
           <div>
             <p className="text-2xl font-bold text-[var(--primary)]">QRIS</p>
             <p className="text-xs text-[var(--muted)] mt-1">Bayar instan</p>
