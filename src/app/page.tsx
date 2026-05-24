@@ -95,7 +95,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-3">
               <Link href="/order"
                 className="inline-flex items-center justify-center bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white px-7 py-3.5 rounded-xl font-medium transition shadow-lg shadow-[var(--primary)]/25 text-sm sm:text-base">
-                Mulai Berlangganan
+                Order Now
               </Link>
               {contact && (
                 <a href={`https://wa.me/${contact}`} target="_blank" rel="noopener noreferrer"
