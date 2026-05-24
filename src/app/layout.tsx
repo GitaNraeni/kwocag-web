@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     locale: "id_ID",
     images: [
       {
-        url: "https://files.catbox.moe/vms1wj.jpg",
+        url: "https://files.catbox.moe/amosh8.png",
         width: 1200,
         height: 630,
         alt: "KWOCAG - Sewa Bot WhatsApp Otomatis",
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "KWOCAG - Sewa Bot WhatsApp",
     description: "Bot otomatis untuk toko online dan manajemen grup. Bayar QRIS, bot langsung join.",
-    images: ["https://files.catbox.moe/vms1wj.jpg"],
+    images: ["https://files.catbox.moe/amosh8.png"],
   },
   robots: {
     index: true,
