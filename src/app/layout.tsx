@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     default: "KWOCAG - Sewa Bot WhatsApp",
     template: "%s | KWOCAG",
   },
-  description: "Sewa bot WhatsApp otomatis untuk toko online dan manajemen grup. Bayar QRIS, bot langsung join. Tanpa ribet.",
+  description: "Layanan sewa bot WhatsApp otomatis untuk manajemen grup dan toko online. Proses cepat, bayar via QRIS, bot langsung aktif.",
   keywords: ["sewa bot whatsapp", "bot whatsapp otomatis", "bot grup whatsapp", "KWOCAG", "rental bot WA", "bot jaga grup", "bot store whatsapp"],
   authors: [{ name: "KWOCAG" }],
   alternates: {
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "KWOCAG - Sewa Bot WhatsApp",
-    description: "Bot otomatis untuk toko online dan manajemen grup. Bayar QRIS, bot langsung join dalam 1 menit.",
+    description: "Layanan sewa bot WhatsApp untuk manajemen grup dan toko online. Bayar QRIS, bot langsung aktif dalam hitungan menit.",
     url: "https://kwocag-web.vercel.app",
     siteName: "KWOCAG",
     type: "website",

@@ -89,18 +89,18 @@ export default function Home() {
             </h1>
 
             <p className="text-[var(--muted)] text-base lg:text-lg leading-relaxed mb-8 max-w-md">
-              Bot otomatis untuk toko online dan manajemen grup. Bayar QRIS, bot langsung join. Tanpa ribet.
+              Solusi otomatis untuk manajemen grup dan toko online. Proses cepat, bayar via QRIS, bot langsung aktif di grup kamu.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">
               <Link href="/order"
                 className="inline-flex items-center justify-center bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white px-7 py-3.5 rounded-xl font-medium transition shadow-lg shadow-[var(--primary)]/25 text-sm sm:text-base">
-                Berlangganan
+                Mulai Berlangganan
               </Link>
               {contact && (
                 <a href={`https://wa.me/${contact}`} target="_blank" rel="noopener noreferrer"
                   className="inline-flex items-center justify-center border border-[var(--card-border)] hover:border-[var(--primary)]/40 text-[var(--foreground)] px-7 py-3.5 rounded-xl font-medium transition text-sm sm:text-base">
-                  Hubungi Kami
+                  Tanya Dulu
                 </a>
               )}
             </div>
@@ -118,8 +118,8 @@ export default function Home() {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm font-medium">Aktivasi Otomatis</p>
-                    <p className="text-xs text-[var(--muted)]">Bayar → Bot join dalam 1 menit</p>
+                    <p className="text-sm font-medium">Aktivasi Instan</p>
+                    <p className="text-xs text-[var(--muted)]">Bayar → Bot aktif kurang dari 2 menit</p>
                   </div>
                 </div>
                 <div className="space-y-3 mt-4">
@@ -196,7 +196,7 @@ export default function Home() {
             {/* Brand */}
             <div>
               <span className="text-sm font-bold text-[var(--foreground)]">{siteName}</span>
-              <p className="text-xs text-[var(--muted)] mt-1">Sewa bot WhatsApp otomatis, bayar QRIS langsung aktif.</p>
+              <p className="text-xs text-[var(--muted)] mt-1">Layanan sewa bot WhatsApp terpercaya. Proses otomatis, aktivasi instan.</p>
             </div>
 
             {/* Links */}

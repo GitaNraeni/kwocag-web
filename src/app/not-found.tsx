@@ -9,7 +9,7 @@ export default function NotFound() {
         </div>
         <h1 className="text-xl font-bold mb-2">Halaman Tidak Ditemukan</h1>
         <p className="text-sm text-[var(--muted)] mb-8">
-          Halaman yang kamu cari tidak ada atau sudah dipindahkan.
+          Maaf, halaman yang kamu cari tidak tersedia atau sudah dipindahkan.
         </p>
         <Link
           href="/"

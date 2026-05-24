@@ -28,8 +28,8 @@ const statusColors: Record<string, string> = {
 
 const statusLabels: Record<string, string> = {
   PENDING: "Menunggu Pembayaran",
-  SUCCESS: "Pembayaran Berhasil",
-  EXPIRED: "Kadaluarsa",
+  SUCCESS: "Berhasil",
+  EXPIRED: "Kedaluwarsa",
   CANCELLED: "Dibatalkan",
 };
 
@@ -140,18 +140,17 @@ export default function OrderStatusPage() {
             </a>
           )}
 
-          {/* Success message - check if bot already joined */}
           {order.status === "SUCCESS" && (
             <div className="mt-6 p-4 rounded-xl bg-[var(--success)]/5 border border-[var(--success)]/20 text-center">
               {order.logs.some((l: any) => l.action === "BOT_JOINED") ? (
                 <>
                   <p className="text-sm text-[var(--success)] font-medium">Bot sudah aktif di grup kamu</p>
-                  <p className="text-xs text-[var(--muted)] mt-1">Ketik .menu di grup untuk melihat fitur</p>
+                  <p className="text-xs text-[var(--muted)] mt-1">Gunakan perintah .menu untuk melihat fitur</p>
                 </>
               ) : (
                 <>
-                  <p className="text-sm text-[var(--success)] font-medium">Bot akan segera join ke grup kamu</p>
-                  <p className="text-xs text-[var(--muted)] mt-1">Biasanya kurang dari 2 menit</p>
+                  <p className="text-sm text-[var(--success)] font-medium">Pembayaran berhasil diterima</p>
+                  <p className="text-xs text-[var(--muted)] mt-1">Bot sedang dalam proses join ke grup kamu</p>
                 </>
               )}
             </div>

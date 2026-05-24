@@ -78,7 +78,7 @@ export default function PaymentQR({ orderCode, amount, basePrice, adminFee, qrUr
               </svg>
             </div>
             <h2 className="text-xl font-bold mb-2">Pembayaran Berhasil</h2>
-            <p className="text-sm text-[var(--muted)]">Bot akan segera join ke grup kamu</p>
+            <p className="text-sm text-[var(--muted)]">Bot sedang dalam proses aktivasi ke grup kamu</p>
           </div>
         </div>
       </div>
@@ -120,7 +120,7 @@ export default function PaymentQR({ orderCode, amount, basePrice, adminFee, qrUr
             <img src={qrUrl} alt="QRIS" width={250} height={250} className="block" />
           </div>
 
-          <p className="text-xs text-[var(--muted)] mb-1">Scan dengan e-wallet atau m-banking</p>
+          <p className="text-xs text-[var(--muted)] mb-1">Scan QR dengan e-wallet atau m-banking</p>
           <p className="text-xs text-[var(--muted)] mb-4 font-mono">{orderCode}</p>
 
           <div className="flex items-center justify-center gap-2 text-xs text-[var(--muted)] mb-1">
