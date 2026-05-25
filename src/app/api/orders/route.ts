@@ -101,7 +101,9 @@ export async function POST(req: NextRequest) {
 
     // Cek slot (skip kalau perpanjang — bot sudah di grup)
     const maxSlots = (botType as any).maxSlots || 0;
-    if (!isExtend && maxSlots > 0 && botType._count.rentals >= maxSlots) {
+    const totalInstances = (botType as any).totalInstances || 1;
+    const totalCapacity = maxSlots * totalInstances;
+    if (!isExtend && maxSlots > 0 && botType._count.rentals >= totalCapacity) {
       return NextResponse.json(
         { success: false, message: "Slot penuh. Bot ini sudah mencapai batas maksimal sewa." },
         { status: 400 }
@@ -144,7 +146,6 @@ export async function POST(req: NextRequest) {
 
     // Auto-assign bot instance (round-robin ke instance yang masih ada slot)
     let assignedInstance = 1;
-    const totalInstances = (botType as any).totalInstances || 1;
     if (totalInstances > 1) {
       // Hitung order aktif per instance
       for (let i = 1; i <= totalInstances; i++) {

@@ -15,6 +15,7 @@ interface BotType {
   isActive: boolean;
   acceptingOrders: boolean;
   maxSlots: number;
+  totalInstances: number;
   prices: { id: string; duration: string; price: number }[];
   _count: { rentals: number };
 }
@@ -101,7 +102,7 @@ export default function AdminBotsPage() {
 
               {/* Slot */}
               <p className="text-xs text-[var(--muted)] mb-3">
-                Slot: {bot._count.rentals}/{bot.maxSlots === 0 ? "Unlimited" : bot.maxSlots}
+                Slot: {bot._count.rentals}/{bot.maxSlots === 0 ? "Unlimited" : bot.maxSlots * (bot.totalInstances || 1)}
               </p>
 
               {/* Prices */}

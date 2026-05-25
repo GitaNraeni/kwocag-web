@@ -12,6 +12,7 @@ interface BotType {
   prices: { id: string; duration: string; price: number }[];
   acceptingOrders?: boolean;
   maxSlots?: number;
+  totalInstances?: number;
   _count?: { rentals: number };
 }
 
@@ -81,8 +82,10 @@ export default function OrderTypePage() {
               const href = mode === "new" ? `/order/${bot.slug}` : `/order/${bot.slug}?mode=extend`;
               const isClosed = bot.acceptingOrders === false;
               const hasSlotLimit = bot.maxSlots !== undefined && bot.maxSlots > 0;
+              const instances = bot.totalInstances || 1;
+              const totalCapacity = (bot.maxSlots || 0) * instances;
               const activeCount = bot._count?.rentals || 0;
-              const slotsFull = hasSlotLimit && activeCount >= (bot.maxSlots || 0);
+              const slotsFull = hasSlotLimit && activeCount >= totalCapacity;
               // Perpanjang selalu bisa (bypass slot + tutup)
               const disabled = mode === "new" && (isClosed || slotsFull);
 
@@ -100,7 +103,7 @@ export default function OrderTypePage() {
                         </span>
                       </div>
                       <p className="text-xs text-[var(--muted)] mt-2">
-                        Slot: {activeCount}/{hasSlotLimit ? bot.maxSlots : "Unlimited"}
+                        Slot: {activeCount}/{hasSlotLimit ? totalCapacity : "Unlimited"}
                       </p>
                     </div>
                   ) : (
@@ -112,7 +115,7 @@ export default function OrderTypePage() {
                         <h3 className="font-semibold group-hover:text-[var(--primary)] transition">{bot.name}</h3>
                         <p className="text-xs text-[var(--muted)] mt-0.5 truncate">{bot.description}</p>
                         <p className="text-xs text-[var(--muted)] mt-1">
-                          Slot: {activeCount}/{hasSlotLimit ? bot.maxSlots : "Unlimited"}
+                          Slot: {activeCount}/{hasSlotLimit ? totalCapacity : "Unlimited"}
                         </p>
                       </div>
                       <div className="text-right shrink-0 ml-4">
