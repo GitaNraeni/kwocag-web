@@ -88,9 +88,6 @@ export default function OrderTypePage() {
               const slotsFull = hasSlotLimit && activeCount >= totalCapacity;
               // Perpanjang selalu bisa (bypass slot + tutup)
               const disabled = mode === "new" && (isClosed || slotsFull);
-              // Display: slot per instance (customer ga perlu tau jumlah instance)
-              const displayMax = bot.maxSlots || 0;
-              const displayUsed = Math.min(activeCount, displayMax); // cap at max per instance for display
 
               return (
                 <div key={bot.id} className={`relative ${disabled ? "opacity-60" : ""}`}>
@@ -106,7 +103,7 @@ export default function OrderTypePage() {
                         </span>
                       </div>
                       <p className="text-xs text-[var(--muted)] mt-2">
-                        Slot: {slotsFull ? displayMax : Math.ceil(activeCount / instances)}/{hasSlotLimit ? displayMax : "Unlimited"}
+                        Slot: {activeCount}/{hasSlotLimit ? totalCapacity : "Unlimited"}
                       </p>
                     </div>
                   ) : (
@@ -118,7 +115,7 @@ export default function OrderTypePage() {
                         <h3 className="font-semibold group-hover:text-[var(--primary)] transition">{bot.name}</h3>
                         <p className="text-xs text-[var(--muted)] mt-0.5 truncate">{bot.description}</p>
                         <p className="text-xs text-[var(--muted)] mt-1">
-                          Slot: {Math.ceil(activeCount / instances)}/{hasSlotLimit ? displayMax : "Unlimited"}
+                          Slot: {activeCount}/{hasSlotLimit ? totalCapacity : "Unlimited"}
                         </p>
                       </div>
                       <div className="text-right shrink-0 ml-4">
