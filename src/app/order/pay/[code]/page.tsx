@@ -158,12 +158,15 @@ export default function PaymentPage() {
             Download QRIS
           </button>
 
-          <Link
-            href={`/order/status/${code}`}
-            className="block w-full py-2.5 border border-[var(--card-border)] hover:border-[var(--muted)] text-[var(--muted)] rounded-xl text-sm transition text-center"
+          <button
+            onClick={async () => {
+              await fetch(`/api/orders/${code}/cancel`, { method: "POST" });
+              setStatus("CANCELLED");
+            }}
+            className="w-full py-2.5 border border-[var(--card-border)] hover:border-[var(--danger)] text-[var(--muted)] hover:text-[var(--danger)] rounded-xl text-sm transition"
           >
-            Lihat Status Order
-          </Link>
+            Batalkan
+          </button>
         </div>
       </div>
     </div>
