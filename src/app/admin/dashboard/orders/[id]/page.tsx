@@ -56,9 +56,9 @@ export default function OrderDetailPage() {
           <span className={`px-3 py-1 rounded-lg text-xs font-medium ${
             order.status === "SUCCESS" ? "bg-green-500/10 text-green-400" :
             order.status === "PENDING" ? "bg-yellow-500/10 text-yellow-400" :
-            order.status === "EXPIRED" ? "bg-red-500/10 text-red-400" :
-            "bg-gray-500/10 text-gray-400"
-          }`}>{order.status === "SUCCESS" ? "Sukses" : order.status}</span>
+            order.status === "EXPIRED" ? "bg-gray-500/10 text-gray-400" :
+            "bg-red-500/10 text-red-400"
+          }`}>{order.status === "SUCCESS" ? "Sukses" : order.status === "CANCELLED" ? "Dibatalkan" : order.status}</span>
         </div>
 
         <div className="grid grid-cols-2 gap-4 text-sm mb-6">

@@ -119,7 +119,7 @@ export default function AdminGroups() {
         <button
           onClick={() => { setSelectedStatus("ENDED"); setPage(1); }}
           className={`px-3 py-1.5 rounded-lg text-xs font-medium transition shrink-0 ${
-            selectedStatus === "ENDED" ? "bg-gray-500/10 text-gray-400 border border-gray-500/20" : "bg-[var(--card)] border border-[var(--card-border)] text-[var(--muted)]"
+            selectedStatus === "ENDED" ? "bg-orange-500/10 text-orange-400 border border-orange-500/20" : "bg-[var(--card)] border border-[var(--card-border)] text-[var(--muted)]"
           }`}
         >
           Selesai ({endedCount})
@@ -164,9 +164,11 @@ export default function AdminGroups() {
                       <span className="text-sm font-medium">{rental.groupName || rental.groupId}</span>
                       {selectedStatus === "ALL" && (
                         <span className={`text-[10px] px-1.5 py-0.5 rounded ${
-                          rental.status === "ACTIVE" ? "bg-green-500/10 text-green-400" : "bg-gray-500/10 text-gray-400"
+                          rental.status === "ACTIVE"
+                            ? rental.isPremium ? "bg-purple-500/10 text-purple-400" : "bg-cyan-500/10 text-cyan-400"
+                            : "bg-orange-500/10 text-orange-400"
                         }`}>
-                          {rental.status === "ACTIVE" ? "Aktif" : "Selesai"}
+                          {rental.status === "ACTIVE" ? (rental.isPremium ? "Premium" : "Basic") : "Selesai"}
                         </span>
                       )}
                       {rental.isPremium && (
@@ -236,9 +238,11 @@ export default function AdminGroups() {
               <div className="flex justify-between">
                 <span className="text-[var(--muted)]">Status</span>
                 <span className={`px-2 py-0.5 rounded text-xs ${
-                  selectedRental.status === "ACTIVE" ? "bg-green-500/10 text-green-400" : "bg-gray-500/10 text-gray-400"
+                  selectedRental.status === "ACTIVE"
+                    ? selectedRental.isPremium ? "bg-purple-500/10 text-purple-400" : "bg-cyan-500/10 text-cyan-400"
+                    : "bg-orange-500/10 text-orange-400"
                 }`}>
-                  {selectedRental.status === "ACTIVE" ? "Aktif" : "Selesai"}
+                  {selectedRental.status === "ACTIVE" ? (selectedRental.isPremium ? "Premium" : "Basic") : "Selesai"}
                 </span>
               </div>
               <div className="flex justify-between">

@@ -46,8 +46,8 @@ export default function AdminOverview() {
   const orderSegments = stats ? [
     { label: "Sukses", count: stats.successOrders, color: "var(--success)" },
     { label: "Pending", count: stats.pendingOrders, color: "var(--warning)" },
-    { label: "Expired", count: stats.expiredOrders, color: "var(--danger)" },
-    { label: "Dibatalkan", count: stats.cancelledOrders, color: "#6b7280" },
+    { label: "Expired", count: stats.expiredOrders, color: "#6b7280" },
+    { label: "Dibatalkan", count: stats.cancelledOrders, color: "var(--danger)" },
   ].filter(s => s.count > 0) : [];
 
   function buildCircles(segments: { label: string; count: number; color: string }[], total: number) {
@@ -212,8 +212,8 @@ export default function AdminOverview() {
                     <p className={`text-[10px] sm:text-xs ${
                       order.status === "SUCCESS" ? "text-[var(--success)]" :
                       order.status === "PENDING" ? "text-[var(--warning)]" :
-                      order.status === "EXPIRED" ? "text-[var(--danger)]" :
-                      "text-gray-400"
+                      order.status === "EXPIRED" ? "text-gray-400" :
+                      "text-[var(--danger)]"
                     }`}>
                       {order.status === "SUCCESS" ? "Sukses" :
                        order.status === "PENDING" ? "Pending" :
