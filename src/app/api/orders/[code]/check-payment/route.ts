@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getTransactionDetail } from "@/lib/pakasir";
+import { getTransactionDetail, cancelTransaction } from "@/lib/pakasir";
 import { sendTelegramNotification, formatPaymentSuccess } from "@/lib/telegram";
 import { calculateExpiryDate, getDurationLabel } from "@/lib/utils";
 
@@ -21,9 +21,25 @@ export async function GET(
       return NextResponse.json({ success: false, status: "not_found" });
     }
 
-    // Kalau sudah active/expired/cancelled, langsung return
+    // Kalau sudah success/expired/cancelled, langsung return
     if (order.status !== "PENDING") {
       return NextResponse.json({ success: true, status: order.status });
+    }
+
+    // Auto-cancel kalau udah > 5 menit
+    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+    if (order.createdAt < fiveMinAgo) {
+      // Cancel di Pakasir
+      await cancelTransaction(code, order.totalPrice);
+      // Update status
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { status: "EXPIRED" },
+      });
+      await prisma.orderLog.create({
+        data: { orderId: order.id, action: "AUTO_EXPIRED", details: "Order expired otomatis (lebih dari 5 menit)" },
+      });
+      return NextResponse.json({ success: true, status: "EXPIRED" });
     }
 
     // Poll ke Pakasir

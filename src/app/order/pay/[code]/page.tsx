@@ -61,13 +61,19 @@ export default function PaymentPage() {
   const handleDownload = async () => {
     if (!order?.paymentUrl) return;
     try {
-      const qrUrl = order.paymentUrl.includes("http")
-        ? `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(order.paymentUrl)}`
-        : order.paymentUrl;
+      const qrImageUrl = order.paymentUrl.startsWith("data:") || order.paymentUrl.includes("ramashop")
+        ? order.paymentUrl
+        : `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(order.paymentUrl)}`;
+      const res = await fetch(qrImageUrl);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
-      link.href = qrUrl;
+      link.href = url;
       link.download = `QRIS-${code}.png`;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     } catch {}
   };
 
