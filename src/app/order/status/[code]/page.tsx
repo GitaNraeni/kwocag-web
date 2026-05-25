@@ -131,9 +131,9 @@ export default function OrderStatusPage() {
           </div>
 
           {/* Payment button if pending */}
-          {order.status === "PENDING" && order.paymentUrl && (
+          {order.status === "PENDING" && (
             <a
-              href={order.paymentUrl}
+              href={`/order/pay/${order.orderCode}`}
               className="block text-center bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white py-2.5 rounded-lg font-medium transition mt-6"
             >
               Bayar Sekarang (QRIS)
