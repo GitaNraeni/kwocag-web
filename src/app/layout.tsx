@@ -44,7 +44,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "KWOCAG - Sewa Bot WhatsApp",
-    description: "Bot otomatis untuk toko online dan manajemen grup. Bayar QRIS, bot langsung join.",
+    description: "Layanan sewa bot WhatsApp untuk manajemen grup dan toko online. Bayar QRIS, bot langsung aktif.",
     images: ["https://files.catbox.moe/amosh8.png"],
   },
   robots: {
