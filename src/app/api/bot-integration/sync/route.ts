@@ -40,7 +40,14 @@ export async function POST(req: NextRequest) {
       if (!groupId || !expired) continue;
 
       const groupIdClean = groupId.replace("@g.us", "");
-      const expiryDate = new Date(expired);
+      // Handle "permanen" string → set 100 tahun dari sekarang
+      let expiryDate: Date;
+      if (expired === "permanen" || expired === "permanent") {
+        expiryDate = new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000);
+      } else {
+        expiryDate = new Date(expired);
+        if (isNaN(expiryDate.getTime())) continue; // skip invalid date
+      }
 
       // Cek apakah sudah ada rental untuk grup ini
       const existing = await prisma.rental.findUnique({
