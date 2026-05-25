@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     let updated = 0;
 
     for (const entry of entries) {
-      const { groupId, groupLink, groupName, expired, contactPhone } = entry;
+      const { groupId, groupLink, groupName, expired, contactPhone, isPremium } = entry;
       if (!groupId || !expired) continue;
 
       const groupIdClean = groupId.replace("@g.us", "");
@@ -54,6 +54,8 @@ export async function POST(req: NextRequest) {
         if (groupLink && groupLink.startsWith("http") && existing.groupLink !== groupLink) updates.groupLink = groupLink;
         if (contactPhone && !existing.contactPhone) updates.contactPhone = contactPhone;
         if (existing.status === "ENDED") updates.status = "ACTIVE"; // re-activate kalau di-sewa lagi
+        // Sync isPremium dari bot (sewavip/addpremgrub)
+        if (typeof isPremium === "boolean" && existing.isPremium !== isPremium) updates.isPremium = isPremium;
 
         if (Object.keys(updates).length > 0) {
           await prisma.rental.update({ where: { id: existing.id }, data: updates });
@@ -69,6 +71,7 @@ export async function POST(req: NextRequest) {
             botTypeId: botType.id,
             status: "ACTIVE",
             source: "BOT", // dari sync bot = source BOT (bisa manual atau auto di bot)
+            isPremium: isPremium === true,
             expiresAt: expiryDate,
             contactPhone: contactPhone || null,
           },
