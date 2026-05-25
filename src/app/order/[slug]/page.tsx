@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import PaymentQR from "@/components/PaymentQR";
 
 interface Price {
   id: string;
@@ -25,6 +24,7 @@ interface BotType {
 export default function OrderPage() {
   const params = useParams();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const slug = params.slug as string;
   const isExtend = searchParams.get("mode") === "extend";
 
@@ -34,20 +34,12 @@ export default function OrderPage() {
   const [error, setError] = useState("");
 
   // Form
-  const [step, setStep] = useState<"form" | "payment">("form");
   const [tier, setTier] = useState<"basic" | "premium">("basic");
   const [duration, setDuration] = useState<string>("");
   const [customDays, setCustomDays] = useState<number>(1);
   const [groupLink, setGroupLink] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [contactEmail, setContactEmail] = useState("");
-
-  // Payment result
-  const [paymentUrl, setPaymentUrl] = useState("");
-  const [qrImage, setQrImage] = useState("");
-  const [orderCode, setOrderCode] = useState("");
-  const [finalAmount, setFinalAmount] = useState(0);
-  const [adminFeeAmount, setAdminFeeAmount] = useState(0);
 
   useEffect(() => {
     fetch("/api/bots")
@@ -119,12 +111,8 @@ export default function OrderPage() {
 
       const data = await res.json();
       if (data.success) {
-        setPaymentUrl(data.data.paymentUrl);
-        setQrImage(data.data.qrImage || "");
-        setOrderCode(data.data.orderCode);
-        setFinalAmount(data.data.totalPrice);
-        setAdminFeeAmount(data.data.adminFee || 0);
-        setStep("payment");
+        // Redirect ke halaman payment dedicated
+        router.push(`/order/pay/${data.data.orderCode}`);
       } else {
         setError(data.message || "Gagal membuat order");
       }
@@ -148,12 +136,7 @@ export default function OrderPage() {
     );
   }
 
-  // Payment step
-  if (step === "payment") {
-    const qrImageUrl = qrImage || `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(paymentUrl)}`;
-    return <PaymentQR orderCode={orderCode} amount={finalAmount} adminFee={adminFeeAmount} basePrice={getTotal()} qrUrl={qrImageUrl} />;
-  }
-
+  // Form page
   return (
     <div className="min-h-screen py-10 px-6">
       <div className="max-w-lg mx-auto">
@@ -299,11 +282,16 @@ export default function OrderPage() {
                 <input
                   type="tel"
                   required
+                  minLength={10}
+                  maxLength={15}
                   placeholder="08xxx"
                   value={contactPhone}
-                  onChange={(e) => setContactPhone(e.target.value)}
+                  onChange={(e) => setContactPhone(e.target.value.replace(/[^0-9]/g, "").slice(0, 15))}
                   className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--primary)]"
                 />
+                {contactPhone && contactPhone.length < 10 && (
+                  <p className="text-xs text-[var(--danger)] mt-1">Minimal 10 digit</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Email</label>

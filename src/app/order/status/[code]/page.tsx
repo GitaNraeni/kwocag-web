@@ -22,8 +22,8 @@ interface OrderData {
 const statusColors: Record<string, string> = {
   PENDING: "text-[var(--warning)]",
   SUCCESS: "text-[var(--success)]",
-  EXPIRED: "text-[var(--danger)]",
-  CANCELLED: "text-[var(--muted)]",
+  EXPIRED: "text-gray-400",
+  CANCELLED: "text-[var(--danger)]",
 };
 
 const statusLabels: Record<string, string> = {
