@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin
 Disallow: /api
 
-Sitemap: https://kwocag-web.vercel.app/sitemap.xml
+Sitemap: https://kwocag.web.id/sitemap.xml

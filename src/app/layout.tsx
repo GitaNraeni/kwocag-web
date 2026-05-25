@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://kwocag-web.vercel.app"),
+  metadataBase: new URL("https://kwocag.web.id"),
   title: {
     default: "KWOCAG - Sewa Bot WhatsApp",
     template: "%s | KWOCAG",
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   keywords: ["sewa bot whatsapp", "bot whatsapp otomatis", "bot grup whatsapp", "KWOCAG", "rental bot WA", "bot jaga grup", "bot store whatsapp"],
   authors: [{ name: "KWOCAG" }],
   alternates: {
-    canonical: "https://kwocag-web.vercel.app",
+    canonical: "https://kwocag.web.id",
   },
   openGraph: {
     title: "KWOCAG - Sewa Bot WhatsApp",
