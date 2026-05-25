@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { createPayment, getPaymentUrl } from "@/lib/pakasir";
 import { sendTelegramNotification, formatOrderNotification } from "@/lib/telegram";
 import { generateOrderCode, getDurationLabel, normalizePhone } from "@/lib/utils";
+import { checkRateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
+import { sanitizePhone, sanitizeUrl, sanitizeEmail, sanitizeText } from "@/lib/sanitize";
 import { z } from "zod";
 
 const orderSchema = z.object({
@@ -18,7 +20,23 @@ const orderSchema = z.object({
 // POST /api/orders - Buat order baru
 export async function POST(req: NextRequest) {
   try {
+    // Rate limiting
+    const ip = getClientIp(req);
+    const { limited, resetIn } = checkRateLimit(`order:${ip}`, RATE_LIMITS.ORDER);
+    if (limited) {
+      return NextResponse.json(
+        { success: false, message: `Terlalu banyak request. Coba lagi dalam ${Math.ceil(resetIn / 1000)} detik.` },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
+
+    // Sanitize inputs before validation
+    if (body.contactPhone) body.contactPhone = sanitizePhone(body.contactPhone);
+    if (body.contactEmail) body.contactEmail = sanitizeEmail(body.contactEmail);
+    if (body.groupLink) body.groupLink = sanitizeUrl(body.groupLink);
+
     const parsed = orderSchema.safeParse(body);
 
     if (!parsed.success) {
