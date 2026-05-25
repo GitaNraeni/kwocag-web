@@ -146,6 +146,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Password correct — check if Telegram is configured for 2FA
+    const settings = await prisma.siteSettings.findUnique({ where: { id: "main" } });
+    const hasTelegram = !!(settings?.telegramToken && settings?.telegramChatId);
+
+    if (!hasTelegram) {
+      // Telegram belum di-set → skip 2FA, langsung login
+      clearAttempts(ip);
+      const token = createToken({ id: admin.id, username: admin.username });
+      const cookieStore = await cookies();
+      cookieStore.set("admin_token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24,
+        path: "/",
+      });
+      return NextResponse.json({ success: true, message: "Login berhasil (2FA belum aktif - set Telegram di Settings)" });
+    }
+
     // Password correct — send 2FA code via Telegram
     const code = generateCode();
     const tfaData = {

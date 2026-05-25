@@ -33,6 +33,7 @@ export async function POST(req: NextRequest) {
 
     let synced = 0;
     let updated = 0;
+    let reactivated = 0;
 
     for (const entry of entries) {
       const { groupId, groupLink, groupName, expired, contactPhone, isPremium } = entry;
@@ -53,7 +54,10 @@ export async function POST(req: NextRequest) {
         if (groupName && existing.groupName !== groupName) updates.groupName = groupName;
         if (groupLink && groupLink.startsWith("http") && existing.groupLink !== groupLink) updates.groupLink = groupLink;
         if (contactPhone && !existing.contactPhone) updates.contactPhone = contactPhone;
-        if (existing.status === "ENDED") updates.status = "ACTIVE"; // re-activate kalau di-sewa lagi
+        if (existing.status === "ENDED" && expiryDate.getTime() > Date.now()) {
+          updates.status = "ACTIVE";
+          reactivated++;
+        }
         // Sync isPremium dari bot (sewavip/addpremgrub)
         if (typeof isPremium === "boolean" && existing.isPremium !== isPremium) updates.isPremium = isPremium;
 
@@ -93,14 +97,20 @@ export async function POST(req: NextRequest) {
     let endedCount = 0;
 
     if (syncedGroupIds.length === 0) {
-      // Semua sewa dihapus dari bot → end semua
+      // Semua sewa dihapus dari bot → end semua YANG SUDAH EXPIRED
       for (const rental of activeRentals) {
+        // Jangan end kalau masih ada sisa waktu
+        const r = await prisma.rental.findUnique({ where: { id: rental.id }, select: { expiresAt: true } });
+        if (r?.expiresAt && r.expiresAt.getTime() > Date.now()) continue;
         await prisma.rental.update({ where: { id: rental.id }, data: { status: "ENDED" } });
         endedCount++;
       }
     } else {
       for (const rental of activeRentals) {
         if (!syncedGroupIds.includes(rental.groupId)) {
+          // Jangan end kalau masih ada sisa waktu (bot mungkin gagal resolve metadata)
+          const r = await prisma.rental.findUnique({ where: { id: rental.id }, select: { expiresAt: true } });
+          if (r?.expiresAt && r.expiresAt.getTime() > Date.now()) continue;
           await prisma.rental.update({ where: { id: rental.id }, data: { status: "ENDED" } });
           endedCount++;
         }
@@ -109,7 +119,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Synced ${synced} new, updated ${updated}, ended ${endedCount}`,
+      message: `Synced ${synced} new, updated ${updated}, reactivated ${reactivated}, ended ${endedCount}`,
     });
   } catch (error) {
     console.error("Sync error:", error);

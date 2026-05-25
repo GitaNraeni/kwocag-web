@@ -40,7 +40,7 @@ export default function AdminOverview() {
   // Donut chart helpers
   const rentalSegments = stats ? [
     { label: "Aktif", count: stats.activeRentals, color: "var(--success)" },
-    { label: "Selesai", count: stats.endedRentals, color: "#6b7280" },
+    { label: "Selesai", count: stats.endedRentals, color: "#f97316" },
   ].filter(s => s.count > 0) : [];
 
   const orderSegments = stats ? [
