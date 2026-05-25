@@ -162,23 +162,16 @@ export default function AdminGroups() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className="text-sm font-medium">{rental.groupName || rental.groupId}</span>
-                      {selectedStatus === "ALL" && (
-                        <>
-                          {rental.status === "ACTIVE" && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-500/10 text-green-400">Aktif</span>
-                          )}
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded ${
-                            rental.status === "ACTIVE"
-                              ? rental.isPremium ? "bg-purple-500/10 text-purple-400" : "bg-cyan-500/10 text-cyan-400"
-                              : "bg-orange-500/10 text-orange-400"
-                          }`}>
-                            {rental.status === "ACTIVE" ? (rental.isPremium ? "Premium" : "Basic") : "Selesai"}
-                          </span>
-                        </>
+                      {rental.status === "ACTIVE" && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-500/10 text-green-400">Aktif</span>
                       )}
-                      {rental.isPremium && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400">Premium</span>
-                      )}
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                        rental.status === "ACTIVE"
+                          ? rental.isPremium ? "bg-purple-500/10 text-purple-400" : "bg-cyan-500/10 text-cyan-400"
+                          : "bg-orange-500/10 text-orange-400"
+                      }`}>
+                        {rental.status === "ACTIVE" ? (rental.isPremium ? "Premium" : "Basic") : "Selesai"}
+                      </span>
                       {isPermanent(rental.expiresAt) && (
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400">Permanen</span>
                       )}
