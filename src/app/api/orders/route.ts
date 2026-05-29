@@ -85,6 +85,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Cek apakah bot aktif — kalau isActive false, tolak semua order (termasuk perpanjang)
+    if (!(botType as any).isActive) {
+      return NextResponse.json(
+        { success: false, message: "Bot ini sedang tidak aktif" },
+        { status: 400 }
+      );
+    }
+
     // Cek apakah ini perpanjang (grup sudah punya sewa aktif) — bypass slot check
     const existingRental = await prisma.rental.findFirst({
       where: { groupLink, botTypeId, status: "ACTIVE" },
