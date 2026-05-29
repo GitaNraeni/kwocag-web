@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
 
   const where: Record<string, unknown> = {
     status: "SUCCESS",
-    logs: { none: { action: "BOT_JOINED" } },
+    logs: { none: { action: { in: ["BOT_JOINED", "BOT_EXTENDED"] } } },
     botType: { slug },
   };
 
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { orderId, groupName, groupId } = await req.json();
+    const { orderId, groupName, groupId, isExtend } = await req.json();
 
     if (!orderId) {
       return NextResponse.json({ success: false, message: "orderId wajib diisi" }, { status: 400 });
@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
     }
 
     await prisma.orderLog.create({
-      data: { orderId, action: "BOT_JOINED", details: groupName ? `Bot join: ${groupName}` : "Bot berhasil join ke grup" },
+      data: { orderId, action: isExtend ? "BOT_EXTENDED" : "BOT_JOINED", details: isExtend ? `Sewa diperpanjang: ${groupName || "grup"}` : (groupName ? `Bot join: ${groupName}` : "Bot berhasil join ke grup") },
     });
 
     return NextResponse.json({ success: true, message: "Marked as joined" });
