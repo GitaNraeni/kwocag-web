@@ -102,7 +102,7 @@ export default function OrderDetailPage() {
 
         {/* Actions */}
         <div className="flex flex-wrap gap-2 pt-4 border-t border-[var(--card-border)]">
-          {order.status === "PENDING" && (
+          {(order.status === "PENDING" || order.status === "EXPIRED" || order.status === "CANCELLED") && (
             <button onClick={() => handleAction("activate")} disabled={actionLoading}
               className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm rounded-lg transition disabled:opacity-50">
               Aktifkan Manual
