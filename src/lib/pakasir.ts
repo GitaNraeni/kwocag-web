@@ -41,6 +41,14 @@ export async function createPayment(params: { orderCode: string; amount: number 
   const cfg = await getConfig();
 
   if (cfg.provider === "ramashop") {
+    // Kalau ramashop API key kosong, fallback ke pakasir
+    if (!cfg.ramashopApiKey) {
+      console.warn("[Payment] RamaShop API key kosong, fallback ke Pakasir");
+      if (cfg.pakasirApiKey && cfg.pakasirSlug) {
+        return createPakasirPayment(cfg.pakasirApiKey, cfg.pakasirSlug, params);
+      }
+      return { success: false, message: "API key payment gateway belum diatur" };
+    }
     return createRamashopPayment(cfg.ramashopApiKey, params);
   }
   return createPakasirPayment(cfg.pakasirApiKey, cfg.pakasirSlug, params);
@@ -136,7 +144,15 @@ async function checkPakasirStatus(apiKey: string, slug: string, orderId: string,
 // ============ RAMASHOP ============
 
 async function createRamashopPayment(apiKey: string, params: { orderCode: string; amount: number }): Promise<PaymentResult> {
+  // Kalau API key kosong, langsung gagal
+  if (!apiKey) {
+    console.error("[RamaShop] API key kosong! Set di admin settings.");
+    return { success: false, message: "RamaShop API key belum diatur" };
+  }
+
   try {
+    console.log(`[RamaShop] Creating deposit: amount=${params.amount}`);
+    
     const res = await fetch(`${RAMASHOP_BASE}/deposit/create`, {
       method: "POST",
       headers: { "X-API-Key": apiKey, "Content-Type": "application/json" },
@@ -144,22 +160,23 @@ async function createRamashopPayment(apiKey: string, params: { orderCode: string
     });
 
     const data = await res.json();
+    console.log(`[RamaShop] Response:`, JSON.stringify(data).substring(0, 500));
 
     if (data.success && data.data) {
       const qrImage = data.data.qrImage || null;
       const qrString = data.data.qrString || null;
       const depositId = data.data.depositId;
 
-      // Prioritas: qrImage langsung dari RamaShop (ini gambar QR QRIS yang bisa di-scan bayar)
-      // Kalau ada qrString juga, kita bisa generate QR sendiri sebagai backup
+      // Prioritas: qrImage langsung dari RamaShop (gambar QR QRIS yang bisa di-scan bayar)
       let finalQrUrl = qrImage;
 
       if (!finalQrUrl && qrString) {
-        // Generate QR image dari QRIS string
+        // Generate QR image dari QRIS string (ini QRIS asli, bisa langsung bayar)
         finalQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(qrString)}`;
       }
 
       if (!finalQrUrl) {
+        console.error("[RamaShop] Response success tapi qrImage dan qrString kosong:", JSON.stringify(data.data));
         return { success: false, message: "QR image tidak tersedia dari RamaShop" };
       }
 
@@ -167,10 +184,11 @@ async function createRamashopPayment(apiKey: string, params: { orderCode: string
         success: true,
         qrImage: finalQrUrl,
         paymentId: depositId,
-        paymentUrl: finalQrUrl, // QR image langsung — bisa di-scan bayar
+        paymentUrl: finalQrUrl,
       };
     }
 
+    console.error("[RamaShop] API error:", data.message || "Unknown error");
     return { success: false, message: data.message || "Gagal membuat pembayaran" };
   } catch (error) {
     console.error("Ramashop error:", error);

@@ -185,9 +185,36 @@ export async function POST(req: NextRequest) {
       amount: finalPrice,
     });
 
+    // Kalau payment gateway gagal, cancel order dan return error
+    if (!payment.success) {
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { status: "CANCELLED" },
+      });
+      await prisma.orderLog.create({
+        data: { orderId: order.id, action: "PAYMENT_FAILED", details: payment.message || "Payment gateway error" },
+      });
+      return NextResponse.json(
+        { success: false, message: payment.message || "Gagal membuat pembayaran. Coba lagi." },
+        { status: 500 }
+      );
+    }
+
     const paymentUrl = payment.paymentUrl || payment.qrImage || await getPaymentUrl(finalPrice, orderCode);
-    const qrImage = payment.qrImage || null; // Direct QR image (Ramashop)
+    const qrImage = payment.qrImage || null;
     const paymentId = payment.paymentId || orderCode;
+
+    // Kalau paymentUrl masih kosong, cancel order
+    if (!paymentUrl) {
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { status: "CANCELLED" },
+      });
+      return NextResponse.json(
+        { success: false, message: "QR pembayaran tidak tersedia. Periksa konfigurasi payment gateway." },
+        { status: 500 }
+      );
+    }
 
     // Update order dengan payment info
     await prisma.order.update({
