@@ -24,6 +24,9 @@ export default function AdminSettings() {
   // Ramashop
   const [ramashopApiKey, setRamashopApiKey] = useState("");
 
+  // QRISPay
+  const [qrispayApiKey, setQrispayApiKey] = useState("");
+
   // Payment provider
   const [paymentProvider, setPaymentProvider] = useState("pakasir");
 
@@ -58,6 +61,7 @@ export default function AdminSettings() {
           setPakasirApiKey(data.data.pakasirApiKey || "");
           setPakasirSlug(data.data.pakasirSlug || "");
           setRamashopApiKey(data.data.ramashopApiKey || "");
+          setQrispayApiKey(data.data.qrispayApiKey || "");
           setPaymentProvider(data.data.paymentProvider || "pakasir");
           setAdminFee(data.data.adminFee || 0);
           setAdminFeePercent(data.data.adminFeePercent || 0);
@@ -90,7 +94,7 @@ export default function AdminSettings() {
         body: JSON.stringify({
           siteName, siteLogo, contactWhatsapp, contactTelegram, channelWhatsapp,
           pakasirApiKey, pakasirSlug,
-          ramashopApiKey, paymentProvider,
+          ramashopApiKey, qrispayApiKey, paymentProvider,
           adminFee, adminFeePercent,
           telegramToken, telegramChatId, telegramLogChatId,
           maintenance, maintenanceMsg,
@@ -184,6 +188,10 @@ export default function AdminSettings() {
                   className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition border ${paymentProvider === "ramashop" ? "border-[var(--primary)] bg-[var(--primary)]/10 text-[var(--primary)]" : "border-[var(--card-border)] text-[var(--muted)]"}`}>
                   Ramashop
                 </button>
+                <button type="button" onClick={() => setPaymentProvider("qrispay")}
+                  className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition border ${paymentProvider === "qrispay" ? "border-[var(--primary)] bg-[var(--primary)]/10 text-[var(--primary)]" : "border-[var(--card-border)] text-[var(--muted)]"}`}>
+                  QRISPay
+                </button>
               </div>
             </div>
 
@@ -214,6 +222,23 @@ export default function AdminSettings() {
                   <label className="block text-xs text-[var(--muted)] mb-1">API Key</label>
                   <div className="relative">
                     <input type={showApiKey ? "text" : "password"} value={ramashopApiKey} onChange={(e) => setRamashopApiKey(e.target.value)}
+                      className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-[var(--primary)] pr-16" />
+                    <button type="button" onClick={() => setShowApiKey(!showApiKey)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-[var(--muted)] hover:text-white px-2 py-1">
+                      {showApiKey ? "Hide" : "Show"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {paymentProvider === "qrispay" && (
+              <div className="space-y-3 pt-3 border-t border-[var(--card-border)]">
+                <div>
+                  <label className="block text-xs text-[var(--muted)] mb-1">API Key (dari qrispay.sairibot.my.id)</label>
+                  <div className="relative">
+                    <input type={showApiKey ? "text" : "password"} value={qrispayApiKey} onChange={(e) => setQrispayApiKey(e.target.value)}
+                      placeholder="qpk_user_xxxxxxxxxxxxxxxx"
                       className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-[var(--primary)] pr-16" />
                     <button type="button" onClick={() => setShowApiKey(!showApiKey)}
                       className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-[var(--muted)] hover:text-white px-2 py-1">

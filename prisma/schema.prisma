@@ -118,6 +118,7 @@ model SiteSettings {
   channelWhatsapp String?
   paymentProvider String  @default("pakasir")
   ramashopApiKey  String?
+  qrispayApiKey   String?
   adminFee        Int     @default(0)
   adminFeePercent Float   @default(0)
   maintenance     Boolean @default(false)

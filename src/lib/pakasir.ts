@@ -6,6 +6,7 @@ import { prisma } from "./prisma";
 
 const PAKASIR_BASE = "https://app.pakasir.com/api";
 const RAMASHOP_BASE = "https://ramashop.my.id/api/public";
+const QRISPAY_BASE = "https://qrispay.sairibot.my.id/v1";
 
 async function getConfig() {
   try {
@@ -15,6 +16,7 @@ async function getConfig() {
       pakasirApiKey: settings?.pakasirApiKey || process.env.PAKASIR_API_KEY || "",
       pakasirSlug: settings?.pakasirSlug || process.env.PAKASIR_PROJECT_SLUG || "",
       ramashopApiKey: (settings as any)?.ramashopApiKey || "",
+      qrispayApiKey: (settings as any)?.qrispayApiKey || "",
     };
   } catch {
     return {
@@ -22,6 +24,7 @@ async function getConfig() {
       pakasirApiKey: process.env.PAKASIR_API_KEY || "",
       pakasirSlug: process.env.PAKASIR_PROJECT_SLUG || "",
       ramashopApiKey: "",
+      qrispayApiKey: "",
     };
   }
 }
@@ -40,8 +43,18 @@ interface PaymentResult {
 export async function createPayment(params: { orderCode: string; amount: number }): Promise<PaymentResult> {
   const cfg = await getConfig();
 
+  if (cfg.provider === "qrispay") {
+    if (!cfg.qrispayApiKey) {
+      console.warn("[Payment] QRISPay API key kosong, fallback ke Pakasir");
+      if (cfg.pakasirApiKey && cfg.pakasirSlug) {
+        return createPakasirPayment(cfg.pakasirApiKey, cfg.pakasirSlug, params);
+      }
+      return { success: false, message: "API key payment gateway belum diatur" };
+    }
+    return createQrispayPayment(cfg.qrispayApiKey, params);
+  }
+
   if (cfg.provider === "ramashop") {
-    // Kalau ramashop API key kosong, fallback ke pakasir
     if (!cfg.ramashopApiKey) {
       console.warn("[Payment] RamaShop API key kosong, fallback ke Pakasir");
       if (cfg.pakasirApiKey && cfg.pakasirSlug) {
@@ -51,6 +64,7 @@ export async function createPayment(params: { orderCode: string; amount: number 
     }
     return createRamashopPayment(cfg.ramashopApiKey, params);
   }
+
   return createPakasirPayment(cfg.pakasirApiKey, cfg.pakasirSlug, params);
 }
 
@@ -60,6 +74,9 @@ export async function createPayment(params: { orderCode: string; amount: number 
 export async function getTransactionDetail(orderId: string, amount: number) {
   const cfg = await getConfig();
 
+  if (cfg.provider === "qrispay") {
+    return checkQrispayStatus(orderId);
+  }
   if (cfg.provider === "ramashop") {
     return checkRamashopStatus(cfg.ramashopApiKey, orderId);
   }
@@ -206,6 +223,93 @@ async function checkRamashopStatus(apiKey: string, depositId: string) {
     // Normalize response format supaya sama dengan Pakasir
     if (data.status && data.data) {
       const status = data.data.status;
+      return {
+        transaction: {
+          status: status === "success" ? "completed" : status === "already" ? "completed" : status,
+        },
+      };
+    }
+    return null;
+  } catch { return null; }
+}
+
+// ============ QRISPAY (sairibot) ============
+
+async function createQrispayPayment(apiKey: string, params: { orderCode: string; amount: number }): Promise<PaymentResult> {
+  if (!apiKey) {
+    console.error("[QRISPay] API key kosong!");
+    return { success: false, message: "QRISPay API key belum diatur" };
+  }
+
+  try {
+    console.log(`[QRISPay] Creating deposit: amount=${params.amount}`);
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+
+    const res = await fetch(`${QRISPAY_BASE}/deposit/create`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount: params.amount, apikey: apiKey }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeout);
+    const data = await res.json();
+    console.log(`[QRISPay] Response:`, JSON.stringify(data).substring(0, 500));
+
+    if (data.status === "success" && data.data) {
+      const qrImage = data.data.qr_image || data.data.qrImage || data.data.qr_url || data.data.qrUrl || null;
+      const qrString = data.data.qr_string || data.data.qrString || data.data.qris_string || null;
+      const transactionId = data.data.transaction_id || data.data.transactionId || data.data.id || null;
+
+      // Prioritas: QR image langsung (bisa di-scan bayar)
+      let finalQrUrl = qrImage;
+
+      if (!finalQrUrl && qrString) {
+        // Generate QR dari QRIS string (ini QRIS asli, langsung bisa bayar)
+        finalQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(qrString)}`;
+      }
+
+      if (!finalQrUrl) {
+        console.error("[QRISPay] Response success tapi QR kosong:", JSON.stringify(data.data));
+        return { success: false, message: "QR image tidak tersedia dari QRISPay" };
+      }
+
+      return {
+        success: true,
+        qrImage: finalQrUrl,
+        paymentId: transactionId,
+        paymentUrl: finalQrUrl,
+      };
+    }
+
+    console.error("[QRISPay] API error:", data.message || "Unknown error");
+    return { success: false, message: data.message || "Gagal membuat pembayaran" };
+  } catch (error: any) {
+    if (error.name === "AbortError") {
+      console.error("[QRISPay] Timeout 15s");
+      return { success: false, message: "QRISPay timeout" };
+    }
+    console.error("[QRISPay] Error:", error);
+    return { success: false, message: "Payment gateway error" };
+  }
+}
+
+async function checkQrispayStatus(transactionId: string) {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+
+    const res = await fetch(`${QRISPAY_BASE}/deposit/status/${transactionId}`, {
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeout);
+    const data = await res.json();
+
+    if (data.data) {
+      const status = data.data.payment_status || data.data.status || "";
       return {
         transaction: {
           status: status === "success" ? "completed" : status === "already" ? "completed" : status,
