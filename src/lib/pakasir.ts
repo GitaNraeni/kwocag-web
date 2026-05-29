@@ -91,15 +91,32 @@ export async function getPaymentUrl(amount: number, orderId: string): Promise<st
 
 async function createPakasirPayment(apiKey: string, slug: string, params: { orderCode: string; amount: number }): Promise<PaymentResult> {
   try {
-    await fetch(`${PAKASIR_BASE}/transactioncreate/qris`, {
+    const res = await fetch(`${PAKASIR_BASE}/transactioncreate/qris`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ api_key: apiKey, project: slug, order_id: params.orderCode, amount: params.amount }),
     });
 
-    const paymentUrl = `https://app.pakasir.com/pay/${slug}/${params.amount}?order_id=${encodeURIComponent(params.orderCode)}&qris_only=1`;
+    const data = await res.json().catch(() => null);
 
-    return { success: true, paymentUrl, paymentId: params.orderCode };
+    // Cek apakah Pakasir API return QRIS string/image langsung
+    const qrisString = data?.qr_string || data?.qris_string || data?.data?.qr_string || data?.data?.qris_string || data?.qr_data || data?.data?.qr_data || null;
+    const qrImage = data?.qr_image || data?.data?.qr_image || data?.qris_image || data?.data?.qris_image || null;
+
+    if (qrisString) {
+      // QRIS string → generate QR image yang bisa langsung di-scan bayar
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(qrisString)}`;
+      return { success: true, paymentUrl: qrUrl, qrImage: qrUrl, paymentId: params.orderCode };
+    }
+
+    if (qrImage) {
+      return { success: true, paymentUrl: qrImage, qrImage, paymentId: params.orderCode };
+    }
+
+    // Pakasir gak return QR langsung — simpan URL halaman payment
+    // Frontend akan tampilin ini dalam iframe (QR QRIS asli dari Pakasir, bisa di-scan bayar)
+    const paymentPageUrl = `https://app.pakasir.com/pay/${slug}/${params.amount}?order_id=${encodeURIComponent(params.orderCode)}&qris_only=1`;
+    return { success: true, paymentUrl: paymentPageUrl, paymentId: params.orderCode };
   } catch (error) {
     console.error("Pakasir error:", error);
     return { success: false, message: "Payment gateway error" };
@@ -129,11 +146,28 @@ async function createRamashopPayment(apiKey: string, params: { orderCode: string
     const data = await res.json();
 
     if (data.success && data.data) {
+      const qrImage = data.data.qrImage || null;
+      const qrString = data.data.qrString || null;
+      const depositId = data.data.depositId;
+
+      // Prioritas: qrImage langsung dari RamaShop (ini gambar QR QRIS yang bisa di-scan bayar)
+      // Kalau ada qrString juga, kita bisa generate QR sendiri sebagai backup
+      let finalQrUrl = qrImage;
+
+      if (!finalQrUrl && qrString) {
+        // Generate QR image dari QRIS string
+        finalQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(qrString)}`;
+      }
+
+      if (!finalQrUrl) {
+        return { success: false, message: "QR image tidak tersedia dari RamaShop" };
+      }
+
       return {
         success: true,
-        qrImage: data.data.qrImage,
-        paymentId: data.data.depositId,
-        paymentUrl: data.data.qrImage, // QR image langsung
+        qrImage: finalQrUrl,
+        paymentId: depositId,
+        paymentUrl: finalQrUrl, // QR image langsung — bisa di-scan bayar
       };
     }
 

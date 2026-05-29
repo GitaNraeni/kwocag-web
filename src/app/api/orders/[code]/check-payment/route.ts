@@ -4,7 +4,7 @@ import { getTransactionDetail, cancelTransaction } from "@/lib/pakasir";
 import { sendTelegramNotification, formatPaymentSuccess } from "@/lib/telegram";
 import { calculateExpiryDate, getDurationLabel } from "@/lib/utils";
 
-// GET /api/orders/[code]/check-payment - Poll payment status dari Pakasir
+// GET /api/orders/[code]/check-payment - Poll payment status (Pakasir/RamaShop)
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ code: string }> }
@@ -29,8 +29,8 @@ export async function GET(
     // Auto-cancel kalau udah > 5 menit
     const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
     if (order.createdAt < fiveMinAgo) {
-      // Cancel di Pakasir
-      await cancelTransaction(code, order.totalPrice);
+      // Cancel di payment gateway
+      await cancelTransaction(order.paymentId || code, order.totalPrice);
       // Update status
       await prisma.order.update({
         where: { id: order.id },
@@ -42,8 +42,10 @@ export async function GET(
       return NextResponse.json({ success: true, status: "EXPIRED" });
     }
 
-    // Poll ke Pakasir
-    const detail = await getTransactionDetail(code, order.totalPrice);
+    // Poll ke payment gateway (Pakasir atau RamaShop)
+    // Untuk RamaShop, perlu pake paymentId (depositId), bukan orderCode
+    const pollId = order.paymentId || code;
+    const detail = await getTransactionDetail(pollId, order.totalPrice);
 
     if (!detail) {
       return NextResponse.json({ success: true, status: "PENDING" });

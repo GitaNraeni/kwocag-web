@@ -61,10 +61,13 @@ export default function PaymentPage() {
   const handleDownload = async () => {
     if (!order?.paymentUrl) return;
     try {
-      const qrImageUrl = order.paymentUrl.startsWith("data:") || order.paymentUrl.includes("ramashop")
-        ? order.paymentUrl
-        : `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(order.paymentUrl)}`;
-      const res = await fetch(qrImageUrl);
+      // Kalau Pakasir page (iframe), gak bisa download QR langsung — buka di tab baru
+      if (order.paymentUrl.includes("app.pakasir.com/pay")) {
+        window.open(order.paymentUrl, "_blank");
+        return;
+      }
+      // RamaShop / direct QR image — download langsung
+      const res = await fetch(order.paymentUrl);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -122,9 +125,9 @@ export default function PaymentPage() {
     );
   }
 
-  const qrUrl = order.paymentUrl?.includes("ramashop") || order.paymentUrl?.startsWith("data:")
-    ? order.paymentUrl
-    : `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(order.paymentUrl || "")}`;
+  // Detect apakah paymentUrl itu halaman Pakasir (perlu iframe) atau gambar QR langsung
+  const isPakasirPage = order.paymentUrl?.includes("app.pakasir.com/pay");
+  const qrUrl = !isPakasirPage ? order.paymentUrl : null;
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6 py-10">
@@ -136,7 +139,20 @@ export default function PaymentPage() {
           </p>
 
           <div className="bg-white rounded-xl p-4 inline-block mb-4">
-            <img src={qrUrl} alt="QRIS" width={250} height={250} className="block" />
+            {qrUrl ? (
+              <img src={qrUrl} alt="QRIS" width={250} height={250} className="block" />
+            ) : isPakasirPage ? (
+              <iframe
+                src={order.paymentUrl}
+                width={280}
+                height={350}
+                className="block border-0 rounded-lg"
+                title="QRIS Payment"
+                sandbox="allow-scripts allow-same-origin"
+              />
+            ) : (
+              <p className="text-sm text-gray-500 py-8">QR tidak tersedia</p>
+            )}
           </div>
 
           <p className="text-xs text-[var(--muted)] mb-1">Scan QR dengan e-wallet atau m-banking</p>
