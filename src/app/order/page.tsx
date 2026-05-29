@@ -11,6 +11,7 @@ interface BotType {
   features: string[];
   prices: { id: string; duration: string; price: number }[];
   acceptingOrders?: boolean;
+  isActive?: boolean;
   maxSlots?: number;
   totalInstances?: number;
   _count?: { rentals: number };
