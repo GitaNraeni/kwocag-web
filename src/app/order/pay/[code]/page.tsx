@@ -12,7 +12,7 @@ export default function PaymentPage() {
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("PENDING");
-  const [timeLeft, setTimeLeft] = useState(300);
+  const [timeLeft, setTimeLeft] = useState(900);
 
   useEffect(() => {
     fetch(`/api/orders/${code}`)

@@ -56,9 +56,9 @@ export async function POST(req: NextRequest) {
         where: { contactPhone, status: "PENDING" },
       });
       if (pendingOrder) {
-        // Kalau pending udah > 5 menit, auto-cancel
-        const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
-        if (pendingOrder.createdAt < fiveMinAgo) {
+        // Kalau pending udah > 15 menit, auto-cancel
+        const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000);
+        if (pendingOrder.createdAt < fifteenMinAgo) {
           await prisma.order.update({
             where: { id: pendingOrder.id },
             data: { status: "EXPIRED" },

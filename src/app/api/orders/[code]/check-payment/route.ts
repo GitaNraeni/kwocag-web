@@ -26,9 +26,9 @@ export async function GET(
       return NextResponse.json({ success: true, status: order.status });
     }
 
-    // Auto-cancel kalau udah > 5 menit
-    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
-    if (order.createdAt < fiveMinAgo) {
+    // Auto-cancel kalau udah > 15 menit (QR QRIS valid 15 menit)
+    const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000);
+    if (order.createdAt < fifteenMinAgo) {
       // Cancel di payment gateway
       await cancelTransaction(order.paymentId || code, order.totalPrice);
       // Update status
@@ -45,17 +45,22 @@ export async function GET(
     // Poll ke payment gateway (Pakasir atau RamaShop)
     // Untuk RamaShop, perlu pake paymentId (depositId), bukan orderCode
     const pollId = order.paymentId || code;
+    console.log(`[CheckPayment] Polling ${code} with paymentId: ${pollId}`);
     const detail = await getTransactionDetail(pollId, order.totalPrice);
 
     if (!detail) {
+      console.log(`[CheckPayment] ${code}: No response from payment gateway (timeout/error)`);
       return NextResponse.json({ success: true, status: "PENDING" });
     }
 
-    // Extract status dari response Pakasir
+    // Extract status dari response
     let txStatus = "";
     if (detail.transaction?.status) txStatus = detail.transaction.status.toLowerCase();
     else if (detail.status) txStatus = detail.status.toLowerCase();
     else if (detail.data?.status) txStatus = detail.data.status.toLowerCase();
+
+    console.log(`[CheckPayment] ${code}: txStatus = "${txStatus}"`);
+
 
     if (txStatus === "completed" || txStatus === "paid" || txStatus === "success" || txStatus === "settlement") {
       // Payment berhasil - set order SUCCESS

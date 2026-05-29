@@ -215,22 +215,51 @@ async function createRamashopPayment(apiKey: string, params: { orderCode: string
 
 async function checkRamashopStatus(apiKey: string, depositId: string) {
   try {
+    console.log(`[RamaShop] Checking status for depositId: ${depositId}`);
+    
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+
     const res = await fetch(`${RAMASHOP_BASE}/deposit/status/${depositId}`, {
       headers: { "X-API-Key": apiKey },
+      signal: controller.signal,
     });
-    const data = await res.json();
 
-    // Normalize response format supaya sama dengan Pakasir
-    if (data.status && data.data) {
-      const status = data.data.status;
+    clearTimeout(timeout);
+    const data = await res.json();
+    console.log(`[RamaShop] Status response:`, JSON.stringify(data).substring(0, 300));
+
+    // RamaShop response format: { status: true, data: { status: "success"|"pending"|"already", ... } }
+    // atau: { success: true, data: { status: "success" } }
+    const paymentStatus = data?.data?.status || data?.data?.payment_status || "";
+    
+    if (paymentStatus) {
       return {
         transaction: {
-          status: status === "success" ? "completed" : status === "already" ? "completed" : status,
+          status: paymentStatus === "success" ? "completed" 
+            : paymentStatus === "already" ? "completed" 
+            : paymentStatus,
         },
       };
     }
+
+    // Fallback: cek top-level status
+    if (data?.status === "success" || data?.status === true) {
+      // Mungkin data langsung di top level
+      return {
+        transaction: { status: "completed" },
+      };
+    }
+
     return null;
-  } catch { return null; }
+  } catch (error: any) {
+    if (error.name === "AbortError") {
+      console.error("[RamaShop] Status check timeout");
+    } else {
+      console.error("[RamaShop] Status check error:", error);
+    }
+    return null;
+  }
 }
 
 // ============ QRISPAY (sairibot) ============
