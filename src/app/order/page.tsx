@@ -86,8 +86,8 @@ export default function OrderTypePage() {
               const totalCapacity = (bot.maxSlots || 0) * instances;
               const activeCount = bot._count?.rentals || 0;
               const slotsFull = hasSlotLimit && activeCount >= totalCapacity;
-              // Perpanjang selalu bisa (bypass slot + tutup)
-              const disabled = mode === "new" && (isClosed || slotsFull);
+              // Perpanjang juga disabled kalau bot nonaktif
+              const disabled = (isClosed || slotsFull || !bot.isActive);
 
               return (
                 <div key={bot.id} className={`relative ${disabled ? "opacity-60" : ""}`}>
