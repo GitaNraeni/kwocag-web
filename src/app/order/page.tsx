@@ -116,26 +116,38 @@ export default function OrderTypePage() {
                   ) : (
                     <Link
                       href={href}
-                      className="group flex items-center justify-between bg-[var(--card)] border border-[var(--card-border)] hover:border-[var(--primary)]/50 hover:bg-[var(--primary)]/[0.02] rounded-xl p-4 sm:p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[var(--primary)]/5 active:translate-y-0"
+                      className="group block bg-[var(--card)] border border-[var(--card-border)] hover:border-[var(--primary)]/50 hover:bg-[var(--primary)]/[0.02] rounded-xl p-4 sm:p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[var(--primary)]/5 active:translate-y-0"
                     >
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <h3 className="font-semibold group-hover:text-[var(--primary)] transition-colors duration-200">{bot.name}</h3>
-                          <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] shrink-0" />
+                      <div className="flex items-start justify-between gap-4 mb-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-semibold group-hover:text-[var(--primary)] transition-colors duration-200">{bot.name}</h3>
+                            <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] shrink-0" />
+                          </div>
+                          <p className="text-xs text-[var(--muted)] leading-relaxed">{bot.description}</p>
                         </div>
-                        <p className="text-xs text-[var(--muted)] truncate">{bot.description}</p>
-                        <p className="text-xs text-[var(--muted)] mt-1.5">
-                          Slot tersedia: <span className="text-[var(--foreground)]">{hasSlotLimit ? totalCapacity - activeCount : "∞"}</span>
-                          {hasSlotLimit && <span className="text-[var(--muted)]"> / {totalCapacity}</span>}
-                        </p>
+                        <div className="text-right shrink-0">
+                          <p className="text-base font-bold text-[var(--foreground)]">Rp {lowest.toLocaleString("id-ID")}</p>
+                          <p className="text-xs text-[var(--muted)]">/minggu</p>
+                        </div>
                       </div>
-                      <div className="text-right shrink-0 ml-4">
-                        <p className="text-sm font-bold text-[var(--foreground)]">Rp {lowest.toLocaleString("id-ID")}</p>
-                        <p className="text-xs text-[var(--muted)]">/minggu</p>
-                        <svg className="w-4 h-4 text-[var(--muted)] group-hover:text-[var(--primary)] group-hover:translate-x-0.5 transition-all duration-200 ml-auto mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
+                      {hasSlotLimit && (
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs text-[var(--muted)]">Slot tersedia</span>
+                            <span className="text-xs font-medium">{totalCapacity - activeCount} <span className="text-[var(--muted)] font-normal">/ {totalCapacity}</span></span>
+                          </div>
+                          <div className="h-1 bg-[var(--card-border)] rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all duration-500"
+                              style={{
+                                width: `${Math.min((activeCount / totalCapacity) * 100, 100)}%`,
+                                background: activeCount / totalCapacity > 0.8 ? 'var(--warning)' : 'var(--primary)',
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </Link>
                   )}
                 </div>
