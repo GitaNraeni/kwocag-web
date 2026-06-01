@@ -152,18 +152,22 @@ export async function POST(req: NextRequest) {
 
     const finalPrice = totalPrice + adminFeeAmount;
 
-    // Auto-assign bot instance (round-robin ke instance yang masih ada slot)
+    // Auto-assign bot instance — isi instance 1 dulu sampai penuh, baru overflow ke 2
     let assignedInstance = 1;
-    if (totalInstances > 1) {
-      // Hitung rental aktif per instance
+    if (isExtend && existingRental) {
+      // Perpanjangan → tetap di instance yang sama
+      assignedInstance = (existingRental as any).botInstance || 1;
+    } else if (totalInstances > 1 && maxSlots > 0) {
+      // Sewa baru — cari instance yang masih ada slot kosong (prioritas instance terkecil)
       for (let i = 1; i <= totalInstances; i++) {
-        const count = await prisma.rental.count({
-          where: { botTypeId, status: "ACTIVE" },
+        const activeCount = await prisma.rental.count({
+          where: {
+            botTypeId,
+            botInstance: i,
+            status: "ACTIVE",
+          } as any,
         });
-        // Bagi rata: kalau total aktif / totalInstances < maxSlots, assign ke instance ini
-        const countPerInstance = Math.ceil(count / totalInstances);
-        const maxPerInstance = (botType as any).maxSlots || 0;
-        if (maxPerInstance === 0 || countPerInstance < maxPerInstance) {
+        if (activeCount < maxSlots) {
           assignedInstance = i;
           break;
         }

@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
 
   const where: Record<string, unknown> = {
     status: "SUCCESS",
-    logs: { none: { action: { in: ["BOT_JOINED", "BOT_EXTENDED"] } } },
+    logs: { none: { action: { in: ["BOT_JOINED", "BOT_EXTENDED", "BOT_FAILED"] } } },
     botType: { slug },
   };
 
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { orderId, groupName, groupId, isExtend } = await req.json();
+    const { orderId, groupName, groupId, isExtend, failed, reason } = await req.json();
 
     if (!orderId) {
       return NextResponse.json({ success: false, message: "orderId wajib diisi" }, { status: 400 });
@@ -71,6 +71,18 @@ export async function POST(req: NextRequest) {
     });
     if (!order) {
       return NextResponse.json({ success: false, message: "Order tidak ditemukan" }, { status: 404 });
+    }
+
+    // Handle failed order — bot nggak bisa join (kicked, link invalid, dll)
+    if (failed) {
+      await prisma.orderLog.create({
+        data: { orderId, action: "BOT_FAILED", details: reason || "Bot gagal join grup" },
+      });
+      await prisma.order.update({
+        where: { id: orderId },
+        data: { notes: `FAILED: ${reason || "Bot gagal join"}` },
+      });
+      return NextResponse.json({ success: true, message: "Marked as failed" });
     }
 
     // Update order notes
@@ -87,7 +99,7 @@ export async function POST(req: NextRequest) {
 
       if (existing) {
         // Update/perpanjang — isPremium ikut order terakhir (bukan sticky)
-        await prisma.rental.update({
+        await (prisma.rental.update as any)({
           where: { id: existing.id },
           data: {
             status: "ACTIVE",
@@ -95,17 +107,19 @@ export async function POST(req: NextRequest) {
             groupName: groupName || existing.groupName,
             groupLink: order.groupLink.startsWith("http") ? order.groupLink : existing.groupLink,
             isPremium: order.isPremium,
+            botInstance: order.botInstance,
           },
         });
         await prisma.order.update({ where: { id: orderId }, data: { rentalId: existing.id } });
       } else {
         // Bikin rental baru
-        const rental = await prisma.rental.create({
+        const rental = await (prisma.rental.create as any)({
           data: {
             groupId: groupIdClean,
             groupName: groupName || null,
             groupLink: order.groupLink.startsWith("http") ? order.groupLink : null,
             botTypeId: order.botTypeId,
+            botInstance: order.botInstance,
             status: "ACTIVE",
             source: "WEBSITE",
             isPremium: order.isPremium,

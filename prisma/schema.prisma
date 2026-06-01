@@ -75,6 +75,7 @@ model Rental {
   groupLink   String?      // invite link grup
   botTypeId   String
   botType     BotType      @relation(fields: [botTypeId], references: [id])
+  botInstance Int          @default(1) // instance mana yang handle rental ini
   status      RentalStatus @default(ACTIVE)
   source      RentalSource @default(MANUAL) // dari mana sewa ini
   isPremium   Boolean      @default(false)

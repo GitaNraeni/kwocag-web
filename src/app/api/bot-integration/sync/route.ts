@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { botTypeSlug, entries } = await req.json();
+    const { botTypeSlug, entries, instance } = await req.json();
 
     if (!botTypeSlug || !entries || !Array.isArray(entries)) {
       return NextResponse.json({ success: false, message: "botTypeSlug dan entries wajib" }, { status: 400 });
@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: "Bot type tidak ditemukan" }, { status: 404 });
     }
 
+    const botInstance = instance ? parseInt(instance) : 1;
     let synced = 0;
     let updated = 0;
     let reactivated = 0;
@@ -61,6 +62,7 @@ export async function POST(req: NextRequest) {
         if (groupName && existing.groupName !== groupName) updates.groupName = groupName;
         if (groupLink && groupLink.startsWith("http") && existing.groupLink !== groupLink) updates.groupLink = groupLink;
         if (contactPhone && !existing.contactPhone) updates.contactPhone = contactPhone;
+        if (existing.botInstance !== botInstance) updates.botInstance = botInstance;
         if (existing.status === "ENDED" && expiryDate.getTime() > Date.now()) {
           updates.status = "ACTIVE";
           reactivated++;
@@ -80,6 +82,7 @@ export async function POST(req: NextRequest) {
             groupName: groupName || null,
             groupLink: groupLink && groupLink.startsWith("http") ? groupLink : null,
             botTypeId: botType.id,
+            botInstance,
             status: "ACTIVE",
             source: "BOT", // dari sync bot = source BOT (bisa manual atau auto di bot)
             isPremium: isPremium === true,
@@ -91,13 +94,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Cleanup: end rentals yang sudah tidak ada di bot
+    // Cleanup: end rentals yang sudah tidak ada di bot (HANYA untuk instance ini)
     const syncedGroupIds = entries
       .map((e: { groupId?: string }) => e.groupId?.replace("@g.us", "") || "")
       .filter((id: string) => id.length > 0);
 
     const activeRentals = await prisma.rental.findMany({
-      where: { botTypeId: botType.id, status: "ACTIVE" },
+      where: { botTypeId: botType.id, botInstance: botInstance, status: "ACTIVE" },
       select: { id: true, groupId: true },
     });
 
