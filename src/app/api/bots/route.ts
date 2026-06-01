@@ -11,13 +11,23 @@ export async function GET() {
           orderBy: { duration: "asc" },
         },
         _count: {
+          // Count per instance nggak bisa langsung di Prisma,
+          // jadi kita count total aktif — slot check per instance ada di orders/route.ts
           select: { rentals: { where: { status: "ACTIVE" } } },
         },
       },
       orderBy: { createdAt: "asc" },
     });
 
-    return NextResponse.json({ success: true, data: bots });
+    // Hitung slot per instance yang benar: totalCapacity = maxSlots * totalInstances
+    const botsWithSlot = bots.map((bot: any) => ({
+      ...bot,
+      totalCapacity: (bot.maxSlots || 0) * (bot.totalInstances || 1),
+      activeCount: bot._count.rentals,
+      isFull: bot.maxSlots > 0 && bot._count.rentals >= (bot.maxSlots * (bot.totalInstances || 1)),
+    }));
+
+    return NextResponse.json({ success: true, data: botsWithSlot });
   } catch (error) {
     console.error("Error fetching bots:", error);
     return NextResponse.json(
