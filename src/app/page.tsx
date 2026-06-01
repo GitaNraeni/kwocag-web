@@ -76,12 +76,14 @@ export default function Home() {
       <section className="relative z-10 flex-1 flex items-center px-6 py-16 md:py-20">
         <div className="max-w-5xl mx-auto w-full grid md:grid-cols-2 gap-10 md:gap-16 items-center">
           <div className="animate-slide-up">
-            {totalActive > 0 && (
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/20 text-xs text-[var(--primary)] mb-6">
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" />
-                {totalActive} grup aktif saat ini
-              </div>
-            )}
+            <div className="h-8 mb-6">
+              {totalActive > 0 && (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/20 text-xs text-[var(--primary)]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" />
+                  {totalActive} grup aktif saat ini
+                </div>
+              )}
+            </div>
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-[1.15] mb-5">
               Sewa Bot
@@ -169,7 +171,7 @@ export default function Home() {
 
       {/* Stats */}
       <section className="relative z-10 border-t border-[var(--card-border)] px-6 py-12">
-        <div ref={statsRef} className="max-w-3xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-6 text-center scroll-fade">
+        <div ref={statsRef} className="max-w-3xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-6 text-center scroll-fade" style={{ minHeight: '80px' }}>
           <div>
             <p className="text-2xl font-bold text-[var(--primary)]">QRIS</p>
             <p className="text-xs text-[var(--muted)] mt-1">Bayar instan</p>
@@ -183,7 +185,7 @@ export default function Home() {
             <p className="text-xs text-[var(--muted)] mt-1">Aktivasi</p>
           </div>
           <div>
-            <p className="text-2xl font-bold text-[var(--success)]">{totalServed}+</p>
+            <p className="text-2xl font-bold text-[var(--success)] tabular-nums">{totalServed > 0 ? `${totalServed}+` : '—'}</p>
             <p className="text-xs text-[var(--muted)] mt-1">Grup dilayani</p>
           </div>
         </div>
