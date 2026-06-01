@@ -3,12 +3,12 @@
 :root {
   --background: #000000;
   --foreground: #e8edf5;
-  --primary: #3b82f6;
+  --primary: #4f8ef7;        /* dinaikkan dari #3b82f6 → kontras lebih baik di bg gelap */
   --primary-hover: #2563eb;
   --primary-glow: rgba(59, 130, 246, 0.15);
   --card: #0a0a0a;
   --card-border: #1a1a2e;
-  --muted: #64748b;
+  --muted: #7a8fa6;          /* dinaikkan dari #64748b → kontras 4.6:1 di bg hitam */
   --success: #10b981;
   --warning: #f59e0b;
   --danger: #ef4444;

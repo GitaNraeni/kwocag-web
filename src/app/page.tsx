@@ -94,7 +94,7 @@ export default function Home() {
 
             <div className="flex flex-col sm:flex-row gap-3">
               <Link href="/order"
-                className="inline-flex items-center justify-center bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white px-7 py-3.5 rounded-xl font-medium transition shadow-lg shadow-[var(--primary)]/25 text-sm sm:text-base">
+                className="inline-flex items-center justify-center bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white font-semibold px-7 py-3.5 rounded-xl transition shadow-lg shadow-[var(--primary)]/25 text-sm sm:text-base">
                 Order Now
               </Link>
               {contact && (
@@ -203,9 +203,9 @@ export default function Home() {
             <div>
               <p className="text-xs font-medium text-[var(--foreground)] mb-2">Layanan</p>
               <div className="flex flex-col gap-1">
-                <Link href="/about" className="text-xs text-[var(--muted)] hover:text-white transition">Tentang Kami</Link>
-                <Link href="/privacy" className="text-xs text-[var(--muted)] hover:text-white transition">Kebijakan Privasi</Link>
-                <Link href="/terms" className="text-xs text-[var(--muted)] hover:text-white transition">Ketentuan Layanan</Link>
+                <Link href="/about" className="text-xs text-[var(--muted)] hover:text-white transition py-1.5 inline-block">Tentang Kami</Link>
+                <Link href="/privacy" className="text-xs text-[var(--muted)] hover:text-white transition py-1.5 inline-block">Kebijakan Privasi</Link>
+                <Link href="/terms" className="text-xs text-[var(--muted)] hover:text-white transition py-1.5 inline-block">Ketentuan Layanan</Link>
               </div>
             </div>
 
