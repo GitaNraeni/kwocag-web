@@ -39,6 +39,13 @@ export default function OrderTypePage() {
           Kembali
         </Link>
 
+        <h1 className="text-2xl font-bold mb-2">
+          {mode === "new" ? "Pilih Tipe Bot" : "Perpanjang Sewa"}
+        </h1>
+        <p className="text-[var(--muted)] text-sm mb-6">
+          {mode === "new" ? "Pilih bot yang sesuai kebutuhan" : "Pilih tipe bot yang ingin diperpanjang"}
+        </p>
+
         {/* Toggle */}
         <div className="flex bg-[var(--card)] border border-[var(--card-border)] rounded-xl p-1 mb-8">
           <button
@@ -54,13 +61,6 @@ export default function OrderTypePage() {
             Perpanjang
           </button>
         </div>
-
-        <h1 className="text-2xl font-bold mb-2">
-          {mode === "new" ? "Pilih Tipe Bot" : "Perpanjang Sewa"}
-        </h1>
-        <p className="text-[var(--muted)] text-sm mb-6">
-          {mode === "new" ? "Pilih bot yang sesuai kebutuhan" : "Pilih tipe bot yang ingin diperpanjang"}
-        </p>
 
         {loading ? (
           <p className="text-[var(--muted)] py-10 text-center">Memuat...</p>

@@ -12,6 +12,12 @@
     "db:seed": "npx tsx prisma/seed.ts",
     "db:restore": "npx tsx prisma/restore.ts"
   },
+  "browserslist": [
+    "last 2 Chrome versions",
+    "last 2 Firefox versions",
+    "last 2 Safari versions",
+    "last 2 Edge versions"
+  ],
   "dependencies": {
     "@prisma/client": "^5.22.0",
     "@types/qrcode": "^1.5.6",
