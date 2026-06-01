@@ -63,7 +63,11 @@ export default function OrderTypePage() {
         </div>
 
         {loading ? (
-          <p className="text-[var(--muted)] py-10 text-center">Memuat...</p>
+          <div className="space-y-3">
+            {[1,2].map(i => (
+              <div key={i} className="skeleton h-20 rounded-xl" />
+            ))}
+          </div>
         ) : bots.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-[var(--card)] border border-[var(--card-border)] flex items-center justify-center">
@@ -75,8 +79,8 @@ export default function OrderTypePage() {
             <p className="text-[var(--muted)] text-xs mt-1">Silakan hubungi admin untuk informasi lebih lanjut.</p>
           </div>
         ) : (
-          <div className="space-y-3 stagger">
-            {bots.map((bot) => {
+          <div className="space-y-3">
+            {bots.map((bot, idx) => {
               const lowest = bot.prices.length > 0
                 ? (bot.prices.find((p: any) => p.duration === "WEEKLY")?.price || Math.min(...bot.prices.map((p: any) => p.price)))
                 : 0;
@@ -87,41 +91,50 @@ export default function OrderTypePage() {
               const totalCapacity = (bot.maxSlots || 0) * instances;
               const activeCount = bot._count?.rentals || 0;
               const slotsFull = hasSlotLimit && activeCount >= totalCapacity;
-              // Perpanjang juga disabled kalau bot nonaktif
               const disabled = (isClosed || slotsFull || !bot.isActive);
 
               return (
-                <div key={bot.id} className={`relative ${disabled ? "opacity-60" : ""}`}>
+                <div key={bot.id}
+                  className="animate-fade-in"
+                  style={{ animationDelay: `${idx * 60}ms`, animationFillMode: "both" }}
+                >
                   {disabled ? (
-                    <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-xl p-5 cursor-not-allowed">
+                    <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-xl p-5 opacity-50 cursor-not-allowed select-none">
                       <div className="flex items-start justify-between">
                         <div className="min-w-0 flex-1">
                           <h3 className="font-semibold">{bot.name}</h3>
                           <p className="text-xs text-[var(--muted)] mt-0.5">{bot.description}</p>
+                          <p className="text-xs text-[var(--muted)] mt-1.5">
+                            Slot: {activeCount}/{hasSlotLimit ? totalCapacity : "∞"}
+                          </p>
                         </div>
-                        <span className="shrink-0 ml-3 px-2 py-0.5 rounded text-xs bg-red-500/10 text-red-400 font-medium">
+                        <span className="shrink-0 ml-3 px-2 py-0.5 rounded-md text-xs bg-red-500/10 text-red-400 font-medium border border-red-500/20">
                           {slotsFull ? "Slot Penuh" : "Tutup"}
                         </span>
                       </div>
-                      <p className="text-xs text-[var(--muted)] mt-2">
-                        Slot: {activeCount}/{hasSlotLimit ? totalCapacity : "Unlimited"}
-                      </p>
                     </div>
                   ) : (
                     <Link
                       href={href}
-                      className="group flex items-center justify-between bg-[var(--card)] border border-[var(--card-border)] hover:border-[var(--primary)]/40 rounded-xl p-4 sm:p-5 transition"
+                      className="group flex items-center justify-between bg-[var(--card)] border border-[var(--card-border)] hover:border-[var(--primary)]/50 hover:bg-[var(--primary)]/[0.02] rounded-xl p-4 sm:p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[var(--primary)]/5 active:translate-y-0"
                     >
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold group-hover:text-[var(--primary)] transition">{bot.name}</h3>
-                        <p className="text-xs text-[var(--muted)] mt-0.5 truncate">{bot.description}</p>
-                        <p className="text-xs text-[var(--muted)] mt-1">
-                          Slot: {activeCount}/{hasSlotLimit ? totalCapacity : "Unlimited"}
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <h3 className="font-semibold group-hover:text-[var(--primary)] transition-colors duration-200">{bot.name}</h3>
+                          <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] shrink-0" />
+                        </div>
+                        <p className="text-xs text-[var(--muted)] truncate">{bot.description}</p>
+                        <p className="text-xs text-[var(--muted)] mt-1.5">
+                          Slot tersedia: <span className="text-[var(--foreground)]">{hasSlotLimit ? totalCapacity - activeCount : "∞"}</span>
+                          {hasSlotLimit && <span className="text-[var(--muted)]"> / {totalCapacity}</span>}
                         </p>
                       </div>
                       <div className="text-right shrink-0 ml-4">
-                        <p className="text-sm font-bold">Rp {lowest.toLocaleString("id-ID")}</p>
+                        <p className="text-sm font-bold text-[var(--foreground)]">Rp {lowest.toLocaleString("id-ID")}</p>
                         <p className="text-xs text-[var(--muted)]">/minggu</p>
+                        <svg className="w-4 h-4 text-[var(--muted)] group-hover:text-[var(--primary)] group-hover:translate-x-0.5 transition-all duration-200 ml-auto mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
                       </div>
                     </Link>
                   )}
