@@ -96,7 +96,7 @@ export default function AboutPage() {
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold mb-4">Tentang Kami</h1>
             <p className="text-[var(--muted)] text-sm sm:text-base leading-relaxed max-w-2xl">
-              {siteName} menyediakan layanan sewa bot WhatsApp untuk berbagai kebutuhan grup, mulai dari jaga grup, game &amp; stiker, sampai bot khusus store untuk grup reseller. Pilih bot yang sesuai, bayar via QRIS, bot langsung aktif.
+              {siteName}{" "}menyediakan layanan sewa bot WhatsApp untuk berbagai kebutuhan grup, mulai dari jaga grup, game &amp; stiker, sampai bot khusus store untuk grup reseller. Pilih bot yang sesuai, bayar via QRIS, bot langsung aktif.
             </p>
           </div>
 
