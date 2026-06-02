@@ -26,7 +26,7 @@ export default function AboutPage() {
     "Aktif otomatis setelah bayar QRIS, nggak perlu setup apapun",
     "Fitur lengkap: game, stiker, anti-link, welcome message",
     "Cocok buat grup apapun — circle, squad, komunitas, sampe reseller",
-    "Harga miring, bisa mingguan atau bulanan",
+    "Harga fleksibel sesuai kebutuhan, mulai mingguan sampai bulanan",
     "CS fast respon via WA & Telegram",
   ];
 
