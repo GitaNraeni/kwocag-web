@@ -27,7 +27,8 @@ function isPermanent(expiresAt: string | null | undefined): boolean {
   return new Date(expiresAt).getTime() > threshold.getTime();
 }
 
-function formatSisa(expiresAt: string | null): string {
+function formatSisa(expiresAt: string | null, status?: string): string {
+  if (status === "ENDED") return "—";
   if (!expiresAt) return "-";
   if (isPermanent(expiresAt)) return "Selamanya";
   const d = new Date(expiresAt).getTime() - Date.now();
@@ -183,7 +184,7 @@ export default function AdminGroups() {
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-[10px] text-[var(--muted)]">Sisa</p>
-                    <p className="text-xs sm:text-sm font-medium">{formatSisa(rental.expiresAt)}</p>
+                    <p className="text-xs sm:text-sm font-medium">{formatSisa(rental.expiresAt, rental.status)}</p>
                   </div>
                 </div>
               </button>
@@ -255,7 +256,7 @@ export default function AdminGroups() {
               </div>
               <div className="flex justify-between">
                 <span className="text-[var(--muted)]">Sisa Waktu</span>
-                <span className="font-medium">{formatSisa(selectedRental.expiresAt)}</span>
+                <span className="font-medium">{formatSisa(selectedRental.expiresAt, selectedRental.status)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[var(--muted)]">Expired</span>
