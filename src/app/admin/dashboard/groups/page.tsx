@@ -286,6 +286,24 @@ export default function AdminGroups() {
             >
               Tutup
             </button>
+            {selectedRental.status === "ACTIVE" && (
+              <button
+                onClick={async () => {
+                  if (!confirm(`Akhiri sewa untuk ${selectedRental.groupName || selectedRental.groupId}?`)) return;
+                  const res = await fetch(`/api/admin/rentals/${selectedRental.id}/end`, { method: "POST" });
+                  const data = await res.json();
+                  if (data.success) {
+                    setRentals(prev => prev.map(r => r.id === selectedRental.id ? { ...r, status: "ENDED" } : r));
+                    setSelectedRental(null);
+                  } else {
+                    alert("Gagal mengakhiri sewa: " + data.message);
+                  }
+                }}
+                className="w-full mt-2 py-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-xl text-sm font-medium transition"
+              >
+                Akhiri Sewa
+              </button>
+            )}
           </div>
         </div>
       )}
