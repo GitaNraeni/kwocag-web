@@ -22,11 +22,12 @@ export default function AboutPage() {
   }, []);
 
   const features = [
-    "Bot otomatis aktif 24/7 tanpa perangkat tambahan",
-    "Aktivasi instan setelah pembayaran via QRIS",
-    "Berbagai tipe bot sesuai kebutuhan",
-    "Harga terjangkau, sistem sewa mingguan & bulanan",
-    "Support langsung via WhatsApp dan Telegram",
+    "Bot aktif 24/7, online terus di grup kamu",
+    "Aktif otomatis setelah bayar QRIS, nggak perlu setup apapun",
+    "Fitur lengkap: game, stiker, anti-link, welcome message",
+    "Cocok buat grup apapun — circle, squad, komunitas, sampe reseller",
+    "Harga miring, bisa mingguan atau bulanan",
+    "CS fast respon via WA & Telegram",
   ];
 
   const reasons = [
@@ -68,7 +69,7 @@ export default function AboutPage() {
       ),
       color: "bg-blue-500/10",
       title: "Support",
-      desc: "Respon cepat via WA & Telegram",
+      desc: "CS fast respon via WA & Telegram",
     },
   ];
 
@@ -95,8 +96,7 @@ export default function AboutPage() {
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold mb-4">Tentang Kami</h1>
             <p className="text-[var(--muted)] text-sm sm:text-base leading-relaxed max-w-2xl">
-              {siteName} adalah layanan penyedia bot WhatsApp otomatis yang dirancang untuk membantu
-              pengelolaan grup dan toko online. Kami hadir dengan solusi yang cepat, terjangkau, dan mudah digunakan.
+              {siteName} nyediain bot WA sewa-an buat grup kamu. Mau yang serbaguna — jaga grup, game, stiker, plus fitur store — atau khusus buat grup reseller? Tinggal pilih, bayar, langsung jalan.
             </p>
           </div>
 

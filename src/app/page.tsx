@@ -94,7 +94,7 @@ export default function Home() {
             </h1>
 
             <p className="text-[var(--muted)] text-base lg:text-lg leading-relaxed mb-8 max-w-md">
-              Solusi otomatis untuk manajemen grup dan toko online. Proses cepat, bayar via QRIS, bot langsung aktif di grup kamu.
+              Capek urus grup sendiri? Bot WA siap bantu. Bayar QRIS, langsung aktif — nggak perlu ribet.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">
@@ -197,7 +197,7 @@ export default function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
             <div>
               <span className="text-sm font-bold text-[var(--foreground)]">{siteName}</span>
-              <p className="text-xs text-[var(--muted)] mt-1 leading-relaxed">Layanan sewa bot WhatsApp terpercaya. Proses otomatis, aktivasi instan.</p>
+              <p className="text-xs text-[var(--muted)] mt-1 leading-relaxed">Sewa bot WA buat grup kamu. Bayar, share link grup, langsung jalan.</p>
             </div>
             <div>
               <p className="text-xs font-medium text-[var(--foreground)] mb-3">Layanan</p>
