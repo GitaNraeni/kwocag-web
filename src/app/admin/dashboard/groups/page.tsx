@@ -55,6 +55,8 @@ export default function AdminGroups() {
   const [selectedRental, setSelectedRental] = useState<Rental | null>(null);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [confirmEnd, setConfirmEnd] = useState<Rental | null>(null);
+  const [ending, setEnding] = useState(false);
 
   useEffect(() => {
     fetch("/api/admin/rentals?limit=200")
@@ -288,22 +290,64 @@ export default function AdminGroups() {
             </button>
             {selectedRental.status === "ACTIVE" && (
               <button
-                onClick={async () => {
-                  if (!confirm(`Akhiri sewa untuk ${selectedRental.groupName || selectedRental.groupId}?`)) return;
-                  const res = await fetch(`/api/admin/rentals/${selectedRental.id}/end`, { method: "POST" });
-                  const data = await res.json();
-                  if (data.success) {
-                    setRentals(prev => prev.map(r => r.id === selectedRental.id ? { ...r, status: "ENDED" } : r));
-                    setSelectedRental(null);
-                  } else {
-                    alert("Gagal mengakhiri sewa: " + data.message);
-                  }
-                }}
+                onClick={() => setConfirmEnd(selectedRental)}
                 className="w-full mt-2 py-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-xl text-sm font-medium transition"
               >
                 Akhiri Sewa
               </button>
             )}
+          </div>
+        </div>
+      )}
+      {/* Custom Confirm Modal — Akhiri Sewa */}
+      {confirmEnd && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => !ending && setConfirmEnd(null)} />
+          <div className="relative bg-[var(--card)] border border-[var(--card-border)] rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-scale-in">
+            {/* Icon */}
+            <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+              <svg className="w-6 h-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+
+            <h3 className="text-base font-bold text-center mb-1">Akhiri Sewa</h3>
+            <p className="text-xs text-[var(--muted)] text-center mb-1">Yakin ingin mengakhiri sewa untuk</p>
+            <p className="text-sm font-semibold text-center mb-5 truncate px-2">
+              {confirmEnd.groupName || confirmEnd.groupId}
+            </p>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => !ending && setConfirmEnd(null)}
+                disabled={ending}
+                className="flex-1 py-2.5 bg-[var(--card-border)] hover:bg-[var(--muted)]/20 rounded-xl text-sm font-medium transition disabled:opacity-50"
+              >
+                Batal
+              </button>
+              <button
+                onClick={async () => {
+                  setEnding(true);
+                  try {
+                    const res = await fetch(`/api/admin/rentals/${confirmEnd.id}/end`, { method: "POST" });
+                    const data = await res.json();
+                    if (data.success) {
+                      setRentals(prev => prev.map(r => r.id === confirmEnd.id ? { ...r, status: "ENDED" } : r));
+                      setSelectedRental(null);
+                      setConfirmEnd(null);
+                    }
+                  } finally {
+                    setEnding(false);
+                  }
+                }}
+                disabled={ending}
+                className="flex-1 py-2.5 bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-red-400 rounded-xl text-sm font-semibold transition disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {ending ? (
+                  <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg> Memproses...</>
+                ) : "Akhiri Sewa"}
+              </button>
+            </div>
           </div>
         </div>
       )}
