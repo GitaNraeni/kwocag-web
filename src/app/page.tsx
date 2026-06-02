@@ -77,7 +77,7 @@ export default function Home() {
       {/* Hero */}
       <section className="relative z-10 flex-1 flex items-center px-6 py-16 md:py-20">
         <div className="max-w-5xl mx-auto w-full grid md:grid-cols-2 gap-10 md:gap-16 items-center">
-          <div className={ready ? "animate-slide-up" : "opacity-0"}>
+          <div>
             {/* Badge — reserved height supaya nggak CLS */}
             <div className="h-8 mb-6">
               {totalActive > 0 && (
@@ -112,7 +112,7 @@ export default function Home() {
           </div>
 
           {/* Right visual */}
-          <div className="hidden md:block" style={{ opacity: ready ? 1 : 0, animation: ready ? 'fadeIn 0.4s ease-out 200ms both' : 'none' }}>
+          <div className="hidden md:block" style={{ opacity: ready ? 1 : 0, transition: 'opacity 0.3s ease 0.1s' }}>
             <div className="relative">
               <div className="absolute -inset-4 bg-gradient-to-br from-[var(--primary)]/5 to-transparent rounded-3xl blur-2xl" />
               <div className="relative bg-[var(--card)] border border-[var(--card-border)] rounded-2xl p-6 card-glow">
@@ -172,9 +172,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stats — smooth fade in, nggak jlep */}
+      {/* Stats */}
       <section className="relative z-10 border-t border-[var(--card-border)] px-6 py-12">
-        <div ref={statsRef} className="max-w-3xl mx-auto scroll-fade" style={{ minHeight: '80px' }}>
+        <div ref={statsRef} className="max-w-3xl mx-auto" style={{ minHeight: '80px' }}>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
             {[
               { value: "QRIS", label: "Bayar instan", color: "text-[var(--primary)]" },
@@ -182,7 +182,7 @@ export default function Home() {
               { value: "<2m", label: "Aktivasi", color: "" },
               { value: totalServed > 0 ? `${totalServed}+` : "—", label: "Grup dilayani", color: "text-[var(--success)] tabular-nums" },
             ].map((stat, i) => (
-              <div key={i} className="animate-fade-in" style={{ animationDelay: `${i * 80}ms`, animationFillMode: "both" }}>
+              <div key={i}>
                 <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
                 <p className="text-xs text-[var(--muted)] mt-1">{stat.label}</p>
               </div>
