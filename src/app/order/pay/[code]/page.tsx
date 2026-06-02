@@ -58,6 +58,13 @@ export default function PaymentPage() {
     return () => clearInterval(timer);
   }, [status]);
 
+  // Auto redirect ke status page saat SUCCESS
+  useEffect(() => {
+    if (status !== "SUCCESS") return;
+    const t = setTimeout(() => router.push(`/order/status/${code}`), 2000);
+    return () => clearTimeout(t);
+  }, [status, code, router]);
+
   const handleDownload = async () => {
     try {
       if (qrUrl) {
@@ -105,7 +112,14 @@ export default function PaymentPage() {
               </svg>
             </div>
             <h2 className="text-xl font-bold mb-2">Pembayaran Berhasil</h2>
-            <p className="text-sm text-[var(--muted)]">Bot sedang dalam proses aktivasi</p>
+            <p className="text-sm text-[var(--muted)] mb-4">Bot sedang dalam proses aktivasi</p>
+            <p className="text-xs text-[var(--muted)] mb-4">Mengarahkan ke halaman status...</p>
+            <Link
+              href={`/order/status/${code}`}
+              className="inline-block text-sm text-[var(--primary)] hover:underline"
+            >
+              Klik di sini jika tidak otomatis redirect
+            </Link>
           </div>
         </div>
       </div>
