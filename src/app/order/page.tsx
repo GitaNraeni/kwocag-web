@@ -134,8 +134,8 @@ export default function OrderTypePage() {
                       {hasSlotLimit && (
                         <div>
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs text-[var(--muted)]">Slot tersedia</span>
-                            <span className="text-xs font-medium">{totalCapacity - activeCount} <span className="text-[var(--muted)] font-normal">/ {totalCapacity}</span></span>
+                            <span className="text-xs text-[var(--muted)]">Slot terpakai</span>
+                            <span className="text-xs font-medium">{activeCount} <span className="text-[var(--muted)] font-normal">/ {totalCapacity}</span></span>
                           </div>
                           <div className="h-1 bg-[var(--card-border)] rounded-full overflow-hidden">
                             <div

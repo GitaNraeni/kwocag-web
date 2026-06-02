@@ -26,19 +26,22 @@ export default function Home() {
   const [totalActive, setTotalActive] = useState(0);
   const [totalServed, setTotalServed] = useState(0);
   const [bots, setBots] = useState<any[]>([]);
+  const [ready, setReady] = useState(false); // semua data siap baru render hero
   const statsRef = useScrollReveal(0.05);
   const footerRef = useScrollReveal(0.05);
 
   useEffect(() => {
-    fetch("/api/site").then(r => r.json()).then(d => {
-      if (d.success) { setSiteName(d.data.siteName); setContact(d.data.contactWhatsapp || ""); setTelegram(d.data.contactTelegram || ""); setChannelWa(d.data.channelWhatsapp || ""); }
-    }).catch(() => {});
-    fetch("/api/bots/stats").then(r => r.json()).then(d => {
-      if (d.success) { setTotalActive(d.totalActive); setTotalServed(d.totalServed || 0); }
-    }).catch(() => {});
-    fetch("/api/bots").then(r => r.json()).then(d => {
-      if (d.success) setBots(d.data);
-    }).catch(() => {});
+    Promise.all([
+      fetch("/api/site").then(r => r.json()).then(d => {
+        if (d.success) { setSiteName(d.data.siteName); setContact(d.data.contactWhatsapp || ""); setTelegram(d.data.contactTelegram || ""); setChannelWa(d.data.channelWhatsapp || ""); }
+      }).catch(() => {}),
+      fetch("/api/bots/stats").then(r => r.json()).then(d => {
+        if (d.success) { setTotalActive(d.totalActive); setTotalServed(d.totalServed || 0); }
+      }).catch(() => {}),
+      fetch("/api/bots").then(r => r.json()).then(d => {
+        if (d.success) setBots(d.data);
+      }).catch(() => {}),
+    ]).finally(() => setReady(true));
   }, []);
 
   return (
@@ -74,7 +77,7 @@ export default function Home() {
       {/* Hero */}
       <section className="relative z-10 flex-1 flex items-center px-6 py-16 md:py-20">
         <div className="max-w-5xl mx-auto w-full grid md:grid-cols-2 gap-10 md:gap-16 items-center">
-          <div className="animate-slide-up">
+          <div className={ready ? "animate-slide-up" : "opacity-0"}>
             {/* Badge — reserved height supaya nggak CLS */}
             <div className="h-8 mb-6">
               {totalActive > 0 && (
@@ -109,7 +112,7 @@ export default function Home() {
           </div>
 
           {/* Right visual */}
-          <div className="hidden md:block animate-fade-in" style={{ animationDelay: "200ms", animationFillMode: "both" }}>
+          <div className="hidden md:block" style={{ opacity: ready ? 1 : 0, animation: ready ? 'fadeIn 0.4s ease-out 200ms both' : 'none' }}>
             <div className="relative">
               <div className="absolute -inset-4 bg-gradient-to-br from-[var(--primary)]/5 to-transparent rounded-3xl blur-2xl" />
               <div className="relative bg-[var(--card)] border border-[var(--card-border)] rounded-2xl p-6 card-glow">
