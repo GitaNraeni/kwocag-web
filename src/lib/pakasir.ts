@@ -184,12 +184,17 @@ async function createRamashopPayment(apiKey: string, params: { orderCode: string
       const qrString = data.data.qrString || null;
       const depositId = data.data.depositId;
 
-      // Prioritas: qrImage langsung dari RamaShop (gambar QR QRIS yang bisa di-scan bayar)
-      let finalQrUrl = qrImage;
+      // PRIORITAS: qrString → generate QR menggunakan api.qrserver.com (lebih reliable)
+      let finalQrUrl = null;
 
-      if (!finalQrUrl && qrString) {
+      if (qrString) {
         // Generate QR image dari QRIS string (ini QRIS asli, bisa langsung bayar)
         finalQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(qrString)}`;
+        console.log(`[RamaShop] Generated QR from qrString via api.qrserver.com`);
+      } else if (qrImage) {
+        // Fallback: qrImage langsung dari RamaShop (tapi bisa expired/temporary)
+        finalQrUrl = qrImage;
+        console.log(`[RamaShop] Using qrImage from RamaShop: ${qrImage.substring(0, 100)}...`);
       }
 
       if (!finalQrUrl) {

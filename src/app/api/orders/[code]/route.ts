@@ -38,6 +38,7 @@ export async function GET(
         totalPrice: order.totalPrice,
         status: order.status,
         paymentUrl: order.paymentUrl,
+        qrImage: order.qrImage,
         paidAt: order.paidAt,
         expiresAt: order.expiresAt,
         createdAt: order.createdAt,

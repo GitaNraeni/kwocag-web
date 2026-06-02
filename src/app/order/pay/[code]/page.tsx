@@ -59,24 +59,25 @@ export default function PaymentPage() {
   }, [status]);
 
   const handleDownload = async () => {
-    if (!order?.paymentUrl) return;
     try {
-      // Kalau Pakasir page (iframe), gak bisa download QR langsung — buka di tab baru
-      if (order.paymentUrl.includes("app.pakasir.com/pay")) {
-        window.open(order.paymentUrl, "_blank");
+      if (qrUrl) {
+        // Fetch dari proxy kita sendiri — tidak ada CORS issue
+        const res = await fetch(qrUrl);
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `QRIS-${code}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
         return;
       }
-      // RamaShop / direct QR image — download langsung
-      const res = await fetch(order.paymentUrl);
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `QRIS-${code}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      // Pakasir page — buka di tab baru
+      if (order?.paymentUrl) {
+        window.open(order.paymentUrl, "_blank");
+      }
     } catch {}
   };
 
@@ -125,9 +126,11 @@ export default function PaymentPage() {
     );
   }
 
-  // Detect apakah paymentUrl itu halaman Pakasir (perlu iframe) atau gambar QR langsung
-  const isPakasirPage = order.paymentUrl?.includes("app.pakasir.com/pay");
-  const qrUrl = !isPakasirPage ? order.paymentUrl : null;
+  // Pakai proxy endpoint untuk serve QR image — hindari CORS issue
+  // /api/orders/[code]/qr fetch dari server-side, proxy juga handle paymentUrl sebagai fallback
+  const hasQr = order.qrImage || order.paymentUrl;
+  const qrUrl = hasQr ? `/api/orders/${code}/qr` : null;
+  const isPakasirPage = !qrUrl && order.paymentUrl?.includes("app.pakasir.com/pay");
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6 py-10">

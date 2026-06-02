@@ -236,6 +236,7 @@ export async function POST(req: NextRequest) {
       data: {
         paymentId: paymentId,
         paymentUrl: paymentUrl,
+        qrImage: qrImage,
       },
     });
 

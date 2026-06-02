@@ -56,6 +56,7 @@ model Order {
   status        OrderStatus @default(PENDING)
   paymentId     String?
   paymentUrl    String?
+  qrImage       String?
   paidAt        DateTime?
   expiresAt     DateTime?
   notes         String?
