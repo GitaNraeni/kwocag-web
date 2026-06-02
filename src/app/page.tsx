@@ -197,7 +197,7 @@ export default function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
             <div>
               <span className="text-sm font-bold text-[var(--foreground)]">{siteName}</span>
-              <p className="text-xs text-[var(--muted)] mt-1 leading-relaxed">Sewa bot WA buat grup kamu. Bayar, share link grup, langsung jalan.</p>
+              <p className="text-xs text-[var(--muted)] mt-1 leading-relaxed">Layanan sewa bot WhatsApp untuk grup kamu. Aktif otomatis, langsung jalan.</p>
             </div>
             <div>
               <p className="text-xs font-medium text-[var(--foreground)] mb-3">Layanan</p>
