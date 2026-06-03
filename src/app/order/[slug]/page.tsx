@@ -288,22 +288,22 @@ export default function OrderPage() {
                 }`}
               />
               {isExtend ? (
-                <p className="text-xs text-[var(--warning)] mt-1.5 font-bold uppercase">
-                  PASTIKAN BOT BERADA DI GRUP YANG INGIN DIPERPANJANG
+                <p className="text-xs text-[var(--warning)] mt-1.5 font-bold">
+                  Pastikan bot berada di grup yang ingin diperpanjang
                 </p>
               ) : (
                 <p className={`text-xs mt-1.5 ${
                   !groupLink
                     ? "text-[var(--warning)]"
                     : !isValidGroupLink(groupLink)
-                    ? "text-[var(--danger)] font-bold uppercase"
-                    : "text-[var(--success)] font-bold uppercase"
+                    ? "text-[var(--danger)] font-bold"
+                    : "text-[var(--success)] font-bold"
                 }`}>
                   {!groupLink
                     ? "Matikan persetujuan admin agar bot tidak error saat join"
                     : !isValidGroupLink(groupLink)
-                    ? "Link grup tidak valid, harus diawali https://chat.whatsapp.com/"
-                    : "Link grup berhasil terdeteksi."
+                    ? "Link tidak valid, harus diawali https://chat.whatsapp.com/"
+                    : "Link (grup) berhasil ditambahkan/terdeteksi"
                   }
                 </p>
               )}
