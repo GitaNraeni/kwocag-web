@@ -302,8 +302,8 @@ export default function OrderPage() {
                   {!groupLink
                     ? "Matikan persetujuan admin agar bot tidak error saat join"
                     : !isValidGroupLink(groupLink)
-                    ? "LINK TIDAK VALID, HARUS DIAWALI https://chat.whatsapp.com/"
-                    : "LINK (GRUP) BERHASIL DITAMBAHKAN/TERDETEKSI"
+                    ? "Link grup tidak valid, harus diawali https://chat.whatsapp.com/"
+                    : "Link grup berhasil terdeteksi."
                   }
                 </p>
               )}
@@ -331,7 +331,7 @@ export default function OrderPage() {
                 <label className="block text-sm font-medium mb-2">Email</label>
                 <input
                   type="email"
-                  placeholder="opsional"
+                  placeholder="opsional@kwocag.web.id"
                   value={contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
                   className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--primary)]"
