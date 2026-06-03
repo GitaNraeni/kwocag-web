@@ -292,12 +292,12 @@ export default function OrderPage() {
                   Pastikan bot berada di grup yang ingin diperpanjang
                 </p>
               ) : (
-                <p className={`text-xs mt-1.5 ${
+                <p className={`text-xs mt-1.5 font-bold ${
                   !groupLink
                     ? "text-[var(--warning)]"
                     : !isValidGroupLink(groupLink)
-                    ? "text-[var(--danger)] font-bold"
-                    : "text-[var(--success)] font-bold"
+                    ? "text-[var(--danger)]"
+                    : "text-[var(--success)]"
                 }`}>
                   {!groupLink
                     ? "Matikan persetujuan admin agar bot tidak error saat join"
