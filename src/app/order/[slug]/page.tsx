@@ -282,20 +282,27 @@ export default function OrderPage() {
                 className={`w-full bg-[var(--background)] border rounded-xl px-4 py-3 text-sm focus:outline-none transition ${
                   groupLink && !isValidGroupLink(groupLink)
                     ? "border-[var(--danger)] focus:border-[var(--danger)]"
+                    : groupLink && isValidGroupLink(groupLink)
+                    ? "border-[var(--success)] focus:border-[var(--success)]"
                     : "border-[var(--card-border)] focus:border-[var(--primary)]"
                 }`}
               />
-              {groupLink && !isValidGroupLink(groupLink) && (
-                <p className="text-xs text-[var(--danger)] mt-1.5">Link tidak valid. Harus diawali https://chat.whatsapp.com/</p>
-              )}
-              {groupLink && isValidGroupLink(groupLink) && !isExtend && (
-                <p className="text-xs text-[var(--success)] mt-1.5">Link grup berhasil terdeteksi</p>
-              )}
               {isExtend ? (
                 <p className="text-xs text-[var(--warning)] mt-1.5">Pastikan bot berada di grup yang ingin diperpanjang</p>
               ) : (
-                <p className="text-xs text-[var(--warning)] mt-1.5">Matikan fitur persetujuan admin agar bot tidak error saat join</p>
+                <>
+                  {!groupLink && (
+                    <p className="text-xs text-[var(--warning)] mt-1.5">Matikan fitur persetujuan admin agar bot tidak error saat join</p>
+                  )}
+                  {groupLink && !isValidGroupLink(groupLink) && (
+                    <p className="text-xs text-[var(--danger)] mt-1.5">Link tidak valid, harus diawali https://chat.whatsapp.com/</p>
+                  )}
+                  {groupLink && isValidGroupLink(groupLink) && (
+                    <p className="text-xs text-[var(--success)] mt-1.5">Link grup berhasil terdeteksi</p>
+                  )}
+                </>
               )}
+            </div>
             </div>
 
             {/* Kontak */}
