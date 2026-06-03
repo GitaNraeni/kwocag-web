@@ -110,7 +110,7 @@ export default function OrderDetailPage() {
           )}
           {order.status === "PENDING" && (
             <button onClick={() => handleAction("cancel")} disabled={actionLoading}
-              className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-xs sm:text-sm rounded-lg transition disabled:opacity-50">
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm rounded-lg transition disabled:opacity-50">
               Batalkan
             </button>
           )}
