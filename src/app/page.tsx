@@ -24,7 +24,7 @@ export default function Home() {
   const [telegram, setTelegram] = useState("");
   const [channelWa, setChannelWa] = useState("");
   const [totalActive, setTotalActive] = useState(0);
-  const [totalServed, setTotalServed] = useState(0);
+  const [totalServed, setTotalServed] = useState<number | null>(null);
   const [bots, setBots] = useState<any[]>([]);
   const [ready, setReady] = useState(false); // semua data siap baru render hero
   const statsRef = useScrollReveal(0.05);
@@ -35,13 +35,15 @@ export default function Home() {
       fetch("/api/site").then(r => r.json()).then(d => {
         if (d.success) { setSiteName(d.data.siteName); setContact(d.data.contactWhatsapp || ""); setTelegram(d.data.contactTelegram || ""); setChannelWa(d.data.channelWhatsapp || ""); }
       }).catch(() => {}),
-      fetch("/api/bots/stats").then(r => r.json()).then(d => {
-        if (d.success) { setTotalActive(d.totalActive); setTotalServed(d.totalServed || 0); }
-      }).catch(() => {}),
       fetch("/api/bots").then(r => r.json()).then(d => {
         if (d.success) setBots(d.data);
       }).catch(() => {}),
     ]).finally(() => setReady(true));
+
+    // Stats fetch terpisah — nggak nunggu bareng hero
+    fetch("/api/bots/stats").then(r => r.json()).then(d => {
+      if (d.success) { setTotalActive(d.totalActive); setTotalServed(d.totalServed || 0); }
+    }).catch(() => {});
   }, []);
 
   return (
@@ -181,10 +183,14 @@ export default function Home() {
                 { value: "QRIS", label: "Bayar instan", color: "text-[var(--primary)]" },
                 { value: "24/7", label: "Bot online", color: "" },
                 { value: "<2m", label: "Aktivasi", color: "" },
-                { value: totalServed > 0 ? `${totalServed}+` : "68+", label: "Grup dilayani", color: "text-[var(--success)] tabular-nums" },
+                { value: totalServed !== null ? `${totalServed}+` : null, label: "Grup dilayani", color: "text-[var(--success)] tabular-nums" },
               ].map((stat, i) => (
                 <div key={i} className="animate-fade-in" style={{ animationDelay: `${i * 80}ms`, animationFillMode: "both" }}>
-                  <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+                  {stat.value !== null ? (
+                    <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+                  ) : (
+                    <div className="h-8 w-12 mx-auto rounded-md bg-[var(--card-border)] animate-pulse" />
+                  )}
                   <p className="text-xs text-[var(--muted)] mt-1">{stat.label}</p>
                 </div>
               ))}
