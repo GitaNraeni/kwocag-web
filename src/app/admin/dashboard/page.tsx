@@ -181,7 +181,7 @@ export default function AdminOverview() {
                     <p className="text-[10px] sm:text-xs text-[var(--muted)]">{rental.botType?.name}</p>
                   </div>
                   <span className={`text-[10px] sm:text-xs px-1.5 py-0.5 rounded shrink-0 ${
-                    rental.status === "ACTIVE" ? "bg-green-500/10 text-green-400" : "bg-gray-500/10 text-gray-400"
+                    rental.status === "ACTIVE" ? "bg-green-500/10 text-green-400" : "bg-orange-500/10 text-orange-400"
                   }`}>
                     {rental.status === "ACTIVE" ? "Aktif" : "Selesai"}
                   </span>
