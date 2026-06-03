@@ -127,6 +127,14 @@ model SiteSettings {
   maintenanceMsg  String? // custom message saat maintenance
 }
 
+model BotHeartbeat {
+  id          String   @id // format: "instance_{n}_{slug}"
+  instance    Int
+  botTypeSlug String
+  lastSeen    DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 enum Duration {
   WEEKLY
   MONTHLY
