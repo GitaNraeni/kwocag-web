@@ -172,22 +172,25 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stats — smooth fade in, nggak jlep */}
+      {/* Stats — muncul bareng hero setelah data ready */}
       <section className="relative z-10 border-t border-[var(--card-border)] px-6 py-12">
         <div ref={statsRef} className="max-w-3xl mx-auto scroll-fade" style={{ minHeight: '80px' }}>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
-            {[
-              { value: "QRIS", label: "Bayar instan", color: "text-[var(--primary)]" },
-              { value: "24/7", label: "Bot online", color: "" },
-              { value: "<2m", label: "Aktivasi", color: "" },
-              { value: totalServed > 0 ? `${totalServed}+` : "—", label: "Grup dilayani", color: "text-[var(--success)] tabular-nums" },
-            ].map((stat, i) => (
-              <div key={i} className="animate-fade-in" style={{ animationDelay: `${i * 80}ms`, animationFillMode: "both" }}>
-                <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
-                <p className="text-xs text-[var(--muted)] mt-1">{stat.label}</p>
-              </div>
-            ))}
-          </div>
+          {ready && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+              {[
+                { value: "QRIS", label: "Bayar instan", color: "text-[var(--primary)]" },
+                { value: "24/7", label: "Bot online", color: "" },
+                { value: "<2m", label: "Aktivasi", color: "" },
+                { value: totalServed > 0 ? `${totalServed}+` : "68+", label: "Grup dilayani", color: "text-[var(--success)] tabular-nums" },
+              ].map((stat, i) => (
+                <div key={i} className="animate-fade-in" style={{ animationDelay: `${i * 80}ms`, animationFillMode: "both" }}>
+                  <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+                  <p className="text-xs text-[var(--muted)] mt-1">{stat.label}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         </div>
       </section>
 
