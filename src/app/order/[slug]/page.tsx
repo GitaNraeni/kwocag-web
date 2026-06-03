@@ -288,13 +288,13 @@ export default function OrderPage() {
               {groupLink && !isValidGroupLink(groupLink) && (
                 <p className="text-xs text-[var(--danger)] mt-1.5">Link tidak valid. Harus diawali https://chat.whatsapp.com/</p>
               )}
-              {groupLink && isValidGroupLink(groupLink) && (
-                <p className="text-xs text-[var(--success)] mt-1.5">✓ Link valid</p>
+              {groupLink && isValidGroupLink(groupLink) && !isExtend && (
+                <p className="text-xs text-[var(--success)] mt-1.5">Link grup berhasil terdeteksi</p>
               )}
               {isExtend ? (
-                <p className="text-xs text-[var(--warning)] mt-1.5">Pastikan bot sudah ada di dalam grup ini</p>
+                <p className="text-xs text-[var(--warning)] mt-1.5">Pastikan bot berada di grup yang ingin diperpanjang</p>
               ) : (
-                !groupLink && <p className="text-xs text-[var(--warning)] mt-1.5">Matikan fitur persetujuan admin agar bot tidak error saat join</p>
+                <p className="text-xs text-[var(--warning)] mt-1.5">Matikan fitur persetujuan admin agar bot tidak error saat join</p>
               )}
             </div>
 
