@@ -8,17 +8,27 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
   }
 
+  const { searchParams } = new URL(req.url);
+  const slug = searchParams.get("slug");
+
   const now = new Date();
   // Ambil rental ACTIVE yang expired, ATAU rental ENDED yang baru diakhiri manual (dalam 10 menit terakhir)
   const recentEndThreshold = new Date(now.getTime() - 10 * 60 * 1000);
 
+  const where: any = {
+    OR: [
+      { status: "ACTIVE", expiresAt: { lt: now } },
+      { status: "ENDED", expiresAt: { lt: now, gt: recentEndThreshold } },
+    ],
+  };
+
+  // Filter by slug kalau ada
+  if (slug) {
+    where.botType = { slug };
+  }
+
   const rentals = await prisma.rental.findMany({
-    where: {
-      OR: [
-        { status: "ACTIVE", expiresAt: { lt: now } },
-        { status: "ENDED", expiresAt: { lt: now, gt: recentEndThreshold } },
-      ],
-    },
+    where,
     include: { botType: true },
   });
 
