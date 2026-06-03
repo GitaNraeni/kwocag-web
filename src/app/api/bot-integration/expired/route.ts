@@ -10,9 +10,9 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const slug = searchParams.get("slug");
+  const instance = searchParams.get("instance");
 
   const now = new Date();
-  // Ambil rental ACTIVE yang expired, ATAU rental ENDED yang baru diakhiri manual (dalam 10 menit terakhir)
   const recentEndThreshold = new Date(now.getTime() - 10 * 60 * 1000);
 
   const where: any = {
@@ -22,10 +22,8 @@ export async function GET(req: NextRequest) {
     ],
   };
 
-  // Filter by slug kalau ada
-  if (slug) {
-    where.botType = { slug };
-  }
+  if (slug) where.botType = { slug };
+  if (instance) where.botInstance = parseInt(instance);
 
   const rentals = await prisma.rental.findMany({
     where,
