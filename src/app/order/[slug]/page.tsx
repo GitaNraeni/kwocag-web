@@ -32,6 +32,7 @@ export default function OrderPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
 
   // Form
   const [tier, setTier] = useState<"basic" | "premium">("basic");
@@ -88,12 +89,25 @@ export default function OrderPage() {
   const getFee = () => adminFeeConfig.flat + Math.ceil(getTotal() * adminFeeConfig.percent / 100);
   const getGrandTotal = () => getTotal() + getFee();
 
+  // Validasi link grup WhatsApp
+  const isValidGroupLink = (link: string) =>
+    /^https:\/\/chat\.whatsapp\.com\/[A-Za-z0-9]{10,}$/.test(link.trim());
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!bot) return;
+    if (!isValidGroupLink(groupLink)) {
+      setError("Link grup tidak valid. Gunakan link dari WhatsApp (https://chat.whatsapp.com/...)");
+      return;
+    }
     setError("");
-    setSubmitting(true);
+    setShowConfirm(true);
+  };
 
+  const handleConfirm = async () => {
+    if (!bot) return;
+    setShowConfirm(false);
+    setSubmitting(true);
     try {
       const res = await fetch("/api/orders", {
         method: "POST",
@@ -111,7 +125,6 @@ export default function OrderPage() {
 
       const data = await res.json();
       if (data.success) {
-        // Redirect ke halaman payment dedicated
         router.push(`/order/pay/${data.data.orderCode}`);
       } else {
         setError(data.message || "Gagal membuat order");
@@ -266,12 +279,22 @@ export default function OrderPage() {
                 placeholder="https://chat.whatsapp.com/xxxxx"
                 value={groupLink}
                 onChange={(e) => setGroupLink(e.target.value)}
-                className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--primary)]"
+                className={`w-full bg-[var(--background)] border rounded-xl px-4 py-3 text-sm focus:outline-none transition ${
+                  groupLink && !isValidGroupLink(groupLink)
+                    ? "border-[var(--danger)] focus:border-[var(--danger)]"
+                    : "border-[var(--card-border)] focus:border-[var(--primary)]"
+                }`}
               />
+              {groupLink && !isValidGroupLink(groupLink) && (
+                <p className="text-xs text-[var(--danger)] mt-1.5">Link tidak valid. Harus diawali https://chat.whatsapp.com/</p>
+              )}
+              {groupLink && isValidGroupLink(groupLink) && (
+                <p className="text-xs text-[var(--success)] mt-1.5">✓ Link valid</p>
+              )}
               {isExtend ? (
                 <p className="text-xs text-[var(--warning)] mt-1.5">Pastikan bot sudah ada di dalam grup ini</p>
               ) : (
-                <p className="text-xs text-[var(--warning)] mt-1.5">Matikan fitur persetujuan admin agar bot tidak error saat join</p>
+                !groupLink && <p className="text-xs text-[var(--warning)] mt-1.5">Matikan fitur persetujuan admin agar bot tidak error saat join</p>
               )}
             </div>
 
@@ -339,6 +362,58 @@ export default function OrderPage() {
           </form>
         </div>
       </div>
+
+      {/* Modal Konfirmasi */}
+      {showConfirm && bot && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6 bg-black/60 backdrop-blur-sm">
+          <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-2xl p-6 w-full max-w-sm">
+            <h3 className="text-lg font-bold mb-4">Konfirmasi Order</h3>
+            <div className="space-y-3 text-sm mb-6">
+              <div className="flex justify-between">
+                <span className="text-[var(--muted)]">Bot</span>
+                <span className="font-medium">{bot.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[var(--muted)]">Durasi</span>
+                <span className="font-medium">
+                  {duration === "WEEKLY" ? "1 Minggu" : duration === "MONTHLY" ? "1 Bulan" : `${customDays} Hari`}
+                </span>
+              </div>
+              {bot.hasPremiumTier && (
+                <div className="flex justify-between">
+                  <span className="text-[var(--muted)]">Tipe</span>
+                  <span className={`font-medium ${tier === "premium" ? "text-purple-400" : ""}`}>
+                    {tier === "premium" ? "Premium" : "Basic"}
+                  </span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-[var(--muted)]">Grup</span>
+                <span className="font-medium text-xs text-right max-w-[180px] break-all">{groupLink}</span>
+              </div>
+              <div className="flex justify-between pt-2 border-t border-[var(--card-border)]">
+                <span className="text-[var(--muted)] font-medium">Total</span>
+                <span className="font-bold text-[var(--primary)]">Rp {getGrandTotal().toLocaleString("id-ID")}</span>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="flex-1 py-2.5 border border-[var(--card-border)] hover:border-[var(--muted)] text-[var(--muted)] rounded-xl text-sm transition"
+              >
+                Ubah
+              </button>
+              <button
+                onClick={handleConfirm}
+                disabled={submitting}
+                className="flex-1 py-2.5 bg-[var(--primary)] hover:bg-[var(--primary-hover)] disabled:opacity-50 text-white rounded-xl text-sm font-medium transition"
+              >
+                {submitting ? "Memproses..." : "Bayar Sekarang"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
