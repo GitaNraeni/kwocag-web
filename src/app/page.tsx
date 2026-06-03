@@ -31,6 +31,12 @@ export default function Home() {
   const footerRef = useScrollReveal(0.05);
 
   useEffect(() => {
+    const fetchStats = () => {
+      fetch("/api/bots/stats").then(r => r.json()).then(d => {
+        if (d.success) { setTotalActive(d.totalActive); setTotalServed(d.totalServed || 0); }
+      }).catch(() => {});
+    };
+
     Promise.all([
       fetch("/api/site").then(r => r.json()).then(d => {
         if (d.success) { setSiteName(d.data.siteName); setContact(d.data.contactWhatsapp || ""); setTelegram(d.data.contactTelegram || ""); setChannelWa(d.data.channelWhatsapp || ""); }
@@ -41,9 +47,11 @@ export default function Home() {
     ]).finally(() => setReady(true));
 
     // Stats fetch terpisah — nggak nunggu bareng hero
-    fetch("/api/bots/stats").then(r => r.json()).then(d => {
-      if (d.success) { setTotalActive(d.totalActive); setTotalServed(d.totalServed || 0); }
-    }).catch(() => {});
+    fetchStats();
+
+    // Live counter — update tiap 30 detik
+    const interval = setInterval(fetchStats, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
