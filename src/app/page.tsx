@@ -77,10 +77,10 @@ export default function Home() {
       {/* Hero */}
       <section className="relative z-10 flex-1 flex items-center px-6 py-16 md:py-20">
         <div className="max-w-5xl mx-auto w-full grid md:grid-cols-2 gap-10 md:gap-16 items-center">
-          <div className="animate-slide-up">
+          <div className={ready ? "animate-slide-up" : "opacity-0"}>
             {/* Badge — reserved height supaya nggak CLS */}
             <div className="h-8 mb-6">
-              {ready && totalActive > 0 && (
+              {totalActive > 0 && (
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/20 text-xs text-[var(--primary)] animate-fade-in">
                   <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" />
                   {totalActive} grup aktif saat ini
