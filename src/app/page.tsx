@@ -79,7 +79,7 @@ export default function Home() {
       {/* Hero */}
       <section className="relative z-10 flex-1 flex items-center px-6 py-16 md:py-20">
         <div className="max-w-5xl mx-auto w-full grid md:grid-cols-2 gap-10 md:gap-16 items-center">
-          <div className="animate-slide-up">
+          <div className={ready ? "animate-slide-up" : "opacity-0"}>
             {/* Badge — reserved height supaya nggak CLS */}
             <div className="h-8 mb-6">
               {totalActive > 0 && (
@@ -200,7 +200,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-[var(--card-border)] px-6 py-8">
+      <footer className="relative z-10 border-t border-[var(--card-border)] px-6 py-8" style={{ opacity: ready ? 1 : 0, transition: 'opacity 0.3s ease' }}>
         <div ref={footerRef} className="max-w-5xl mx-auto scroll-fade">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
             <div>
