@@ -9,10 +9,15 @@ export async function GET(req: NextRequest) {
   }
 
   const now = new Date();
+  // Ambil rental ACTIVE yang expired, ATAU rental ENDED yang baru diakhiri manual (dalam 10 menit terakhir)
+  const recentEndThreshold = new Date(now.getTime() - 10 * 60 * 1000);
+
   const rentals = await prisma.rental.findMany({
     where: {
-      status: "ACTIVE",
-      expiresAt: { lt: now },
+      OR: [
+        { status: "ACTIVE", expiresAt: { lt: now } },
+        { status: "ENDED", expiresAt: { lt: now, gt: recentEndThreshold } },
+      ],
     },
     include: { botType: true },
   });
