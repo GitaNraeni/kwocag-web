@@ -35,8 +35,7 @@ export default function TermsPage() {
             <section>
               <h2 className="text-base font-semibold text-[var(--foreground)] mb-2">1. Layanan</h2>
               <p>
-                {siteName} menyediakan layanan sewa bot WhatsApp otomatis untuk keperluan toko online 
-                dan manajemen grup. Bot akan aktif sesuai durasi yang dipilih setelah pembayaran berhasil.
+                {siteName} menyediakan layanan sewa bot WhatsApp otomatis untuk keperluan store dan manajemen grup. Bot akan aktif sesuai durasi yang dipilih setelah pembayaran berhasil.
               </p>
             </section>
 
