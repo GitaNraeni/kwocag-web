@@ -176,9 +176,9 @@ export default function AdminOverview() {
             <div className="space-y-2">
               {recentRentals.map((rental: any) => (
                 <div key={rental.id} className="flex items-center justify-between py-2 px-2 rounded-lg hover:bg-white/5 transition">
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 pr-3">
                     <p className="text-xs sm:text-sm font-medium truncate">{rental.groupName || rental.groupId}</p>
-                    <p className="text-[10px] sm:text-xs text-[var(--muted)]">{rental.botType?.name}</p>
+                    <p className="text-[10px] sm:text-xs text-[var(--muted)] truncate">{rental.botType?.name}</p>
                   </div>
                   <span className={`text-[10px] sm:text-xs px-1.5 py-0.5 rounded shrink-0 ${
                     rental.status === "ACTIVE" ? "bg-green-500/10 text-green-400" : "bg-orange-500/10 text-orange-400"
@@ -203,9 +203,9 @@ export default function AdminOverview() {
             <div className="space-y-2">
               {recentOrders.map((order: any) => (
                 <div key={order.id} className="flex items-center justify-between py-2 px-2 rounded-lg hover:bg-white/5 transition">
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-xs sm:text-sm font-mono truncate">{order.orderCode}</p>
-                    <p className="text-[10px] sm:text-xs text-[var(--muted)]">{order.botType?.name}</p>
+                    <p className="text-[10px] sm:text-xs text-[var(--muted)] truncate">{order.botType?.name}</p>
                   </div>
                   <div className="text-right shrink-0 ml-3">
                     <p className="text-xs sm:text-sm font-medium">Rp {order.totalPrice?.toLocaleString("id-ID")}</p>
