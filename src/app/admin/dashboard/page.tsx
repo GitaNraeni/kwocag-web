@@ -175,12 +175,12 @@ export default function AdminOverview() {
           ) : (
             <div className="space-y-2">
               {recentRentals.map((rental: any) => (
-                <div key={rental.id} className="flex items-center justify-between py-2 px-2 rounded-lg hover:bg-white/5 transition">
-                  <div className="min-w-0 flex-1 pr-3">
+                <div key={rental.id} className="flex items-center justify-between gap-2 py-2 px-2 rounded-lg hover:bg-white/5 transition">
+                  <div className="flex-1 min-w-0">
                     <p className="text-xs sm:text-sm font-medium truncate">{rental.groupName || rental.groupId}</p>
                     <p className="text-[10px] sm:text-xs text-[var(--muted)] truncate">{rental.botType?.name}</p>
                   </div>
-                  <span className={`text-[10px] sm:text-xs px-1.5 py-0.5 rounded shrink-0 ${
+                  <span className={`text-[10px] sm:text-xs px-1.5 py-0.5 rounded shrink-0 whitespace-nowrap ${
                     rental.status === "ACTIVE" ? "bg-green-500/10 text-green-400" : "bg-orange-500/10 text-orange-400"
                   }`}>
                     {rental.status === "ACTIVE" ? "Aktif" : "Selesai"}
@@ -202,14 +202,14 @@ export default function AdminOverview() {
           ) : (
             <div className="space-y-2">
               {recentOrders.map((order: any) => (
-                <div key={order.id} className="flex items-center justify-between py-2 px-2 rounded-lg hover:bg-white/5 transition">
-                  <div className="min-w-0 flex-1">
+                <div key={order.id} className="flex items-center justify-between gap-2 py-2 px-2 rounded-lg hover:bg-white/5 transition">
+                  <div className="flex-1 min-w-0">
                     <p className="text-xs sm:text-sm font-mono truncate">{order.orderCode}</p>
                     <p className="text-[10px] sm:text-xs text-[var(--muted)] truncate">{order.botType?.name}</p>
                   </div>
-                  <div className="text-right shrink-0 ml-3">
-                    <p className="text-xs sm:text-sm font-medium">Rp {order.totalPrice?.toLocaleString("id-ID")}</p>
-                    <p className={`text-[10px] sm:text-xs ${
+                  <div className="shrink-0 text-right">
+                    <p className="text-xs sm:text-sm font-medium whitespace-nowrap">Rp {order.totalPrice?.toLocaleString("id-ID")}</p>
+                    <p className={`text-[10px] sm:text-xs whitespace-nowrap ${
                       order.status === "SUCCESS" ? "text-[var(--success)]" :
                       order.status === "PENDING" ? "text-[var(--warning)]" :
                       order.status === "EXPIRED" ? "text-gray-400" :
