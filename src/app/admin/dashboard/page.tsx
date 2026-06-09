@@ -76,7 +76,8 @@ export default function AdminOverview() {
   if (!stats) return <SkeletonOverview />;
 
   return (
-    <div className="max-w-5xl">
+    /* TAMBAHAN: w-full dan overflow-x-hidden biar layout utama gak bocor ke kanan */
+    <div className="max-w-5xl w-full overflow-x-hidden">
       <h2 className="text-2xl font-bold mb-6">Overview</h2>
 
       {/* Stat Cards */}
@@ -165,7 +166,7 @@ export default function AdminOverview() {
       {/* Recent Lists */}
       <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 stagger">
         {/* Sewa Bot Terbaru */}
-        <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-xl p-4 sm:p-5">
+        <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-xl p-4 sm:p-5 overflow-hidden">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-medium">Sewa Bot Terbaru</h3>
             <Link href="/admin/dashboard/groups" className="text-xs text-[var(--primary)] hover:underline">Lihat semua</Link>
@@ -175,13 +176,13 @@ export default function AdminOverview() {
           ) : (
             <div className="space-y-2">
               {recentRentals.map((rental: any) => (
-                <div key={rental.id} className="flex items-center justify-between gap-2 py-2 px-2 rounded-lg hover:bg-white/5 transition">
-                  {/* Div teks dengan overflow dan truncate yang dipaksa */}
-                  <div className="flex-1 min-w-0 overflow-hidden">
+                /* PERUBAHAN UTAMA: Pakai grid grid-cols-[1fr_auto] */
+                <div key={rental.id} className="grid grid-cols-[1fr_auto] items-center gap-3 py-2 px-2 rounded-lg hover:bg-white/5 transition">
+                  <div className="min-w-0">
                     <p className="text-xs sm:text-sm font-medium truncate">{rental.groupName || rental.groupId}</p>
                     <p className="text-[10px] sm:text-xs text-[var(--muted)] truncate">{rental.botType?.name}</p>
                   </div>
-                  <span className={`text-[10px] sm:text-xs px-1.5 py-0.5 rounded shrink-0 whitespace-nowrap ${
+                  <span className={`text-[10px] sm:text-xs px-1.5 py-0.5 rounded shrink-0 ${
                     rental.status === "ACTIVE" ? "bg-green-500/10 text-green-400" : "bg-orange-500/10 text-orange-400"
                   }`}>
                     {rental.status === "ACTIVE" ? "Aktif" : "Selesai"}
@@ -193,7 +194,7 @@ export default function AdminOverview() {
         </div>
 
         {/* Transaksi Terbaru */}
-        <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-xl p-4 sm:p-5">
+        <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-xl p-4 sm:p-5 overflow-hidden">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-medium">Transaksi Terbaru</h3>
             <Link href="/admin/dashboard/orders" className="text-xs text-[var(--primary)] hover:underline">Lihat semua</Link>
@@ -203,14 +204,15 @@ export default function AdminOverview() {
           ) : (
             <div className="space-y-2">
               {recentOrders.map((order: any) => (
-                <div key={order.id} className="flex items-center justify-between gap-2 py-2 px-2 rounded-lg hover:bg-white/5 transition">
-                  <div className="flex-1 min-w-0 overflow-hidden">
+                 /* PERUBAHAN UTAMA: Pakai grid grid-cols-[1fr_auto] */
+                <div key={order.id} className="grid grid-cols-[1fr_auto] items-center gap-3 py-2 px-2 rounded-lg hover:bg-white/5 transition">
+                  <div className="min-w-0">
                     <p className="text-xs sm:text-sm font-mono truncate">{order.orderCode}</p>
                     <p className="text-[10px] sm:text-xs text-[var(--muted)] truncate">{order.botType?.name}</p>
                   </div>
-                  <div className="shrink-0 text-right">
-                    <p className="text-xs sm:text-sm font-medium whitespace-nowrap">Rp {order.totalPrice?.toLocaleString("id-ID")}</p>
-                    <p className={`text-[10px] sm:text-xs whitespace-nowrap ${
+                  <div className="text-right shrink-0">
+                    <p className="text-xs sm:text-sm font-medium">Rp {order.totalPrice?.toLocaleString("id-ID")}</p>
+                    <p className={`text-[10px] sm:text-xs ${
                       order.status === "SUCCESS" ? "text-[var(--success)]" :
                       order.status === "PENDING" ? "text-[var(--warning)]" :
                       order.status === "EXPIRED" ? "text-gray-400" :
