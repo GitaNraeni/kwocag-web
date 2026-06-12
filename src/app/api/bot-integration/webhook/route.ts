@@ -35,9 +35,73 @@ export async function GET(req: NextRequest) {
     orderBy: [{ isPremium: "desc" }, { paidAt: "asc" }],
   });
 
+  // 🔥 ANTISIPASI LU: Proses filter pintar pakai Kode Invite biar mengunci data Rental / ID Grup yang sama!
+  const filteredOrders = [];
+
+  for (const o of orders) {
+    // 1. Ambil kode invite grupnya saja (22 karakter unik setelah chat.whatsapp.com/)
+    const cleanLink = o.groupLink ? o.groupLink.split('?')[0].trim() : "";
+    const inviteCode = cleanLink.replace("https://chat.whatsapp.com/", "").trim();
+    
+    // Auto-update link bersih ke database orderan biar sinkron
+    if (cleanLink && cleanLink !== o.groupLink) {
+      await prisma.order.update({
+        where: { id: o.id },
+        data: { groupLink: cleanLink }
+      });
+      o.groupLink = cleanLink;
+    }
+
+    // 2. PENCARIAN PINTAR: Cari di database Rental apakah kode invite ini sudah punya JID/ID Group aktif
+    let existingRental = null;
+    
+    if (inviteCode) {
+      existingRental = await prisma.rental.findFirst({
+        where: {
+          groupLink: { contains: inviteCode },
+          botTypeId: o.botTypeId,
+          status: "ACTIVE"
+        }
+      });
+    }
+
+    // 3. KEPUTUSAN SISTEM (BYPASS ATAU JOIN)
+    if (existingRental) {
+      // 🌸 JALUR PERPANJANG OTOMATIS: Langsung kunci data berdasarkan row ID Rental/ID Group aslinya!
+      await (prisma.rental.update as any)({
+        where: { id: existingRental.id },
+        data: {
+          expiresAt: o.expiresAt,
+          isPremium: o.isPremium,
+          botInstance: o.botInstance,
+          // Kalau tautan yang diinput baru, update sekalian biar data link di web makin segar
+          groupLink: cleanLink.startsWith("http") ? cleanLink : existingRental.groupLink,
+        },
+      });
+
+      // Hubungkan ID orderan ini ke rental lama yang sudah ada di database Neon
+      await prisma.order.update({ where: { id: o.id }, data: { rentalId: existingRental.id } });
+
+      // Catat log sukses EXTEND di sistem web biar admin tahu ini perpanjangan auto sukses
+      await prisma.orderLog.create({
+        data: { 
+          orderId: o.id, 
+          action: "BOT_EXTENDED", 
+          details: `Sewa diperpanjang otomatis via ID Group lama [${existingRental.groupId}]: ${existingRental.groupName || "grup"}` 
+        },
+      });
+      
+      // Lewati, jangan dilempar ke bot! (Bypass perintah join biar gak memicu limit restricted)
+      continue;
+    }
+
+    // 4. Kalau bener-bener bersih gak ada di record Rental lama, fix ini SEWA BARU (Masukkan ke antrean bot)
+    filteredOrders.push(o);
+  }
+
   return NextResponse.json({
     success: true,
-    data: orders.map((o) => ({
+    data: filteredOrders.map((o) => ({
       orderId: o.id,
       orderCode: o.orderCode,
       botType: o.botType.slug,
@@ -90,7 +154,7 @@ export async function POST(req: NextRequest) {
       await prisma.order.update({ where: { id: orderId }, data: { notes: groupName } });
     }
 
-    // Bikin atau update Rental kalau groupId dikirim
+    // Bikin atau update Rental kalau groupId dikirim (Untuk kasir baru manual atau backup)
     if (groupId) {
       const groupIdClean = groupId.replace("@g.us", "");
       const existing = await prisma.rental.findUnique({
@@ -98,7 +162,6 @@ export async function POST(req: NextRequest) {
       });
 
       if (existing) {
-        // Update/perpanjang — isPremium ikut order terakhir (bukan sticky)
         await (prisma.rental.update as any)({
           where: { id: existing.id },
           data: {
@@ -112,7 +175,6 @@ export async function POST(req: NextRequest) {
         });
         await prisma.order.update({ where: { id: orderId }, data: { rentalId: existing.id } });
       } else {
-        // Bikin rental baru
         const rental = await (prisma.rental.create as any)({
           data: {
             groupId: groupIdClean,
