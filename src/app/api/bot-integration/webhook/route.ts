@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { cleanGroupLink, getGroupInviteCode } from "@/lib/sanitize";
 
 // GET /api/bot-integration/webhook - Ambil order yang sudah SUCCESS tapi belum di-join bot
 // Query params:
@@ -39,10 +40,9 @@ export async function GET(req: NextRequest) {
   const filteredOrders = [];
 
   for (const o of orders) {
-    // 1. Ambil kode invite grupnya saja (22 karakter unik setelah chat.whatsapp.com/)
-    const cleanLink = o.groupLink ? o.groupLink.split('?')[0].trim() : "";
-    const inviteCode = cleanLink.replace("https://chat.whatsapp.com/", "").trim();
-    
+    const cleanLink = o.groupLink ? cleanGroupLink(o.groupLink) : "";
+    const inviteCode = getGroupInviteCode(cleanLink);
+
     // Auto-update link bersih ke database orderan biar sinkron
     if (cleanLink && cleanLink !== o.groupLink) {
       await prisma.order.update({

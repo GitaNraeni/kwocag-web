@@ -4,7 +4,7 @@ import { createPayment, getPaymentUrl } from "@/lib/pakasir";
 import { sendTelegramNotification, formatOrderNotification } from "@/lib/telegram";
 import { generateOrderCode, getDurationLabel, normalizePhone } from "@/lib/utils";
 import { checkRateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
-import { sanitizePhone, sanitizeUrl, sanitizeEmail, sanitizeText } from "@/lib/sanitize";
+import { cleanGroupLink, getGroupInviteCode, sanitizePhone, sanitizeUrl, sanitizeEmail, sanitizeText } from "@/lib/sanitize";
 import { z } from "zod";
 
 const orderSchema = z.object({
@@ -47,6 +47,8 @@ export async function POST(req: NextRequest) {
     }
 
     const { botTypeId, duration, tier, customDays, groupLink, contactPhone: rawPhone, contactEmail } = parsed.data;
+    const normalizedGroupLink = cleanGroupLink(groupLink);
+    const inviteCode = getGroupInviteCode(normalizedGroupLink);
     const contactPhone = normalizePhone(rawPhone);
     const isPremium = tier === "premium";
 
@@ -94,9 +96,15 @@ export async function POST(req: NextRequest) {
     }
 
     // Cek apakah ini perpanjang (grup sudah punya sewa aktif) — bypass slot check
-    const existingRental = await prisma.rental.findFirst({
-      where: { groupLink, botTypeId, status: "ACTIVE" },
-    });
+    const existingRental = inviteCode
+      ? await prisma.rental.findFirst({
+          where: {
+            groupLink: { contains: inviteCode },
+            botTypeId,
+            status: "ACTIVE",
+          },
+        })
+      : null;
     const isExtend = !!existingRental;
 
     // Cek apakah bot menerima order (skip kalau perpanjang)
@@ -185,7 +193,7 @@ export async function POST(req: NextRequest) {
         duration: duration as "WEEKLY" | "MONTHLY" | "CUSTOM",
         customDays: duration === "CUSTOM" ? customDays : null,
         isPremium,
-        groupLink,
+        groupLink: normalizedGroupLink,
         contactPhone,
         contactEmail,
         totalPrice: finalPrice,

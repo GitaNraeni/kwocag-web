@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getTransactionDetail, cancelTransaction } from "@/lib/pakasir";
 import { sendTelegramNotification, formatPaymentSuccess } from "@/lib/telegram";
 import { calculateExpiryDate, getDurationLabel } from "@/lib/utils";
+import { getGroupInviteCode } from "@/lib/sanitize";
 
 // GET /api/orders/[code]/check-payment - Poll payment status (Pakasir/RamaShop)
 export async function GET(
@@ -65,7 +66,22 @@ export async function GET(
     if (txStatus === "completed" || txStatus === "paid" || txStatus === "success" || txStatus === "settlement") {
       // Payment berhasil - set order SUCCESS
       const now = new Date();
-      const expiresAt = calculateExpiryDate(now, order.duration, order.customDays);
+      const inviteCode = getGroupInviteCode(order.groupLink);
+
+      const activeRental = inviteCode
+        ? await prisma.rental.findFirst({
+            where: {
+              groupLink: { contains: inviteCode },
+              botTypeId: order.botTypeId,
+              status: "ACTIVE",
+              expiresAt: { gt: now },
+            },
+            orderBy: { expiresAt: "desc" },
+          })
+        : null;
+
+      const baseDate = activeRental?.expiresAt || now;
+      const expiresAt = calculateExpiryDate(baseDate, order.duration, order.customDays);
 
       await prisma.order.update({
         where: { id: order.id },
@@ -73,6 +89,7 @@ export async function GET(
           status: "SUCCESS",
           paidAt: now,
           expiresAt,
+          rentalId: activeRental?.id || order.rentalId,
         },
       });
 

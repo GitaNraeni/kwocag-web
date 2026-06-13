@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendTelegramNotification, formatPaymentSuccess, sendLogNotification } from "@/lib/telegram";
 import { calculateExpiryDate, getDurationLabel } from "@/lib/utils";
+import { getGroupInviteCode } from "@/lib/sanitize";
 
 // POST /api/payment/callback - Webhook dari Pakasir
 // Format payload Pakasir: { order_id, amount, project, status, payment_method, completed_at }
@@ -36,7 +37,22 @@ export async function POST(req: NextRequest) {
       }
 
       const now = new Date();
-      const expiresAt = calculateExpiryDate(now, order.duration, order.customDays);
+      const inviteCode = getGroupInviteCode(order.groupLink);
+
+      const activeRental = inviteCode
+        ? await prisma.rental.findFirst({
+            where: {
+              groupLink: { contains: inviteCode },
+              botTypeId: order.botTypeId,
+              status: "ACTIVE",
+              expiresAt: { gt: now },
+            },
+            orderBy: { expiresAt: "desc" },
+          })
+        : null;
+
+      const baseDate = activeRental?.expiresAt || now;
+      const expiresAt = calculateExpiryDate(baseDate, order.duration, order.customDays);
 
       // Update order status
       await prisma.order.update({
@@ -45,10 +61,10 @@ export async function POST(req: NextRequest) {
           status: "SUCCESS",
           paidAt: completed_at ? new Date(completed_at) : now,
           expiresAt,
+          rentalId: activeRental?.id || order.rentalId,
         },
       });
 
-      // Log
       await prisma.orderLog.create({
         data: {
           orderId: order.id,
@@ -57,7 +73,6 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // Notifikasi Telegram
       await sendTelegramNotification(
         formatPaymentSuccess({
           orderCode: order.orderCode,

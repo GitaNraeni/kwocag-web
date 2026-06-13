@@ -59,24 +59,39 @@ export function sanitizePhone(input: string): string {
 }
 
 /**
+ * Normalize WhatsApp group invite link
+ */
+export function cleanGroupLink(input: string): string {
+  if (!input) return "";
+  let clean = input.trim();
+  clean = stripHtml(clean);
+  clean = clean.replace(/[\x00-\x1f\x7f]/g, "");
+  clean = clean.split("?")[0].trim().replace(/\/+$/u, "");
+  if (!clean.startsWith("https://") && !clean.startsWith("http://")) {
+    clean = "https://" + clean;
+  }
+  return clean;
+}
+
+export function getGroupInviteCode(link: string): string {
+  const clean = cleanGroupLink(link);
+  if (!clean.startsWith("https://chat.whatsapp.com/")) return "";
+  return clean.replace(/^https?:\/\/chat\.whatsapp\.com\//i, "").trim();
+}
+
+/**
  * Sanitize URL input (group link)
  */
 export function sanitizeUrl(input: string): string {
   if (!input) return "";
-  let clean = input.trim();
-  // Remove HTML
-  clean = stripHtml(clean);
-  // Remove null bytes and control characters
-  clean = clean.replace(/[\x00-\x1f\x7f]/g, "");
-  // Must start with https://
+  const clean = cleanGroupLink(input);
   if (!clean.startsWith("https://") && !clean.startsWith("http://")) {
-    clean = "https://" + clean;
+    return "";
   }
   // Block javascript: protocol
   if (clean.toLowerCase().includes("javascript:")) return "";
   if (clean.toLowerCase().includes("data:")) return "";
-  if (clean.length > 500) clean = clean.slice(0, 500);
-  return clean;
+  return clean.length > 500 ? clean.slice(0, 500) : clean;
 }
 
 /**
@@ -85,5 +100,5 @@ export function sanitizeUrl(input: string): string {
 export function isValidGroupLink(url: string): boolean {
   if (!url) return false;
   const pattern = /^https:\/\/chat\.whatsapp\.com\/[A-Za-z0-9]{10,}$/;
-  return pattern.test(url.trim());
+  return pattern.test(cleanGroupLink(url));
 }

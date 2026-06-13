@@ -89,23 +89,33 @@ export default function OrderPage() {
   const getFee = () => adminFeeConfig.flat + Math.ceil(getTotal() * adminFeeConfig.percent / 100);
   const getGrandTotal = () => getTotal() + getFee();
 
+  const cleanGroupLink = (value: string) =>
+    value.trim().split("?")[0].trim().replace(/\/+$/, "");
+
   // Validasi link grup WhatsApp
   const isValidGroupLink = (link: string) =>
-    /^https:\/\/chat\.whatsapp\.com\/[A-Za-z0-9]{10,}$/.test(link.trim());
+    /^https:\/\/chat\.whatsapp\.com\/[A-Za-z0-9]{10,}$/.test(cleanGroupLink(link));
+
+  const handleGroupLinkChange = (value: string) => {
+    setGroupLink(cleanGroupLink(value));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!bot) return;
-    if (!isValidGroupLink(groupLink)) {
+    const cleanedGroupLink = cleanGroupLink(groupLink);
+    if (!isValidGroupLink(cleanedGroupLink)) {
       setError("Link grup tidak valid. Gunakan link dari WhatsApp (https://chat.whatsapp.com/...)");
       return;
     }
+    setGroupLink(cleanedGroupLink);
     setError("");
     setShowConfirm(true);
   };
 
   const handleConfirm = async () => {
     if (!bot) return;
+    const cleanedGroupLink = cleanGroupLink(groupLink);
     setShowConfirm(false);
     setSubmitting(true);
     try {
@@ -117,7 +127,7 @@ export default function OrderPage() {
           duration,
           tier,
           customDays: duration === "CUSTOM" ? customDays : undefined,
-          groupLink,
+          groupLink: cleanedGroupLink,
           contactPhone: contactPhone || undefined,
           contactEmail: contactEmail || undefined,
         }),
