@@ -14,7 +14,7 @@ interface BotType {
   isActive?: boolean;
   maxSlots?: number;
   totalInstances?: number;
-  _count?: { rentals: number };
+  activeCount?: number;
 }
 
 export default function OrderTypePage() {
@@ -89,7 +89,7 @@ export default function OrderTypePage() {
               const hasSlotLimit = bot.maxSlots !== undefined && bot.maxSlots > 0;
               const instances = bot.totalInstances || 1;
               const totalCapacity = (bot.maxSlots || 0) * instances;
-              const activeCount = bot._count?.rentals || 0;
+              const activeCount = bot.activeCount || 0;
               const slotsFull = hasSlotLimit && activeCount >= totalCapacity;
               const disabled = (isClosed || slotsFull || !bot.isActive);
 

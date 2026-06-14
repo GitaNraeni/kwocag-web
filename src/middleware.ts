@@ -21,18 +21,43 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Cek maintenance mode via API (no cache)
+  // Cek maintenance mode — prioritas cookie (cepat, tanpa fetch)
+  const maintenanceCookie = req.cookies.get("x-maintenance")?.value;
+  if (maintenanceCookie === "true") {
+    const maintenanceUrl = new URL("/maintenance", req.url);
+    return NextResponse.redirect(maintenanceUrl);
+  }
+
+  // Fallback: cek via API (kalau cookie belum ada/kedaluwarsa)
   try {
-    const siteUrl = new URL("/api/site", req.url);
-    const res = await fetch(siteUrl, { cache: "no-store" });
+    const siteUrl = new URL("/api/site", req.nextUrl.origin);
+    const res = await fetch(siteUrl.toString(), {
+      cache: "no-store",
+      signal: AbortSignal.timeout(3000),
+    });
     const data = await res.json();
 
     if (data.success && data.data.maintenance) {
       const maintenanceUrl = new URL("/maintenance", req.url);
-      return NextResponse.redirect(maintenanceUrl);
+      const redirectRes = NextResponse.redirect(maintenanceUrl);
+      redirectRes.cookies.set("x-maintenance", "true", {
+        path: "/",
+        sameSite: "lax",
+        maxAge: 60,
+      });
+      return redirectRes;
+    } else if (data.success && !data.data.maintenance && maintenanceCookie === "true") {
+      // Maintenance dimatikan — clear cookie biar gak redirect terus
+      const nextRes = NextResponse.next();
+      nextRes.cookies.set("x-maintenance", "false", {
+        path: "/",
+        sameSite: "lax",
+        maxAge: 0, // hapus cookie
+      });
+      return nextRes;
     }
   } catch {
-    // Kalau gagal fetch, jangan block — lanjut aja
+    // Gagal fetch → jangan block
   }
 
   return NextResponse.next();
