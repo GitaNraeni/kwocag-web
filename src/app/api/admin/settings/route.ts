@@ -9,7 +9,6 @@ export async function GET() {
     return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
   }
 
-  // Get or create settings
   let settings = await prisma.siteSettings.findUnique({ where: { id: "main" } });
   if (!settings) {
     settings = await prisma.siteSettings.create({
@@ -25,7 +24,6 @@ export async function GET() {
     });
   }
 
-  // Get admin info
   const admin = await prisma.admin.findUnique({ where: { id: session.id } });
 
   return NextResponse.json({
@@ -84,7 +82,6 @@ export async function PUT(req: NextRequest) {
     newPassword,
   } = body;
 
-  // Update site settings
   await prisma.siteSettings.upsert({
     where: { id: "main" },
     update: {
@@ -118,7 +115,6 @@ export async function PUT(req: NextRequest) {
     },
   });
 
-  // Update username if provided
   if (username) {
     await prisma.admin.update({
       where: { id: session.id },
@@ -126,7 +122,6 @@ export async function PUT(req: NextRequest) {
     });
   }
 
-  // Update password if provided
   if (currentPassword && newPassword) {
     const admin = await prisma.admin.findUnique({ where: { id: session.id } });
     if (!admin) {
@@ -140,5 +135,17 @@ export async function PUT(req: NextRequest) {
     await prisma.admin.update({ where: { id: session.id }, data: { password: hashed } });
   }
 
-  return NextResponse.json({ success: true, message: "Pengaturan tersimpan" });
+  // Set cookie maintenance flag biar middleware bisa baca tanpa fetch
+  const response = NextResponse.json({ success: true, message: "Pengaturan tersimpan" });
+
+  if (maintenance !== undefined) {
+    response.cookies.set("site_maintenance", maintenance ? "1" : "0", {
+      path: "/",
+      httpOnly: true,
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: "lax",
+    });
+  }
+
+  return response;
 }
