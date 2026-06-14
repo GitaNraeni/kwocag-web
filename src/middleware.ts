@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-// Paths yang TIDAK di-redirect saat maintenance
+// Paths yang TIDAK di-redirect saat maintenance (Versi Lengkap Lu)
 const BYPASS_PATHS = [
   "/maintenance",
   "/admin",
@@ -13,51 +14,43 @@ const BYPASS_PATHS = [
   "/favicon.ico",
 ];
 
+// Kita bikin cache biar gak nembak DB terus-terusan
+let maintenanceCache = {
+  status: false,
+  lastCheck: 0
+};
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Skip bypass paths
+  // 1. Skip bypass paths
   if (BYPASS_PATHS.some(p => pathname.startsWith(p))) {
     return NextResponse.next();
   }
 
-  // Cek maintenance mode — prioritas cookie (cepat, tanpa fetch)
-  const maintenanceCookie = req.cookies.get("x-maintenance")?.value;
-  if (maintenanceCookie === "true") {
-    const maintenanceUrl = new URL("/maintenance", req.url);
-    return NextResponse.redirect(maintenanceUrl);
+  // 2. Cek Maintenance (Update cache setiap 30 detik biar gak berat ke DB)
+  const now = Date.now();
+  if (now - maintenanceCache.lastCheck > 30000) {
+    try {
+      // PENTING: Pake URL absolute di middleware
+      const res = await fetch(`${req.nextUrl.origin}/api/site`, { cache: "no-store" });
+      const data = await res.json();
+      
+      if (data.success) {
+        maintenanceCache = {
+          status: data.data.maintenance,
+          lastCheck: now
+        };
+      }
+    } catch (e) {
+      // Kalau fetch gagal, kita pake status TERAKHIR yang kesimpen di cache, jadi gak nembus!
+      console.error("Middleware Maintenance Check Failed");
+    }
   }
 
-  // Fallback: cek via API (kalau cookie belum ada/kedaluwarsa)
-  try {
-    const siteUrl = new URL("/api/site", req.nextUrl.origin);
-    const res = await fetch(siteUrl.toString(), {
-      cache: "no-store",
-      signal: AbortSignal.timeout(3000),
-    });
-    const data = await res.json();
-
-    if (data.success && data.data.maintenance) {
-      const maintenanceUrl = new URL("/maintenance", req.url);
-      const redirectRes = NextResponse.redirect(maintenanceUrl);
-      redirectRes.cookies.set("x-maintenance", "true", {
-        path: "/",
-        sameSite: "lax",
-        maxAge: 60,
-      });
-      return redirectRes;
-    } else if (data.success && !data.data.maintenance && maintenanceCookie === "true") {
-      // Maintenance dimatikan — clear cookie biar gak redirect terus
-      const nextRes = NextResponse.next();
-      nextRes.cookies.set("x-maintenance", "false", {
-        path: "/",
-        sameSite: "lax",
-        maxAge: 0, // hapus cookie
-      });
-      return nextRes;
-    }
-  } catch {
-    // Gagal fetch → jangan block
+  // 3. Redirect kalau maintenance aktif
+  if (maintenanceCache.status) {
+    return NextResponse.redirect(new URL("/maintenance", req.url));
   }
 
   return NextResponse.next();
