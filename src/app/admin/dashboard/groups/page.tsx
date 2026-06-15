@@ -10,6 +10,7 @@ interface Rental {
   groupName: string | null;
   groupLink: string | null;
   botType: { name: string; slug: string };
+  botInstance: number | null;
   status: string;
   source: string;
   isPremium: boolean;
@@ -58,6 +59,7 @@ export default function AdminGroups() {
   const [page, setPage] = useState(1);
   const [confirmEnd, setConfirmEnd] = useState<Rental | null>(null);
   const [ending, setEnding] = useState(false);
+  const [botInstanceMap, setBotInstanceMap] = useState<Record<string, number>>({}); // slug → totalInstances
 
   useEffect(() => {
     fetch("/api/admin/rentals?limit=200")
@@ -66,6 +68,20 @@ export default function AdminGroups() {
         if (data?.success) setRentals(data.data);
       })
       .finally(() => setLoading(false));
+
+    // Fetch totalInstances per botType
+    fetch("/api/bots")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success) {
+          const map: Record<string, number> = {};
+          for (const bot of data.data) {
+            map[bot.slug] = bot.totalInstances || 1;
+          }
+          setBotInstanceMap(map);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const botTypes = Array.from(new Set(rentals.map(r => r.botType.slug)));
@@ -74,10 +90,10 @@ export default function AdminGroups() {
     .filter(r => selectedStatus === "ALL" || r.status === selectedStatus)
     .filter(r => {
       if (!search.trim()) return true;
-      const q = search.toLowerCase();
+      const q = search.toLowerCase().replace("@g.us", "").trim();
       return (
         (r.groupName || "").toLowerCase().includes(q) ||
-        r.groupId.toLowerCase().includes(q)
+        r.groupId.toLowerCase().replace("@g.us", "").includes(q)
       );
     });
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
@@ -179,7 +195,14 @@ export default function AdminGroups() {
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400">Permanen</span>
                       )}
                     </div>
-                    <p className="text-xs text-[var(--muted)]">{rental.botType.name} • {sourceLabel(rental.source)}</p>
+                    <p className="text-xs text-[var(--muted)]">
+                      {rental.botType.name} • {sourceLabel(rental.source)}
+                      {(botInstanceMap[rental.botType.slug] || 1) > 1 && rental.botInstance && (
+                        <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-blue-500/10 text-blue-400 font-mono">
+                          #{rental.botInstance}
+                        </span>
+                      )}
+                    </p>
                     <p className="text-[10px] text-[var(--muted)] mt-0.5 font-mono">{rental.groupId}</p>
                   </div>
                   <div className="text-right shrink-0">
@@ -250,6 +273,12 @@ export default function AdminGroups() {
                 <span className="text-[var(--muted)]">Sumber</span>
                 <span>{sourceLabel(selectedRental.source)}</span>
               </div>
+              {(botInstanceMap[selectedRental.botType.slug] || 1) > 1 && selectedRental.botInstance && (
+                <div className="flex justify-between">
+                  <span className="text-[var(--muted)]">Instance</span>
+                  <span className="font-mono text-xs text-blue-400">#{selectedRental.botInstance}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-[var(--muted)]">Premium</span>
                 <span>{selectedRental.isPremium ? "Ya" : "Tidak"}</span>
