@@ -127,7 +127,8 @@ export async function POST(req: NextRequest) {
             groupName: groupName || existing.groupName,
             groupLink: order.groupLink.startsWith("http") ? order.groupLink : existing.groupLink,
             isPremium: order.isPremium,
-            botInstance: order.botInstance,
+            // Jangan overwrite botInstance dari order — biar sync bot yang jadi acuan
+            // botInstance hanya di-set kalau rental baru (create), bukan update
           },
         });
         // Sync expiresAt ke order juga kalau berubah
