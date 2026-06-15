@@ -1,6 +1,7 @@
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { cleanGroupLink, getGroupInviteCode } from "@/lib/sanitize";
+import { calculateExpiryDate } from "@/lib/utils";
 
 // GET /api/bot-integration/webhook - Ambil order yang sudah SUCCESS tapi belum di-join bot
 // Query params:
@@ -36,72 +37,9 @@ export async function GET(req: NextRequest) {
     orderBy: [{ isPremium: "desc" }, { paidAt: "asc" }],
   });
 
-  // 🔥 ANTISIPASI LU: Proses filter pintar pakai Kode Invite biar mengunci data Rental / ID Grup yang sama!
-  const filteredOrders = [];
-
-  for (const o of orders) {
-    const cleanLink = o.groupLink ? cleanGroupLink(o.groupLink) : "";
-    const inviteCode = getGroupInviteCode(cleanLink);
-
-    // Auto-update link bersih ke database orderan biar sinkron
-    if (cleanLink && cleanLink !== o.groupLink) {
-      await prisma.order.update({
-        where: { id: o.id },
-        data: { groupLink: cleanLink }
-      });
-      o.groupLink = cleanLink;
-    }
-
-    // 2. PENCARIAN PINTAR: Cari di database Rental apakah kode invite ini sudah punya JID/ID Group aktif
-    let existingRental = null;
-    
-    if (inviteCode) {
-      existingRental = await prisma.rental.findFirst({
-        where: {
-          groupLink: { contains: inviteCode },
-          botTypeId: o.botTypeId,
-          status: "ACTIVE"
-        }
-      });
-    }
-
-    // 3. KEPUTUSAN SISTEM (BYPASS ATAU JOIN)
-    if (existingRental) {
-      // 🌸 JALUR PERPANJANG OTOMATIS: Langsung kunci data berdasarkan row ID Rental/ID Group aslinya!
-      await (prisma.rental.update as any)({
-        where: { id: existingRental.id },
-        data: {
-          expiresAt: o.expiresAt,
-          isPremium: o.isPremium,
-          botInstance: o.botInstance,
-          // Kalau tautan yang diinput baru, update sekalian biar data link di web makin segar
-          groupLink: cleanLink.startsWith("http") ? cleanLink : existingRental.groupLink,
-        },
-      });
-
-      // Hubungkan ID orderan ini ke rental lama yang sudah ada di database Neon
-      await prisma.order.update({ where: { id: o.id }, data: { rentalId: existingRental.id } });
-
-      // Catat log sukses EXTEND di sistem web biar admin tahu ini perpanjangan auto sukses
-      await prisma.orderLog.create({
-        data: { 
-          orderId: o.id, 
-          action: "BOT_EXTENDED", 
-          details: `Sewa diperpanjang otomatis via ID Group lama [${existingRental.groupId}]: ${existingRental.groupName || "grup"}` 
-        },
-      });
-      
-      // Lewati, jangan dilempar ke bot! (Bypass perintah join biar gak memicu limit restricted)
-      continue;
-    }
-
-    // 4. Kalau bener-bener bersih gak ada di record Rental lama, fix ini SEWA BARU (Masukkan ke antrean bot)
-    filteredOrders.push(o);
-  }
-
   return NextResponse.json({
     success: true,
-    data: filteredOrders.map((o) => ({
+    data: orders.map((o) => ({
       orderId: o.id,
       orderCode: o.orderCode,
       botType: o.botType.slug,
@@ -154,7 +92,7 @@ export async function POST(req: NextRequest) {
       await prisma.order.update({ where: { id: orderId }, data: { notes: groupName } });
     }
 
-    // Bikin atau update Rental kalau groupId dikirim (Untuk kasir baru manual atau backup)
+    // Bikin atau update Rental kalau groupId dikirim
     if (groupId) {
       const groupIdClean = groupId.replace("@g.us", "");
       const existing = await prisma.rental.findUnique({
@@ -162,19 +100,53 @@ export async function POST(req: NextRequest) {
       });
 
       if (existing) {
+        // Recalculate expiresAt kalau rental existing masih aktif dan
+        // order.expiresAt tidak memperhitungkan sisa waktu (misal groupLink null saat payment)
+        const now = new Date();
+        let finalExpiresAt = order.expiresAt;
+        if (
+          existing.status === "ACTIVE" &&
+          existing.expiresAt &&
+          existing.expiresAt > now &&
+          order.expiresAt
+        ) {
+          // Cek apakah order.expiresAt sudah include sisa waktu existing
+          // Kalau order.expiresAt < existing.expiresAt + durasi order → berarti belum disambung
+          const recalculated = calculateExpiryDate(existing.expiresAt, order.duration, order.customDays);
+          if (recalculated > order.expiresAt) {
+            finalExpiresAt = recalculated;
+          }
+        }
+
+        // Update/perpanjang — isPremium ikut order terakhir (bukan sticky)
         await (prisma.rental.update as any)({
           where: { id: existing.id },
           data: {
             status: "ACTIVE",
-            expiresAt: order.expiresAt,
+            expiresAt: finalExpiresAt,
             groupName: groupName || existing.groupName,
             groupLink: order.groupLink.startsWith("http") ? order.groupLink : existing.groupLink,
             isPremium: order.isPremium,
             botInstance: order.botInstance,
           },
         });
+        // Sync expiresAt ke order juga kalau berubah
+        if (finalExpiresAt !== order.expiresAt) {
+          await prisma.order.update({
+            where: { id: orderId },
+            data: { expiresAt: finalExpiresAt },
+          });
+          await prisma.orderLog.create({
+            data: {
+              orderId,
+              action: "EXPIRY_CORRECTED",
+              details: `Tanggal aktif dikoreksi dari ${order.expiresAt?.toLocaleDateString("id-ID") ?? "-"} → ${finalExpiresAt!.toLocaleDateString("id-ID")} (sisa waktu sebelumnya diperhitungkan)`,
+            },
+          });
+        }
         await prisma.order.update({ where: { id: orderId }, data: { rentalId: existing.id } });
       } else {
+        // Bikin rental baru
         const rental = await (prisma.rental.create as any)({
           data: {
             groupId: groupIdClean,
