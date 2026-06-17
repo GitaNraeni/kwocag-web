@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { SkeletonOverview } from "@/components/Skeleton";
@@ -17,11 +17,25 @@ interface Stats {
   totalRevenue: number;
 }
 
+interface ChartMonth {
+  key: string;
+  label: string;
+  revenue: number;
+}
+
+interface ChartData {
+  months: ChartMonth[];
+  total: number;
+}
+
 export default function AdminOverview() {
   const router = useRouter();
   const [stats, setStats] = useState<Stats | null>(null);
   const [recentRentals, setRecentRentals] = useState<any[]>([]);
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [chartData, setChartData] = useState<ChartData | null>(null);
+  const [tooltip, setTooltip] = useState<{ index: number; x: number; y: number } | null>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
     fetch("/api/admin/rentals?limit=5")
@@ -35,6 +49,10 @@ export default function AdminOverview() {
     fetch("/api/admin/stats")
       .then((res) => { if (res.status === 401) { router.push("/admin"); return null; } return res.json(); })
       .then((data) => { if (data?.success) setStats(data.data); }).catch(() => {});
+
+    fetch("/api/admin/stats/chart")
+      .then((res) => { if (res.status === 401) { router.push("/admin"); return null; } return res.json(); })
+      .then((data) => { if (data?.success) setChartData(data.data); }).catch(() => {});
   }, []);
 
   // Donut chart helpers
@@ -161,6 +179,173 @@ export default function AdminOverview() {
             <p className="text-[var(--muted)] text-sm text-center py-6">Belum ada transaksi</p>
           )}
         </div>
+      </div>
+
+      {/* Grafik Revenue */}
+      <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-xl p-4 sm:p-5 mb-6 stagger">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-medium">Grafik Revenue</h3>
+          {chartData && (
+            <span className="text-xs text-[var(--muted)]">
+              Total: <span className="text-white font-medium">Rp {chartData.total.toLocaleString("id-ID")}</span>
+            </span>
+          )}
+        </div>
+        {chartData ? (
+          (() => {
+            const months = chartData.months;
+            const maxRev = Math.max(...months.map(m => m.revenue), 1);
+            // SVG dimensions (viewBox units)
+            const W = 400;
+            const H = 120;
+            const padL = 8;
+            const padR = 8;
+            const padTop = 10;
+            const padBottom = 24; // space for labels
+            const chartW = W - padL - padR;
+            const chartH = H - padTop - padBottom;
+            const barCount = months.length;
+            const barGap = 3;
+            const barW = (chartW - (barCount - 1) * barGap) / barCount;
+            const nowKey = (() => {
+              const d = new Date();
+              return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+            })();
+
+            return (
+              <div className="relative">
+                <svg
+                  ref={svgRef}
+                  viewBox={`0 0 ${W} ${H}`}
+                  className="w-full"
+                  style={{ display: "block" }}
+                  onMouseLeave={() => setTooltip(null)}
+                  onTouchEnd={() => setTooltip(null)}
+                >
+                  {/* Grid lines */}
+                  {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
+                    const y = padTop + chartH * (1 - ratio);
+                    return (
+                      <line
+                        key={i}
+                        x1={padL} y1={y}
+                        x2={W - padR} y2={y}
+                        stroke="var(--card-border)"
+                        strokeWidth="0.5"
+                        strokeDasharray={i === 0 ? "none" : "2,2"}
+                      />
+                    );
+                  })}
+
+                  {/* Bars */}
+                  {months.map((m, i) => {
+                    const x = padL + i * (barW + barGap);
+                    const barH = chartH * (m.revenue / maxRev);
+                    const y = padTop + chartH - barH;
+                    const isCurrent = m.key === nowKey;
+                    const isHovered = tooltip?.index === i;
+
+                    return (
+                      <g key={m.key}>
+                        {/* Invisible wider hit area for touch/hover */}
+                        <rect
+                          x={x} y={padTop}
+                          width={barW} height={chartH}
+                          fill="transparent"
+                          style={{ cursor: "pointer" }}
+                          onMouseEnter={(e) => {
+                            const svg = svgRef.current;
+                            if (!svg) return;
+                            const rect = svg.getBoundingClientRect();
+                            const scaleX = W / rect.width;
+                            const scaleY = H / rect.height;
+                            setTooltip({
+                              index: i,
+                              x: (e.clientX - rect.left) * scaleX,
+                              y: y * (1 / scaleY),
+                            });
+                          }}
+                          onTouchStart={(e) => {
+                            const svg = svgRef.current;
+                            if (!svg) return;
+                            const touch = e.touches[0];
+                            const rect = svg.getBoundingClientRect();
+                            const scaleX = W / rect.width;
+                            const scaleY = H / rect.height;
+                            setTooltip({
+                              index: i,
+                              x: (touch.clientX - rect.left) * scaleX,
+                              y: y * (1 / scaleY),
+                            });
+                            e.preventDefault();
+                          }}
+                        />
+                        {/* Bar */}
+                        {m.revenue > 0 && (
+                          <rect
+                            x={x} y={y}
+                            width={barW}
+                            height={barH}
+                            rx="2"
+                            fill={isHovered ? "var(--primary)" : isCurrent ? "var(--primary)" : "var(--primary)"}
+                            opacity={isHovered ? 1 : isCurrent ? 1 : 0.55}
+                          />
+                        )}
+                        {/* Zero bar placeholder */}
+                        {m.revenue === 0 && (
+                          <rect
+                            x={x} y={padTop + chartH - 2}
+                            width={barW} height={2}
+                            rx="1"
+                            fill="var(--card-border)"
+                            opacity={0.5}
+                          />
+                        )}
+                        {/* Label */}
+                        <text
+                          x={x + barW / 2}
+                          y={H - 4}
+                          textAnchor="middle"
+                          fontSize="7"
+                          fill={isCurrent ? "var(--primary)" : "var(--muted)"}
+                          fontWeight={isCurrent ? "600" : "400"}
+                        >
+                          {m.label}
+                        </text>
+                      </g>
+                    );
+                  })}
+
+                  {/* Tooltip */}
+                  {tooltip !== null && (() => {
+                    const m = months[tooltip.index];
+                    const tipW = 90;
+                    const tipH = 28;
+                    let tx = tooltip.x - tipW / 2;
+                    if (tx < 2) tx = 2;
+                    if (tx + tipW > W - 2) tx = W - tipW - 2;
+                    const ty = Math.max(padTop, tooltip.y - tipH - 6);
+
+                    return (
+                      <g>
+                        <rect x={tx} y={ty} width={tipW} height={tipH} rx="4"
+                          fill="var(--card)" stroke="var(--card-border)" strokeWidth="0.8" />
+                        <text x={tx + tipW / 2} y={ty + 10} textAnchor="middle" fontSize="6.5" fill="var(--muted)">{m.label}</text>
+                        <text x={tx + tipW / 2} y={ty + 21} textAnchor="middle" fontSize="7.5" fontWeight="600" fill="var(--primary)">
+                          Rp {m.revenue.toLocaleString("id-ID")}
+                        </text>
+                      </g>
+                    );
+                  })()}
+                </svg>
+              </div>
+            );
+          })()
+        ) : (
+          <div className="h-32 flex items-center justify-center">
+            <p className="text-[var(--muted)] text-sm">Memuat grafik...</p>
+          </div>
+        )}
       </div>
 
       {/* Recent Lists */}
