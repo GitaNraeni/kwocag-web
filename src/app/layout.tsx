@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { DynamicFavicon } from "@/components/DynamicFavicon";
+import { MaintenanceGuard } from "@/components/MaintenanceGuard";
 import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
     default: "KWOCAG - Sewa Bot WhatsApp",
     template: "%s | KWOCAG",
   },
-  description: "Layanan sewa bot WhatsApp otomatis untuk manajemen grup dan toko online. Proses cepat, bayar via QRIS, bot langsung aktif.",
+  description: "Layanan sewa bot WhatsApp untuk grup kamu. Aktif otomatis, langsung bisa digunakan.",
   keywords: ["sewa bot whatsapp", "bot whatsapp otomatis", "bot grup whatsapp", "KWOCAG", "rental bot WA", "bot jaga grup", "bot store whatsapp"],
   authors: [{ name: "KWOCAG" }],
   alternates: {
@@ -30,7 +31,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "KWOCAG - Sewa Bot WhatsApp",
-    description: "Layanan sewa bot WhatsApp untuk manajemen grup dan toko online. Bayar QRIS, bot langsung aktif dalam hitungan menit.",
+    description: "Layanan sewa bot WhatsApp untuk grup kamu. Aktif otomatis, langsung bisa digunakan.",
     url: "https://kwocag-web.vercel.app",
     siteName: "KWOCAG",
     type: "website",
@@ -47,7 +48,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "KWOCAG - Sewa Bot WhatsApp",
-    description: "Layanan sewa bot WhatsApp untuk manajemen grup dan toko online. Bayar QRIS, bot langsung aktif.",
+    description: "Layanan sewa bot WhatsApp untuk grup kamu. Aktif otomatis, langsung bisa digunakan.",
     images: ["https://files.catbox.moe/amosh8.png"],
   },
   robots: {
@@ -98,6 +99,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <DynamicFavicon />
+        <MaintenanceGuard />
         {children}
       </body>
     </html>
