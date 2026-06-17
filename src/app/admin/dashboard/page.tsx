@@ -239,21 +239,11 @@ export default function AdminOverview() {
 
                     return (
                       <g key={m.key}>
-                        {/* Hit area */}
-                        <rect
-                          x={x} y={padTop} width={barW} height={chartH}
-                          fill="transparent"
-                          style={{ cursor: "pointer" }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedBar(selectedBar === i ? null : i);
-                          }}
-                        />
                         {/* Bar */}
                         <rect
                           x={x} y={y} width={barW} height={barH}
                           rx="2"
-                          fill={isSelected ? "white" : "var(--primary)"}
+                          fill="var(--primary)"
                           opacity={m.revenue === 0 ? 0.15 : isSelected ? 1 : isCurrent ? 0.9 : 0.45}
                         />
                         {/* Label bulan */}
@@ -269,6 +259,29 @@ export default function AdminOverview() {
                     );
                   })}
                 </svg>
+
+                {/* Overlay div untuk handle klik per bar — lebih reliable dari SVG onClick */}
+                <div
+                  className="absolute inset-x-0 top-0 cursor-pointer"
+                  style={{ bottom: `${(padBottom / H) * 100}%` }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+                    const relX = e.clientX - rect.left;
+                    const totalW = rect.width;
+                    const padLpx = (padL / W) * totalW;
+                    const padRpx = (padR / W) * totalW;
+                    const usableW = totalW - padLpx - padRpx;
+                    const offsetX = relX - padLpx;
+                    const slotW = usableW / barCount;
+                    const idx = Math.floor(offsetX / slotW);
+                    if (idx >= 0 && idx < barCount) {
+                      setSelectedBar(prev => prev === idx ? null : idx);
+                    } else {
+                      setSelectedBar(null);
+                    }
+                  }}
+                />
 
                 {/* Info bulan terpilih di bawah grafik */}
                 <div className="h-5 mt-1 flex items-center justify-center">
