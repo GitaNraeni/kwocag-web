@@ -66,22 +66,27 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Cek maintenance — skip untuk /admin, /api, /maintenance
+  // Cek maintenance langsung via Prisma
+  // Skip kalau path adalah /admin, /api, atau /maintenance itu sendiri
   const headersList = await headers();
-  const pathname = headersList.get("x-invoke-path") || headersList.get("x-pathname") || "";
-  const isAdminOrApi = pathname.startsWith("/admin") || pathname.startsWith("/api") || pathname.startsWith("/maintenance");
+  const pathname = headersList.get("x-pathname") ?? "";
+  const skip = pathname.startsWith("/admin") ||
+               pathname.startsWith("/api") ||
+               pathname === "/maintenance" ||
+               pathname.startsWith("/maintenance");
 
-  if (!isAdminOrApi) {
+  if (!skip) {
+    let settings = null;
     try {
-      const settings = await prisma.siteSettings.findUnique({
+      settings = await prisma.siteSettings.findUnique({
         where: { id: "main" },
         select: { maintenance: true },
       });
-      if (settings?.maintenance === true) {
-        redirect("/maintenance");
-      }
     } catch {
       // DB error → lanjut normal
+    }
+    if (settings?.maintenance === true) {
+      redirect("/maintenance");
     }
   }
 
