@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { DynamicFavicon } from "@/components/DynamicFavicon";
+import { prisma } from "@/lib/prisma";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -58,11 +61,30 @@ export const metadata: Metadata = {
   icons: [],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Cek maintenance — skip untuk /admin, /api, /maintenance
+  const headersList = await headers();
+  const pathname = headersList.get("x-invoke-path") || headersList.get("x-pathname") || "";
+  const isAdminOrApi = pathname.startsWith("/admin") || pathname.startsWith("/api") || pathname.startsWith("/maintenance");
+
+  if (!isAdminOrApi) {
+    try {
+      const settings = await prisma.siteSettings.findUnique({
+        where: { id: "main" },
+        select: { maintenance: true },
+      });
+      if (settings?.maintenance === true) {
+        redirect("/maintenance");
+      }
+    } catch {
+      // DB error → lanjut normal
+    }
+  }
+
   return (
     <html
       lang="id"
