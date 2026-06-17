@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { SkeletonOverview } from "@/components/Skeleton";
@@ -34,8 +34,7 @@ export default function AdminOverview() {
   const [recentRentals, setRecentRentals] = useState<any[]>([]);
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [chartData, setChartData] = useState<ChartData | null>(null);
-  const [tooltip, setTooltip] = useState<{ index: number; x: number; y: number } | null>(null);
-  const svgRef = useRef<SVGSVGElement>(null);
+  const [selectedBar, setSelectedBar] = useState<number | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/rentals?limit=5")
@@ -194,150 +193,141 @@ export default function AdminOverview() {
         {chartData ? (
           (() => {
             const months = chartData.months;
-            const maxRev = Math.max(...months.map(m => m.revenue), 1);
-            // SVG dimensions (viewBox units)
+            const maxRev = Math.max(...months.map(m => m.revenue));
+            // Bar max height dikap 75% supaya ga keliatan penuh banget
             const W = 400;
-            const H = 120;
-            const padL = 8;
-            const padR = 8;
-            const padTop = 10;
-            const padBottom = 24; // space for labels
+            const H = 110;
+            const padL = 6;
+            const padR = 6;
+            const padTop = 32; // ruang tooltip di atas
+            const padBottom = 20;
             const chartW = W - padL - padR;
             const chartH = H - padTop - padBottom;
             const barCount = months.length;
-            const barGap = 3;
+            const barGap = 4;
             const barW = (chartW - (barCount - 1) * barGap) / barCount;
             const nowKey = (() => {
               const d = new Date();
               return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
             })();
 
+            // selected bar month info
+            const selMonth = selectedBar !== null ? months[selectedBar] : null;
+
             return (
-              <div className="relative">
+              <div className="relative" onClick={() => setSelectedBar(null)}>
                 <svg
-                  ref={svgRef}
                   viewBox={`0 0 ${W} ${H}`}
                   className="w-full"
                   style={{ display: "block" }}
-                  onMouseLeave={() => setTooltip(null)}
-                  onTouchEnd={() => setTooltip(null)}
                 >
                   {/* Grid lines */}
-                  {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
+                  {[0, 0.5, 1].map((ratio, i) => {
                     const y = padTop + chartH * (1 - ratio);
                     return (
-                      <line
-                        key={i}
-                        x1={padL} y1={y}
-                        x2={W - padR} y2={y}
-                        stroke="var(--card-border)"
-                        strokeWidth="0.5"
-                        strokeDasharray={i === 0 ? "none" : "2,2"}
-                      />
+                      <line key={i} x1={padL} y1={y} x2={W - padR} y2={y}
+                        stroke="var(--card-border)" strokeWidth="0.5"
+                        strokeDasharray={ratio === 0 ? "none" : "2,2"} />
                     );
                   })}
 
                   {/* Bars */}
                   {months.map((m, i) => {
                     const x = padL + i * (barW + barGap);
-                    const barH = chartH * (m.revenue / maxRev);
+                    // min bar height 2px biar bulan kosong tetap keliatan
+                    const rawH = maxRev > 0 ? chartH * (m.revenue / maxRev) * 0.85 : 0;
+                    const barH = m.revenue > 0 ? Math.max(rawH, 3) : 2;
                     const y = padTop + chartH - barH;
                     const isCurrent = m.key === nowKey;
-                    const isHovered = tooltip?.index === i;
+                    const isSelected = selectedBar === i;
+                    const barColor = isSelected
+                      ? "white"
+                      : isCurrent
+                      ? "var(--primary)"
+                      : "var(--primary)";
+                    const barOpacity = isSelected ? 1 : isCurrent ? 0.9 : 0.4;
+
+                    // Tooltip di atas bar saat selected
+                    const tipW = 88;
+                    const tipH = 26;
+                    let tx = x + barW / 2 - tipW / 2;
+                    if (tx < 2) tx = 2;
+                    if (tx + tipW > W - 2) tx = W - tipW - 2;
+                    const ty = Math.max(2, y - tipH - 4);
 
                     return (
                       <g key={m.key}>
-                        {/* Invisible wider hit area for touch/hover */}
+                        {/* Hit area */}
                         <rect
-                          x={x} y={padTop}
-                          width={barW} height={chartH}
+                          x={x} y={padTop} width={barW} height={chartH}
                           fill="transparent"
                           style={{ cursor: "pointer" }}
-                          onMouseEnter={(e) => {
-                            const svg = svgRef.current;
-                            if (!svg) return;
-                            const rect = svg.getBoundingClientRect();
-                            const scaleX = W / rect.width;
-                            const scaleY = H / rect.height;
-                            setTooltip({
-                              index: i,
-                              x: (e.clientX - rect.left) * scaleX,
-                              y: y * (1 / scaleY),
-                            });
-                          }}
-                          onTouchStart={(e) => {
-                            const svg = svgRef.current;
-                            if (!svg) return;
-                            const touch = e.touches[0];
-                            const rect = svg.getBoundingClientRect();
-                            const scaleX = W / rect.width;
-                            const scaleY = H / rect.height;
-                            setTooltip({
-                              index: i,
-                              x: (touch.clientX - rect.left) * scaleX,
-                              y: y * (1 / scaleY),
-                            });
-                            e.preventDefault();
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedBar(selectedBar === i ? null : i);
                           }}
                         />
+
                         {/* Bar */}
-                        {m.revenue > 0 && (
-                          <rect
-                            x={x} y={y}
-                            width={barW}
-                            height={barH}
-                            rx="2"
-                            fill={isHovered ? "var(--primary)" : isCurrent ? "var(--primary)" : "var(--primary)"}
-                            opacity={isHovered ? 1 : isCurrent ? 1 : 0.55}
-                          />
-                        )}
-                        {/* Zero bar placeholder */}
-                        {m.revenue === 0 && (
-                          <rect
-                            x={x} y={padTop + chartH - 2}
-                            width={barW} height={2}
-                            rx="1"
-                            fill="var(--card-border)"
-                            opacity={0.5}
-                          />
-                        )}
-                        {/* Label */}
+                        <rect
+                          x={x} y={y} width={barW} height={barH}
+                          rx="2"
+                          fill={barColor}
+                          opacity={m.revenue === 0 ? 0.2 : barOpacity}
+                        />
+
+                        {/* Label bulan */}
                         <text
-                          x={x + barW / 2}
-                          y={H - 4}
-                          textAnchor="middle"
-                          fontSize="7"
+                          x={x + barW / 2} y={H - 3}
+                          textAnchor="middle" fontSize="6.5"
                           fill={isCurrent ? "var(--primary)" : "var(--muted)"}
                           fontWeight={isCurrent ? "600" : "400"}
                         >
                           {m.label}
                         </text>
+
+                        {/* Tooltip tepat di atas bar */}
+                        {isSelected && (
+                          <g>
+                            {/* Shadow / backdrop */}
+                            <rect x={tx + 1} y={ty + 1} width={tipW} height={tipH}
+                              rx="4" fill="black" opacity="0.3" />
+                            {/* Kotak tooltip */}
+                            <rect x={tx} y={ty} width={tipW} height={tipH}
+                              rx="4" fill="var(--card)"
+                              stroke="var(--primary)" strokeWidth="0.8"
+                              strokeOpacity="0.6" />
+                            {/* Nama bulan */}
+                            <text x={tx + tipW / 2} y={ty + 9}
+                              textAnchor="middle" fontSize="6"
+                              fill="var(--muted)">{m.label}</text>
+                            {/* Nominal */}
+                            <text x={tx + tipW / 2} y={ty + 20}
+                              textAnchor="middle" fontSize="7.5"
+                              fontWeight="700" fill="var(--primary)">
+                              Rp {m.revenue.toLocaleString("id-ID")}
+                            </text>
+                          </g>
+                        )}
                       </g>
                     );
                   })}
-
-                  {/* Tooltip */}
-                  {tooltip !== null && (() => {
-                    const m = months[tooltip.index];
-                    const tipW = 90;
-                    const tipH = 28;
-                    let tx = tooltip.x - tipW / 2;
-                    if (tx < 2) tx = 2;
-                    if (tx + tipW > W - 2) tx = W - tipW - 2;
-                    const ty = Math.max(padTop, tooltip.y - tipH - 6);
-
-                    return (
-                      <g>
-                        <rect x={tx} y={ty} width={tipW} height={tipH} rx="4"
-                          fill="var(--card)" stroke="var(--card-border)" strokeWidth="0.8" />
-                        <text x={tx + tipW / 2} y={ty + 10} textAnchor="middle" fontSize="6.5" fill="var(--muted)">{m.label}</text>
-                        <text x={tx + tipW / 2} y={ty + 21} textAnchor="middle" fontSize="7.5" fontWeight="600" fill="var(--primary)">
-                          Rp {m.revenue.toLocaleString("id-ID")}
-                        </text>
-                      </g>
-                    );
-                  })()}
                 </svg>
+
+                {/* Info bulan terpilih di bawah grafik */}
+                <div className="h-5 mt-1 flex items-center justify-center">
+                  {selMonth ? (
+                    <p className="text-xs text-[var(--muted)]">
+                      <span className="text-white font-medium">{selMonth.label}</span>
+                      {" · "}
+                      <span className="text-[var(--primary)] font-semibold">
+                        Rp {selMonth.revenue.toLocaleString("id-ID")}
+                      </span>
+                    </p>
+                  ) : (
+                    <p className="text-[10px] text-[var(--muted)] opacity-50">Tap batang untuk detail</p>
+                  )}
+                </div>
               </div>
             );
           })()
