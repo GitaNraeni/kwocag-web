@@ -142,10 +142,18 @@ export default function OrderStatusPage() {
 
           {order.status === "SUCCESS" && (
             <div className="mt-6 p-4 rounded-xl bg-[var(--success)]/5 border border-[var(--success)]/20 text-center">
-              {order.logs.some((l: any) => l.action === "BOT_JOINED") ? (
+              {order.logs.some((l: any) => l.action === "BOT_JOINED" || l.action === "BOT_EXTENDED") ? (
                 <>
-                  <p className="text-sm text-[var(--success)] font-medium">Bot sudah aktif di grup kamu</p>
-                  <p className="text-xs text-[var(--muted)] mt-1">Gunakan perintah .menu untuk melihat fitur</p>
+                  <p className="text-sm text-[var(--success)] font-medium">
+                    {order.logs.some((l: any) => l.action === "BOT_EXTENDED")
+                      ? "Sewa berhasil diperpanjang"
+                      : "Bot sudah aktif di grup kamu"}
+                  </p>
+                  <p className="text-xs text-[var(--muted)] mt-1">
+                    {order.logs.some((l: any) => l.action === "BOT_EXTENDED")
+                      ? "Bot tetap aktif di grup kamu"
+                      : "Gunakan perintah .menu untuk melihat fitur"}
+                  </p>
                 </>
               ) : (
                 <>
