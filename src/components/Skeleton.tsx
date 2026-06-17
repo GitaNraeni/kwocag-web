@@ -50,21 +50,28 @@ export function SkeletonOverview() {
           <div className="skeleton h-4 w-28" />
           <div className="skeleton h-3 w-24" />
         </div>
-        {/* Batang-batang skeleton */}
-        <div className="flex items-end gap-1 h-20 px-1">
-          {[40, 60, 30, 75, 50, 90, 45, 65, 35, 80, 55, 100].map((h, i) => (
-            <div
-              key={i}
-              className="skeleton flex-1 rounded-sm"
-              style={{ height: `${h * 0.7}%` }}
-            />
-          ))}
+        {/* Area grafik */}
+        <div className="relative h-16">
+          {/* Grid line atas */}
+          <div className="absolute top-0 left-0 right-0 h-px bg-[var(--card-border)] opacity-40" />
+          {/* Grid line tengah */}
+          <div className="absolute top-1/2 left-0 right-0 h-px bg-[var(--card-border)] opacity-20" />
+          {/* Batang skeleton dengan tinggi bervariasi */}
+          <div className="absolute bottom-0 left-0 right-0 flex items-end gap-1 px-1">
+            {[25, 40, 20, 55, 30, 70, 35, 50, 25, 60, 40, 85].map((h, i) => (
+              <div key={i} className="skeleton flex-1 rounded-sm" style={{ height: `${h}%` }} />
+            ))}
+          </div>
         </div>
-        {/* Label bulan skeleton */}
+        {/* Label bulan */}
         <div className="flex gap-1 mt-2 px-1">
           {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="skeleton flex-1 h-2 rounded" />
+            <div key={i} className="skeleton flex-1 h-1.5 rounded" />
           ))}
+        </div>
+        {/* Info bar */}
+        <div className="mt-2 flex justify-center">
+          <div className="skeleton h-3 w-32" />
         </div>
       </div>
       <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">

@@ -194,12 +194,11 @@ export default function AdminOverview() {
           (() => {
             const months = chartData.months;
             const maxRev = Math.max(...months.map(m => m.revenue));
-            // Bar max height dikap 75% supaya ga keliatan penuh banget
             const W = 400;
-            const H = 110;
+            const H = 90;
             const padL = 6;
             const padR = 6;
-            const padTop = 32; // ruang tooltip di atas
+            const padTop = 6;
             const padBottom = 20;
             const chartW = W - padL - padR;
             const chartH = H - padTop - padBottom;
@@ -210,8 +209,6 @@ export default function AdminOverview() {
               const d = new Date();
               return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
             })();
-
-            // selected bar month info
             const selMonth = selectedBar !== null ? months[selectedBar] : null;
 
             return (
@@ -234,26 +231,11 @@ export default function AdminOverview() {
                   {/* Bars */}
                   {months.map((m, i) => {
                     const x = padL + i * (barW + barGap);
-                    // min bar height 2px biar bulan kosong tetap keliatan
                     const rawH = maxRev > 0 ? chartH * (m.revenue / maxRev) * 0.85 : 0;
                     const barH = m.revenue > 0 ? Math.max(rawH, 3) : 2;
                     const y = padTop + chartH - barH;
                     const isCurrent = m.key === nowKey;
                     const isSelected = selectedBar === i;
-                    const barColor = isSelected
-                      ? "white"
-                      : isCurrent
-                      ? "var(--primary)"
-                      : "var(--primary)";
-                    const barOpacity = isSelected ? 1 : isCurrent ? 0.9 : 0.4;
-
-                    // Tooltip di atas bar saat selected
-                    const tipW = 88;
-                    const tipH = 26;
-                    let tx = x + barW / 2 - tipW / 2;
-                    if (tx < 2) tx = 2;
-                    if (tx + tipW > W - 2) tx = W - tipW - 2;
-                    const ty = Math.max(2, y - tipH - 4);
 
                     return (
                       <g key={m.key}>
@@ -267,15 +249,13 @@ export default function AdminOverview() {
                             setSelectedBar(selectedBar === i ? null : i);
                           }}
                         />
-
                         {/* Bar */}
                         <rect
                           x={x} y={y} width={barW} height={barH}
                           rx="2"
-                          fill={barColor}
-                          opacity={m.revenue === 0 ? 0.2 : barOpacity}
+                          fill={isSelected ? "white" : "var(--primary)"}
+                          opacity={m.revenue === 0 ? 0.15 : isSelected ? 1 : isCurrent ? 0.9 : 0.45}
                         />
-
                         {/* Label bulan */}
                         <text
                           x={x + barW / 2} y={H - 3}
@@ -285,30 +265,6 @@ export default function AdminOverview() {
                         >
                           {m.label}
                         </text>
-
-                        {/* Tooltip tepat di atas bar */}
-                        {isSelected && (
-                          <g>
-                            {/* Shadow / backdrop */}
-                            <rect x={tx + 1} y={ty + 1} width={tipW} height={tipH}
-                              rx="4" fill="black" opacity="0.3" />
-                            {/* Kotak tooltip */}
-                            <rect x={tx} y={ty} width={tipW} height={tipH}
-                              rx="4" fill="var(--card)"
-                              stroke="var(--primary)" strokeWidth="0.8"
-                              strokeOpacity="0.6" />
-                            {/* Nama bulan */}
-                            <text x={tx + tipW / 2} y={ty + 9}
-                              textAnchor="middle" fontSize="6"
-                              fill="var(--muted)">{m.label}</text>
-                            {/* Nominal */}
-                            <text x={tx + tipW / 2} y={ty + 20}
-                              textAnchor="middle" fontSize="7.5"
-                              fontWeight="700" fill="var(--primary)">
-                              Rp {m.revenue.toLocaleString("id-ID")}
-                            </text>
-                          </g>
-                        )}
                       </g>
                     );
                   })}
@@ -325,7 +281,7 @@ export default function AdminOverview() {
                       </span>
                     </p>
                   ) : (
-                    <p className="text-[10px] text-[var(--muted)] opacity-50">Tap batang untuk detail</p>
+                    <p className="text-[10px] text-[var(--muted)] opacity-40">Tap batang untuk detail</p>
                   )}
                 </div>
               </div>
