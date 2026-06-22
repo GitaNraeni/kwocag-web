@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model BotType {
@@ -120,7 +121,6 @@ model SiteSettings {
   channelWhatsapp String?
   paymentProvider String  @default("pakasir")
   ramashopApiKey  String?
-  qrispayApiKey   String?
   adminFee        Int     @default(0)
   adminFeePercent Float   @default(0)
   maintenance     Boolean @default(false)
