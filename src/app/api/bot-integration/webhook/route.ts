@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { calculateExpiryDate } from "@/lib/utils";
@@ -100,22 +99,20 @@ export async function POST(req: NextRequest) {
       });
 
       if (existing) {
-        // Recalculate expiresAt kalau rental existing masih aktif dan
-        // order.expiresAt tidak memperhitungkan sisa waktu (misal groupLink null saat payment)
+        // order.expiresAt SUDAH final & benar — dihitung sekali di payment/callback
+        // dengan baseDate = sisa waktu rental aktif (lihat calculateExpiryDate di sana).
+        // Jangan dihitung ulang di sini, karena itu bakal nambahin sisa waktu DUA KALI
+        // (sisa waktu lama + durasi order, ditambah lagi ke expiresAt yang udah
+        // mengandung sisa waktu lama tsb). Recalculate cuma boleh dipakai sebagai
+        // fallback kalau order.expiresAt memang nggak valid/kosong.
         const now = new Date();
         let finalExpiresAt = order.expiresAt;
-        if (
-          existing.status === "ACTIVE" &&
-          existing.expiresAt &&
-          existing.expiresAt > now &&
-          order.expiresAt
-        ) {
-          // Cek apakah order.expiresAt sudah include sisa waktu existing
-          // Kalau order.expiresAt < existing.expiresAt + durasi order → berarti belum disambung
-          const recalculated = calculateExpiryDate(existing.expiresAt, order.duration, order.customDays);
-          if (recalculated > order.expiresAt) {
-            finalExpiresAt = recalculated;
-          }
+        if (!finalExpiresAt || finalExpiresAt <= now) {
+          const baseDate =
+            existing.status === "ACTIVE" && existing.expiresAt && existing.expiresAt > now
+              ? existing.expiresAt
+              : now;
+          finalExpiresAt = calculateExpiryDate(baseDate, order.duration, order.customDays);
         }
 
         // Update/perpanjang — isPremium ikut order terakhir (bukan sticky)
