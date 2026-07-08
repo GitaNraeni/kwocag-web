@@ -237,7 +237,7 @@ export default function Home() {
       />
 
       {/* Hero — pt-20 agar tidak tertutup navbar fixed */}
-      <section className="relative z-10 flex-1 flex items-center px-6 pt-16 pb-16 md:pt-20 md:pb-20">
+      <section className="relative z-10 flex-1 flex items-center px-6 pt-32 pb-16 md:pt-32 md:pb-20">
         <div className="max-w-5xl mx-auto w-full grid md:grid-cols-2 gap-10 md:gap-16 items-center">
           <div className={ready ? "animate-slide-up" : "opacity-0"}>
             <div className="h-8 mb-6">
