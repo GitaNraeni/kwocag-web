@@ -31,6 +31,7 @@ export async function GET() {
     data: {
       siteName: settings.siteName,
       siteLogo: settings.siteLogo,
+      siteIcon: (settings as any).siteIcon || null,
       pakasirApiKey: settings.pakasirApiKey || "",
       pakasirSlug: settings.pakasirSlug || "",
       ramashopApiKey: (settings as any).ramashopApiKey || "",
@@ -45,6 +46,9 @@ export async function GET() {
       channelWhatsapp: (settings as any).channelWhatsapp || "",
       maintenance: (settings as any).maintenance || false,
       maintenanceMsg: (settings as any).maintenanceMsg || "",
+      bannerEnabled: (settings as any).bannerEnabled || false,
+      bannerImage: (settings as any).bannerImage || "",
+      bannerLink: (settings as any).bannerLink || "",
       username: admin?.username || "",
     },
   });
@@ -75,6 +79,9 @@ export async function PUT(req: NextRequest) {
     channelWhatsapp,
     maintenance,
     maintenanceMsg,
+    bannerEnabled,
+    bannerImage,
+    bannerLink,
     username,
     currentPassword,
     newPassword,
@@ -85,6 +92,7 @@ export async function PUT(req: NextRequest) {
     update: {
       ...(siteName !== undefined && { siteName }),
       ...(siteLogo !== undefined && { siteLogo }),
+      ...(body.siteIcon !== undefined && { siteIcon: body.siteIcon }),
       ...(pakasirApiKey !== undefined && { pakasirApiKey }),
       ...(pakasirSlug !== undefined && { pakasirSlug }),
       ...(ramashopApiKey !== undefined && { ramashopApiKey }),
@@ -99,6 +107,9 @@ export async function PUT(req: NextRequest) {
       ...(channelWhatsapp !== undefined && { channelWhatsapp }),
       ...(maintenance !== undefined && { maintenance: Boolean(maintenance) }),
       ...(maintenanceMsg !== undefined && { maintenanceMsg }),
+      ...(bannerEnabled !== undefined && { bannerEnabled: Boolean(bannerEnabled) }),
+      ...(bannerImage !== undefined && { bannerImage }),
+      ...(bannerLink !== undefined && { bannerLink }),
     },
     create: {
       id: "main",

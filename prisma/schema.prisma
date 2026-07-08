@@ -9,21 +9,23 @@ datasource db {
 }
 
 model BotType {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  description String
-  features    String[] // list fitur bot
-  prices      Price[]
-  orders      Order[]
-  rentals     Rental[]
-  isActive    Boolean  @default(true)
-  maxSlots    Int      @default(0) // 0 = unlimited (per bot instance)
-  totalInstances Int   @default(1) // jumlah nomor bot yang handle tipe ini
-  acceptingOrders Boolean @default(true)
-  hasPremiumTier Boolean @default(false) // apakah bot ini punya opsi premium
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  description     String
+  features        String[] // list fitur bot (backward compat)
+  featuresBasic   String[] @default([]) // fitur tier basic
+  featuresPremium String[] @default([]) // fitur tier premium
+  prices          Price[]
+  orders          Order[]
+  rentals         Rental[]
+  isActive        Boolean  @default(true)
+  maxSlots        Int      @default(0) // 0 = unlimited (per bot instance)
+  totalInstances  Int      @default(1) // jumlah nomor bot yang handle tipe ini
+  acceptingOrders Boolean  @default(true)
+  hasPremiumTier  Boolean  @default(false) // apakah bot ini punya opsi premium
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model Price {
@@ -41,54 +43,60 @@ model Price {
 }
 
 model Order {
-  id            String      @id @default(cuid())
-  orderCode     String      @unique
-  botTypeId     String
-  botType       BotType     @relation(fields: [botTypeId], references: [id])
-  botInstance   Int         @default(1)
-  duration      Duration
-  customDays    Int?
-  isPremium     Boolean     @default(false)
-  groupLink     String
-  contactPhone  String?
+  id              String      @id @default(cuid())
+  orderCode       String      @unique
+  botTypeId       String
+  botType         BotType     @relation(fields: [botTypeId], references: [id])
+  botInstance     Int         @default(1)
+  duration        Duration
+  customDays      Int?
+  isPremium       Boolean     @default(false)
+  groupLink       String
+  contactPhone    String?
   normalizedPhone String?
-  contactEmail  String?
-  totalPrice    Int
-  status        OrderStatus @default(PENDING)
-  paymentId     String?
-  paymentUrl    String?
-  qrImage       String?
-  paidAt        DateTime?
-  expiresAt     DateTime?
-  notes         String?
-  rentalId      String?     // link ke rental yang dibuat dari order ini
-  rental        Rental?     @relation(fields: [rentalId], references: [id])
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  contactEmail    String?
+  totalPrice      Int
+  status          OrderStatus @default(PENDING)
+  paymentId       String?
+  paymentUrl      String?
+  qrImage         String?
+  paidAt          DateTime?
+  expiresAt       DateTime?
+  notes           String?
+  rentalId        String?     // link ke rental yang dibuat dari order ini
+  rental          Rental?     @relation(fields: [rentalId], references: [id])
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
-  logs          OrderLog[]
+  logs            OrderLog[]
+
+  @@index([status])
+  @@index([createdAt])
 }
 
 // Tabel terpisah untuk sewa bot per grup
 model Rental {
-  id          String       @id @default(cuid())
-  groupId     String       // WhatsApp group ID (tanpa @g.us)
-  groupName   String?      // nama grup
-  groupLink   String?      // invite link grup
-  botTypeId   String
-  botType     BotType      @relation(fields: [botTypeId], references: [id])
-  botInstance Int          @default(1) // instance mana yang handle rental ini
-  status      RentalStatus @default(ACTIVE)
-  source      RentalSource @default(MANUAL) // dari mana sewa ini
-  isPremium   Boolean      @default(false)
-  expiresAt   DateTime?    // kapan sewa berakhir
+  id           String       @id @default(cuid())
+  groupId      String       // WhatsApp group ID (tanpa @g.us)
+  groupName    String?      // nama grup
+  groupLink    String?      // invite link grup
+  botTypeId    String
+  botType      BotType      @relation(fields: [botTypeId], references: [id])
+  botInstance  Int          @default(1) // instance mana yang handle rental ini
+  status       RentalStatus @default(ACTIVE)
+  source       RentalSource @default(MANUAL) // dari mana sewa ini
+  isPremium    Boolean      @default(false)
+  expiresAt    DateTime?    // kapan sewa berakhir
   contactPhone String?
-  notes       String?
-  orders      Order[]      // order yang terkait
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  notes        String?
+  orders       Order[]      // order yang terkait
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   @@unique([groupId, botTypeId]) // 1 grup cuma bisa 1 sewa per bot type
+  @@index([status])
+  @@index([expiresAt])
+  @@index([botTypeId])
 }
 
 model OrderLog {
@@ -108,23 +116,30 @@ model Admin {
 }
 
 model SiteSettings {
-  id              String  @id @default("main")
-  siteName        String  @default("KWOCAG")
-  siteLogo        String?
-  pakasirApiKey   String?
-  pakasirSlug     String?
-  telegramToken   String?
-  telegramChatId  String?
+  id                String  @id @default("main")
+  siteName          String  @default("KWOCAG")
+  siteLogo          String? // URL logo navbar (wide/landscape)
+  siteIcon          String? // URL favicon (square/icon kecil)
+  pakasirApiKey     String?
+  pakasirSlug       String?
+  telegramToken     String?
+  telegramChatId    String?
   telegramLogChatId String? // chat ID terpisah untuk error & login log
-  contactWhatsapp String?
-  contactTelegram String?
-  channelWhatsapp String?
-  paymentProvider String  @default("pakasir")
-  ramashopApiKey  String?
-  adminFee        Int     @default(0)
-  adminFeePercent Float   @default(0)
-  maintenance     Boolean @default(false)
-  maintenanceMsg  String? // custom message saat maintenance
+  contactWhatsapp   String?
+  contactTelegram   String?
+  channelWhatsapp   String?
+  paymentProvider   String  @default("pakasir")
+  ramashopApiKey    String?
+  adminFee          Int     @default(0)
+  adminFeePercent   Float   @default(0)
+  maintenance       Boolean @default(false)
+  maintenanceMsg    String? // custom message saat maintenance
+  bannerEnabled     Boolean @default(false)
+  bannerImage       String? // URL eksternal gambar pengumuman (opsional)
+  bannerTitle       String? // judul pengumuman
+  bannerText        String? // teks pengumuman (opsional)
+  bannerLink        String? // link tujuan klik pengumuman
+  bannerLinkLabel   String? // label tombol link
 }
 
 model BotHeartbeat {
@@ -157,4 +172,11 @@ enum RentalSource {
   MANUAL
   BOT
   WEBSITE
+}
+
+model ProcessedWebhook {
+  eventId   String   @id
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
 }

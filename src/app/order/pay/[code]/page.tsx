@@ -42,7 +42,7 @@ export default function PaymentPage() {
           clearInterval(interval);
         }
       } catch {}
-    }, 5000);
+    }, 8000);
     return () => clearInterval(interval);
   }, [code, status]);
 

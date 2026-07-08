@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Navbar } from "@/components/Navbar";
 
 interface BotType {
   id: string;
@@ -30,14 +31,9 @@ export default function OrderTypePage() {
   }, []);
 
   return (
-    <div className="min-h-screen px-4 sm:px-6 py-10">
+    <div className="min-h-screen px-4 sm:px-6 pt-16 pb-10">
       <div className="max-w-2xl mx-auto">
-        <Link href="/" className="text-sm text-[var(--muted)] hover:text-white mb-6 inline-flex items-center gap-1">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Kembali
-        </Link>
+        <Navbar backButton />
 
         <h1 className="text-2xl font-bold mb-2">
           {mode === "new" ? "Pilih Tipe Bot" : "Perpanjang Sewa"}
@@ -103,7 +99,7 @@ export default function OrderTypePage() {
                       <div className="flex items-start justify-between">
                         <div className="min-w-0 flex-1">
                           <h3 className="font-semibold">{bot.name}</h3>
-                          <p className="text-xs text-[var(--muted)] mt-0.5">{bot.description}</p>
+                          <p className="text-xs text-[var(--muted)] mt-0.5 line-clamp-2">{bot.description}</p>
                           <p className="text-xs text-[var(--muted)] mt-1.5">
                             Slot: {activeCount}/{hasSlotLimit ? totalCapacity : "∞"}
                           </p>
@@ -124,7 +120,7 @@ export default function OrderTypePage() {
                             <h3 className="font-semibold group-hover:text-[var(--primary)] transition-colors duration-200">{bot.name}</h3>
                             <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] shrink-0" />
                           </div>
-                          <p className="text-xs text-[var(--muted)] leading-relaxed">{bot.description}</p>
+                          <p className="text-xs text-[var(--muted)] leading-relaxed line-clamp-2">{bot.description}</p>
                         </div>
                         <div className="text-right shrink-0">
                           <p className="text-base font-bold text-[var(--foreground)]">Rp {lowest.toLocaleString("id-ID")}</p>

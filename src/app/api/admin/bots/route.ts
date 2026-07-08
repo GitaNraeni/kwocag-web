@@ -8,6 +8,8 @@ const botTypeSchema = z.object({
   slug: z.string().min(1),
   description: z.string().min(1),
   features: z.array(z.string()),
+  featuresBasic: z.array(z.string()).optional(),
+  featuresPremium: z.array(z.string()).optional(),
   maxSlots: z.number().min(0).optional(),
   hasPremiumTier: z.boolean().optional(),
   prices: z.array(
@@ -53,7 +55,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { name, slug, description, features, prices, maxSlots: parsedMaxSlots, hasPremiumTier } = parsed.data;
+    const { name, slug, description, features, featuresBasic, featuresPremium, prices, maxSlots: parsedMaxSlots, hasPremiumTier } = parsed.data;
     const maxSlots = parsedMaxSlots ?? (body.maxSlots as number) ?? 0;
     const totalInstances = (body.totalInstances as number) || 1;
 
@@ -72,6 +74,8 @@ export async function POST(req: NextRequest) {
         slug,
         description,
         features,
+        featuresBasic: featuresBasic || [],
+        featuresPremium: featuresPremium || [],
         maxSlots,
         totalInstances,
         hasPremiumTier: hasPremiumTier || false,

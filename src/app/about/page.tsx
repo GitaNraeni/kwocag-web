@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { Navbar } from "@/components/Navbar";
 
 export default function AboutPage() {
   const [siteName, setSiteName] = useState("KWOCAG");
@@ -75,21 +75,9 @@ export default function AboutPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="px-6 py-5 border-b border-[var(--card-border)]">
-        <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <Link href="/" className="text-lg font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
-            {siteName}
-          </Link>
-          <Link href="/" className="text-sm text-[var(--muted)] hover:text-white transition inline-flex items-center gap-1">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Kembali
-          </Link>
-        </div>
-      </header>
+      <Navbar backButton />
 
-      <main className="flex-1 px-6 py-12">
+      <main className="flex-1 px-6 pt-16 pb-12">
         <div className="max-w-3xl mx-auto animate-fade-in space-y-10">
 
           {/* Intro */}

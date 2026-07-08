@@ -125,7 +125,7 @@ export default function OrderStatusPage() {
             {order.expiresAt && (
               <div className="flex justify-between">
                 <span className="text-[var(--muted)]">Aktif Sampai</span>
-                <span>{new Date(order.expiresAt).toLocaleDateString("id-ID")}</span>
+                <span>{new Date(order.expiresAt).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta" })}</span>
               </div>
             )}
           </div>

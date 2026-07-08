@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// GET /api/site - Public site info (nama, logo, contact)
+// GET /api/site - Public site info (nama, logo, contact, banner)
 export async function GET() {
   try {
     const settings = await prisma.siteSettings.findUnique({ where: { id: "main" } });
@@ -11,6 +11,7 @@ export async function GET() {
       data: {
         siteName: data?.siteName || "KWOCAG",
         siteLogo: data?.siteLogo || null,
+        siteIcon: data?.siteIcon || null,
         contactWhatsapp: data?.contactWhatsapp || null,
         contactTelegram: data?.contactTelegram || null,
         channelWhatsapp: data?.channelWhatsapp || null,
@@ -18,12 +19,25 @@ export async function GET() {
         adminFeePercent: data?.adminFeePercent || 0,
         maintenance: data?.maintenance || false,
         maintenanceMsg: data?.maintenanceMsg || null,
+        bannerEnabled: data?.bannerEnabled || false,
+        bannerImage: data?.bannerImage || null,
+        bannerTitle: data?.bannerTitle || null,
+        bannerText: data?.bannerText || null,
+        bannerLink: data?.bannerLink || null,
+        bannerLinkLabel: data?.bannerLinkLabel || null,
       },
     });
   } catch {
     return NextResponse.json({
       success: true,
-      data: { siteName: "KWOCAG", siteLogo: null, contactWhatsapp: null },
+      data: {
+        siteName: "KWOCAG",
+        siteLogo: null,
+        contactWhatsapp: null,
+        bannerEnabled: false,
+        bannerImage: null,
+        bannerLink: null,
+      },
     });
   }
 }

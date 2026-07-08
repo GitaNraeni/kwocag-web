@@ -8,6 +8,8 @@ const updateBotSchema = z.object({
   slug: z.string().min(1).optional(),
   description: z.string().min(1).optional(),
   features: z.array(z.string()).optional(),
+  featuresBasic: z.array(z.string()).optional(),
+  featuresPremium: z.array(z.string()).optional(),
   isActive: z.boolean().optional(),
   acceptingOrders: z.boolean().optional(),
   maxSlots: z.number().min(0).optional(),
@@ -24,6 +26,29 @@ const updateBotSchema = z.object({
     )
     .optional(),
 });
+
+// GET /api/admin/bots/[id] - Detail satu bot
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const bot = await prisma.botType.findUnique({
+    where: { id },
+    include: { prices: true },
+  });
+
+  if (!bot) {
+    return NextResponse.json({ success: false, message: "Bot tidak ditemukan" }, { status: 404 });
+  }
+
+  return NextResponse.json({ success: true, data: bot });
+}
 
 // PUT /api/admin/bots/[id] - Update tipe bot
 export async function PUT(
@@ -56,9 +81,7 @@ export async function PUT(
 
     // Update prices jika ada
     if (prices) {
-      // Hapus harga lama
       await prisma.price.deleteMany({ where: { botTypeId: id } });
-      // Buat harga baru
       await prisma.price.createMany({
         data: prices.map((p) => ({
           botTypeId: id,
@@ -98,7 +121,6 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    // Cek apakah masih ada sewa aktif
     const activeRentals = await prisma.rental.count({
       where: { botTypeId: id, status: "ACTIVE" },
     });

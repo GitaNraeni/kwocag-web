@@ -9,7 +9,8 @@ export default function AddBotPage() {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
-  const [features, setFeatures] = useState("");
+  const [featuresBasic, setFeaturesBasic] = useState("");
+  const [featuresPremium, setFeaturesPremium] = useState("");
   const [weeklyPrice, setWeeklyPrice] = useState(0);
   const [monthlyPrice, setMonthlyPrice] = useState(0);
   const [customPrice, setCustomPrice] = useState(0);
@@ -39,13 +40,18 @@ export default function AddBotPage() {
 
     if (prices.length === 0) { setError("Minimal 1 harga harus diisi"); setSubmitting(false); return; }
 
+    const basicArr = featuresBasic.split("\n").map(f => f.trim()).filter(Boolean);
+    const premiumArr = featuresPremium.split("\n").map(f => f.trim()).filter(Boolean);
+
     try {
       const res = await fetch("/api/admin/bots", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name, slug, description,
-          features: features.split("\n").filter(f => f.trim()),
+          features: basicArr, // backward compat
+          featuresBasic: basicArr,
+          featuresPremium: premiumArr,
           prices, maxSlots: maxSlots || 0,
           totalInstances: totalInstances || 1,
           hasPremiumTier,
@@ -85,10 +91,21 @@ export default function AddBotPage() {
           <input type="text" required value={description} onChange={(e) => setDescription(e.target.value)}
             className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[var(--primary)]" />
         </div>
-        <div>
-          <label className="block text-xs text-[var(--muted)] mb-1">Fitur (1 per baris)</label>
-          <textarea required value={features} onChange={(e) => setFeatures(e.target.value)} rows={4}
-            className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[var(--primary)]" />
+
+        {/* Fitur split 2 kolom */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs text-[var(--muted)] mb-1">Fitur Basic (satu per baris)</label>
+            <textarea value={featuresBasic} onChange={(e) => setFeaturesBasic(e.target.value)} rows={5}
+              placeholder={"Anti Spam\nAnti Link\nAnti Flood"}
+              className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[var(--primary)] resize-none" />
+          </div>
+          <div>
+            <label className="block text-xs text-purple-400 mb-1">Fitur Premium (satu per baris)</label>
+            <textarea value={featuresPremium} onChange={(e) => setFeaturesPremium(e.target.value)} rows={5}
+              placeholder={"Semua fitur Basic\nAI Chat\nAuto Reply"}
+              className="w-full bg-[var(--background)] border border-purple-500/30 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-purple-500 resize-none" />
+          </div>
         </div>
 
         {/* Basic prices */}
@@ -120,7 +137,7 @@ export default function AddBotPage() {
               className="accent-purple-500 w-4 h-4" />
             <div>
               <span className="text-sm font-medium">Punya Tier Premium</span>
-              <p className="text-xs text-[var(--muted)]">Aktifkan jika bot ini punya opsi premium (fitur grup premium)</p>
+              <p className="text-xs text-[var(--muted)]">Aktifkan jika bot ini punya opsi premium</p>
             </div>
           </label>
         </div>
@@ -149,17 +166,17 @@ export default function AddBotPage() {
           </div>
         )}
 
-        <div>
-          <label className="block text-xs text-[var(--muted)] mb-1">Max Slot (0 = unlimited)</label>
-          <input type="number" min={0} value={maxSlots} onChange={(e) => setMaxSlots(parseInt(e.target.value) || 0)}
-            className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[var(--primary)]" />
-        </div>
-
-        <div>
-          <label className="block text-xs text-[var(--muted)] mb-1">Jumlah Nomor Bot (Instance)</label>
-          <input type="number" min={1} value={totalInstances} onChange={(e) => setTotalInstances(parseInt(e.target.value) || 1)}
-            className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[var(--primary)]" />
-          <p className="text-xs text-[var(--muted)] mt-1">Berapa nomor bot yang handle tipe ini. Slot dibagi rata per instance.</p>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs text-[var(--muted)] mb-1">Max Slot (0 = unlimited)</label>
+            <input type="number" min={0} value={maxSlots} onChange={(e) => setMaxSlots(parseInt(e.target.value) || 0)}
+              className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[var(--primary)]" />
+          </div>
+          <div>
+            <label className="block text-xs text-[var(--muted)] mb-1">Jumlah Instance</label>
+            <input type="number" min={1} value={totalInstances} onChange={(e) => setTotalInstances(parseInt(e.target.value) || 1)}
+              className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[var(--primary)]" />
+          </div>
         </div>
 
         {error && <p className="text-[var(--danger)] text-xs">{error}</p>}

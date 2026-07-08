@@ -11,6 +11,8 @@ export function MaintenanceGuard() {
     // Jangan cek kalau sudah di /maintenance atau /admin
     if (pathname.startsWith("/maintenance") || pathname.startsWith("/admin")) return;
 
+    // Cek sekali saat mount — server-side layout.tsx sudah handle redirect otomatis
+    // Tidak perlu polling karena layout server component redirect langsung
     const check = async () => {
       try {
         const res = await fetch("/api/site");
@@ -23,12 +25,8 @@ export function MaintenanceGuard() {
       }
     };
 
-    // Cek langsung saat mount
     check();
-
-    // Polling tiap 15 detik
-    const interval = setInterval(check, 15000);
-    return () => clearInterval(interval);
+    // Tidak ada setInterval — hemat invocation
   }, [pathname, router]);
 
   return null;

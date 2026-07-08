@@ -13,6 +13,7 @@ export default function AdminSettings() {
   // Site
   const [siteName, setSiteName] = useState("");
   const [siteLogo, setSiteLogo] = useState("");
+  const [siteIcon, setSiteIcon] = useState("");
   const [contactWhatsapp, setContactWhatsapp] = useState("");
   const [contactTelegram, setContactTelegram] = useState("");
   const [channelWhatsapp, setChannelWhatsapp] = useState("");
@@ -52,6 +53,7 @@ export default function AdminSettings() {
         if (data?.success) {
           setSiteName(data.data.siteName || "");
           setSiteLogo(data.data.siteLogo || "");
+          setSiteIcon(data.data.siteIcon || "");
           setContactWhatsapp(data.data.contactWhatsapp || "");
           setContactTelegram(data.data.contactTelegram || "");
           setChannelWhatsapp(data.data.channelWhatsapp || "");
@@ -88,7 +90,7 @@ export default function AdminSettings() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          siteName, siteLogo, contactWhatsapp, contactTelegram, channelWhatsapp,
+          siteName, siteLogo, siteIcon, contactWhatsapp, contactTelegram, channelWhatsapp,
           pakasirApiKey, pakasirSlug,
           ramashopApiKey, paymentProvider,
           adminFee, adminFeePercent,
@@ -147,9 +149,14 @@ export default function AdminSettings() {
                 className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[var(--primary)]" />
             </div>
             <div>
-              <label className="block text-xs text-[var(--muted)] mb-1">Logo URL (opsional)</label>
-              <input type="url" value={siteLogo} onChange={(e) => setSiteLogo(e.target.value)} placeholder="https://..."
+              <label className="block text-xs text-[var(--muted)] mb-1">Icon / Favicon (URL — gambar square untuk tab browser & login)</label>
+              <input type="url" value={siteIcon} onChange={(e) => setSiteIcon(e.target.value)} placeholder="https://... (icon kotak 512x512)"
                 className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[var(--primary)]" />
+              {siteIcon && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={siteIcon} alt="preview icon" className="mt-2 h-8 w-8 object-contain rounded" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+              )}
+              <p className="text-[10px] text-[var(--muted)] mt-1">Ini yang muncul di tab browser, bookmark, dan halaman login</p>
             </div>
             <div>
               <label className="block text-xs text-[var(--muted)] mb-1">WhatsApp Contact</label>

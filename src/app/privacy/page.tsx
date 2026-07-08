@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { Navbar } from "@/components/Navbar";
 
 export default function PrivacyPage() {
   const [siteName, setSiteName] = useState("KWOCAG");
@@ -14,20 +14,10 @@ export default function PrivacyPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <header className="px-6 py-5 border-b border-[var(--card-border)]">
-        <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <Link href="/" className="text-lg font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
-            {siteName}
-          </Link>
-          <Link href="/" className="text-sm text-[var(--muted)] hover:text-white transition">
-            Kembali
-          </Link>
-        </div>
-      </header>
+      <Navbar backButton />
 
       {/* Content */}
-      <main className="flex-1 px-6 py-12">
+      <main className="flex-1 px-6 pt-16 pb-12">
         <div className="max-w-3xl mx-auto animate-fade-in">
           <h1 className="text-2xl sm:text-3xl font-bold mb-8">Kebijakan Privasi</h1>
 

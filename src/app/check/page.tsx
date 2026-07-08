@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Navbar } from "@/components/Navbar";
 
 interface OrderResult {
   orderCode: string;
@@ -68,13 +69,8 @@ export default function CheckPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6 py-10">
-      <div className="max-w-sm w-full">
-        <Link href="/" className="text-sm text-[var(--muted)] hover:text-white mb-6 inline-flex items-center gap-1">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Kembali
-        </Link>
+      <Navbar backButton />
+      <div className="max-w-sm w-full mt-10">
 
         <div className="bg-[var(--card)] border border-[var(--card-border)] rounded-2xl p-6">
           <h1 className="text-xl font-bold mb-1">Cek Order</h1>

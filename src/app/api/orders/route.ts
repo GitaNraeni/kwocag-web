@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createPayment, getPaymentUrl } from "@/lib/pakasir";
-import { sendTelegramNotification, formatOrderNotification } from "@/lib/telegram";
+import { sendTelegramNotification, sendLogNotification, formatOrderNotification } from "@/lib/telegram";
 import { generateOrderCode, getDurationLabel, normalizePhone } from "@/lib/utils";
 import { checkRateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 import { cleanGroupLink, getGroupInviteCode, sanitizePhone, sanitizeUrl, sanitizeEmail, sanitizeText } from "@/lib/sanitize";
 import { z } from "zod";
+
+// Throttle notif rate limit — max 1 notif per 5 menit per key
+const rateLimitNotifMap = new Map<string, number>();
+function shouldNotifyRateLimit(key: string): boolean {
+  const last = rateLimitNotifMap.get(key) || 0;
+  if (Date.now() - last > 5 * 60 * 1000) {
+    rateLimitNotifMap.set(key, Date.now());
+    return true;
+  }
+  return false;
+}
 
 const orderSchema = z.object({
   botTypeId: z.string().min(1),
@@ -24,6 +35,12 @@ export async function POST(req: NextRequest) {
     const ip = getClientIp(req);
     const { limited, resetIn } = checkRateLimit(`order:${ip}`, RATE_LIMITS.ORDER);
     if (limited) {
+      const now = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
+      if (shouldNotifyRateLimit(`order:${ip}`)) {
+        sendLogNotification(
+          `⚠️ <b>Rate Limit Terpicu</b>\n\nEndpoint: /api/orders\nIP: <code>${ip}</code>\nWaktu: ${now}`
+        ).catch(() => {});
+      }
       return NextResponse.json(
         { success: false, message: `Terlalu banyak request. Coba lagi dalam ${Math.ceil(resetIn / 1000)} detik.` },
         { status: 429 }

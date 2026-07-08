@@ -2,7 +2,12 @@
 
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-
+import { Navbar } from "@/components/Navbar";
+import {
+  motion,
+  useMotionValue,
+  AnimatePresence,
+} from "framer-motion";
 function useScrollReveal(threshold = 0.1) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -18,6 +23,127 @@ function useScrollReveal(threshold = 0.1) {
   return ref;
 }
 
+// Counter animasi count up
+function CountUp({ target, className, suffix = "" }: { target: number; className?: string; suffix?: string }) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (target === 0) { setCount(0); return; }
+    const duration = 1500;
+    const steps = 40;
+    const increment = target / steps;
+    let current = 0;
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= target) { setCount(target); clearInterval(timer); }
+      else setCount(Math.floor(current));
+    }, duration / steps);
+    return () => clearInterval(timer);
+  }, [target]);
+  return <p className={className}>{count}{suffix}</p>;
+}
+
+// Card tilt 3D
+function TiltCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const rotateX = useMotionValue(0);
+  const rotateY = useMotionValue(0);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = (e.clientX - cx) / (rect.width / 2);
+    const dy = (e.clientY - cy) / (rect.height / 2);
+    rotateX.set(-dy * 10);
+    rotateY.set(dx * 10);
+  };
+
+  const handleMouseLeave = () => {
+    rotateX.set(0);
+    rotateY.set(0);
+  };
+
+  return (
+    <motion.div
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{ rotateX, rotateY, perspective: 800, transformStyle: "preserve-3d" }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+// Pop-up Banner Modal
+function BannerModal({ bannerImage, bannerTitle, bannerText, bannerLink, bannerLinkLabel, onClose }: {
+  bannerImage: string; bannerTitle: string; bannerText: string; bannerLink: string; bannerLinkLabel: string; onClose: () => void;
+}) {
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          className="relative max-w-sm w-full rounded-2xl overflow-hidden border border-[var(--card-border)] bg-[var(--card)]"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Gambar */}
+          {bannerImage && (
+            bannerLink ? (
+              <a href={bannerLink} target="_blank" rel="noopener noreferrer">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={bannerImage} alt="Banner" className="w-full object-cover" />
+              </a>
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={bannerImage} alt="Banner" className="w-full object-cover" />
+            )
+          )}
+
+          {/* Konten teks */}
+          {(bannerTitle || bannerText || (bannerLink && bannerLinkLabel)) && (
+            <div className="px-5 py-4 space-y-2">
+              {bannerTitle && (
+                <p className="text-base font-bold text-[var(--foreground)] leading-snug">{bannerTitle}</p>
+              )}
+              {bannerText && (
+                <p className="text-sm text-[var(--muted)] leading-relaxed whitespace-pre-wrap">{bannerText}</p>
+              )}
+              {bannerLink && bannerLinkLabel && (
+                <div className="pt-1">
+                  <a href={bannerLink} target="_blank" rel="noopener noreferrer"
+                    className="inline-block px-4 py-2 bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white text-xs rounded-lg font-medium transition">
+                    {bannerLinkLabel}
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
+
+          <button
+            onClick={onClose}
+            className="absolute top-3 right-3 bg-black/50 hover:bg-black/70 rounded-full p-1.5 text-white transition"
+            aria-label="Tutup"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 export default function Home() {
   const [siteName, setSiteName] = useState("KWOCAG");
   const [contact, setContact] = useState("");
@@ -26,7 +152,15 @@ export default function Home() {
   const [totalActive, setTotalActive] = useState(0);
   const [totalServed, setTotalServed] = useState<number | null>(null);
   const [bots, setBots] = useState<any[]>([]);
-  const [ready, setReady] = useState(false); // semua data siap baru render hero
+  const [ready, setReady] = useState(false);
+  // Banner
+  const [showBanner, setShowBanner] = useState(false);
+  const [bannerImage, setBannerImage] = useState("");
+  const [bannerTitle, setBannerTitle] = useState("");
+  const [bannerText, setBannerText] = useState("");
+  const [bannerLink, setBannerLink] = useState("");
+  const [bannerLinkLabel, setBannerLinkLabel] = useState("");
+
   const statsRef = useScrollReveal(0.05);
   const footerRef = useScrollReveal(0.05);
 
@@ -39,56 +173,73 @@ export default function Home() {
 
     Promise.all([
       fetch("/api/site").then(r => r.json()).then(d => {
-        if (d.success) { setSiteName(d.data.siteName); setContact(d.data.contactWhatsapp || ""); setTelegram(d.data.contactTelegram || ""); setChannelWa(d.data.channelWhatsapp || ""); }
+        if (d.success) {
+          setSiteName(d.data.siteName);
+          setContact(d.data.contactWhatsapp || "");
+          setTelegram(d.data.contactTelegram || "");
+          setChannelWa(d.data.channelWhatsapp || "");
+
+          // Pop-up banner logic — localStorage throttle 1 hari
+          if (d.data.bannerEnabled && (d.data.bannerImage || d.data.bannerTitle || d.data.bannerText)) {
+            const BANNER_KEY = "kwocag_banner_shown";
+            const EXPIRY = 86400000;
+            try {
+              const stored = localStorage.getItem(BANNER_KEY);
+              const now = Date.now();
+              const shouldShow = !stored || (now - parseInt(stored)) > EXPIRY;
+              if (shouldShow) {
+                setBannerImage(d.data.bannerImage || "");
+                setBannerTitle(d.data.bannerTitle || "");
+                setBannerText(d.data.bannerText || "");
+                setBannerLink(d.data.bannerLink || "");
+                setBannerLinkLabel(d.data.bannerLinkLabel || "");
+                setShowBanner(true);
+                localStorage.setItem(BANNER_KEY, now.toString());
+              }
+            } catch { /* localStorage unavailable */ }
+          }
+        }
       }).catch(() => {}),
       fetch("/api/bots").then(r => r.json()).then(d => {
         if (d.success) setBots(d.data);
       }).catch(() => {}),
     ]).finally(() => setReady(true));
 
-    // Stats fetch terpisah — nggak nunggu bareng hero
     fetchStats();
-
-    // Live counter — update tiap 30 detik
     const interval = setInterval(fetchStats, 30000);
     return () => clearInterval(interval);
   }, []);
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
+      {/* Navbar capsul — shared component */}
+      <Navbar />
+
+      {/* Pop-up Banner */}
+      {showBanner && (bannerImage || bannerTitle || bannerText) && (
+        <BannerModal
+          bannerImage={bannerImage}
+          bannerTitle={bannerTitle}
+          bannerText={bannerText}
+          bannerLink={bannerLink}
+          bannerLinkLabel={bannerLinkLabel}
+          onClose={() => setShowBanner(false)}
+        />
+      )}
+
       {/* Background effects */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full bg-[var(--primary)]/[0.03] blur-[100px]" />
         <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full bg-blue-900/10 blur-[80px]" />
       </div>
-
-      {/* Grid pattern overlay */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.02]"
         style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }}
       />
 
-      {/* Header */}
-      <header className="relative z-10 px-6 py-5">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <span className="text-lg font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">{siteName}</span>
-          <div className="flex items-center gap-3 sm:gap-4 text-sm">
-            <Link href="/about" className="text-[var(--muted)] hover:text-white transition hidden sm:inline">Tentang</Link>
-            <Link href="/check" className="text-[var(--muted)] hover:text-white transition">Cek Order</Link>
-            {contact && (
-              <a href={`https://wa.me/${contact}`} target="_blank" rel="noopener noreferrer"
-                className="hidden sm:inline-flex px-4 py-1.5 border border-[var(--card-border)] hover:border-[var(--primary)]/50 rounded-lg text-[var(--muted)] hover:text-white transition">
-                Contact
-              </a>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* Hero */}
-      <section className="relative z-10 flex-1 flex items-center px-6 py-16 md:py-20">
+      {/* Hero — pt-20 agar tidak tertutup navbar fixed */}
+      <section className="relative z-10 flex-1 flex items-center px-6 pt-16 pb-16 md:pt-20 md:pb-20">
         <div className="max-w-5xl mx-auto w-full grid md:grid-cols-2 gap-10 md:gap-16 items-center">
           <div className={ready ? "animate-slide-up" : "opacity-0"}>
-            {/* Badge — reserved height supaya nggak CLS */}
             <div className="h-8 mb-6">
               {totalActive > 0 && (
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/20 text-xs text-[var(--primary)] animate-fade-in">
@@ -112,18 +263,18 @@ export default function Home() {
                 className="inline-flex items-center justify-center bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white font-semibold px-7 py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-[var(--primary)]/25 text-sm sm:text-base hover:shadow-[var(--primary)]/40 hover:-translate-y-0.5 active:translate-y-0">
                 Order Now
               </Link>
-              {contact && (
+              {contact ? (
                 <a href={`https://wa.me/${contact}`} target="_blank" rel="noopener noreferrer"
                   className="inline-flex items-center justify-center border border-[var(--card-border)] hover:border-[var(--primary)]/40 text-[var(--foreground)] px-7 py-3.5 rounded-xl font-medium transition-all duration-200 text-sm sm:text-base hover:-translate-y-0.5 active:translate-y-0">
                   Tanya Dulu
                 </a>
-              )}
+              ) : null}
             </div>
           </div>
 
-          {/* Right visual */}
+          {/* Right visual — TiltCard 3D */}
           <div className="hidden md:block" style={{ opacity: ready ? 1 : 0, animation: ready ? 'fadeIn 0.4s ease-out 200ms both' : 'none' }}>
-            <div className="relative">
+            <TiltCard className="relative">
               <div className="absolute -inset-4 bg-gradient-to-br from-[var(--primary)]/5 to-transparent rounded-3xl blur-2xl" />
               <div className="relative bg-[var(--card)] border border-[var(--card-border)] rounded-2xl p-6 card-glow">
                 <div className="flex items-center gap-3 pb-4 border-b border-[var(--card-border)]">
@@ -154,17 +305,11 @@ export default function Home() {
                   }) : (
                     <>
                       <div className="flex items-center justify-between p-3 rounded-lg bg-[var(--background)] border border-[var(--card-border)]/50">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-[var(--success)]" />
-                          <span className="text-sm">Bot Store</span>
-                        </div>
+                        <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-[var(--success)]" /><span className="text-sm">Bot Store</span></div>
                         <span className="text-xs text-[var(--primary)] font-medium">Rp 2.000/minggu</span>
                       </div>
                       <div className="flex items-center justify-between p-3 rounded-lg bg-[var(--background)] border border-[var(--card-border)]/50">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-[var(--success)]" />
-                          <span className="text-sm">Bot Guardian</span>
-                        </div>
+                        <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-[var(--success)]" /><span className="text-sm">Bot Guardian</span></div>
                         <span className="text-xs text-[var(--primary)] font-medium">Rp 3.000/minggu</span>
                       </div>
                     </>
@@ -177,31 +322,51 @@ export default function Home() {
                   100% TRUSTED
                 </div>
               </div>
-            </div>
+            </TiltCard>
           </div>
         </div>
       </section>
 
-      {/* Stats — muncul bareng hero setelah data ready */}
+      {/* Stats */}
       <section className="relative z-10 border-t border-[var(--card-border)] px-6 py-12">
         <div ref={statsRef} className="max-w-3xl mx-auto scroll-fade" style={{ minHeight: '80px' }}>
           {ready && (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
-              {[
-                { value: "QRIS", label: "Bayar instan", color: "text-[var(--primary)]" },
-                { value: "24/7", label: "Bot online", color: "" },
-                { value: "<2m", label: "Aktivasi", color: "" },
-                { value: totalServed !== null ? `${totalServed}+` : null, label: "Grup dilayani", color: "text-[var(--success)] tabular-nums" },
-              ].map((stat, i) => (
-                <div key={i} className="animate-fade-in" style={{ animationDelay: `${i * 80}ms`, animationFillMode: "both" }}>
-                  {stat.value !== null ? (
-                    <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
-                  ) : (
-                    <div className="h-8 w-12 mx-auto rounded-md bg-[var(--card-border)] animate-pulse" />
-                  )}
-                  <p className="text-xs text-[var(--muted)] mt-1">{stat.label}</p>
+              {/* QRIS — logo resmi dengan float animation */}
+              <div className="animate-fade-in" style={{ animationFillMode: "both" }}>
+                <div className="h-8 flex items-center justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="https://files.catbox.moe/3bh8vo.png"
+                    alt="QRIS"
+                    className="h-6 w-auto object-contain"
+                    style={{
+                      filter: "brightness(0) saturate(100%) invert(35%) sepia(90%) saturate(1500%) hue-rotate(200deg) brightness(100%)",
+                      animation: "floatY 3s ease-in-out infinite",
+                    }}
+                  />
                 </div>
-              ))}
+                <p className="text-xs text-[var(--muted)] mt-1">Bayar instan</p>
+              </div>
+              {/* 24/7 */}
+              <div className="animate-fade-in" style={{ animationDelay: "80ms", animationFillMode: "both" }}>
+                <p className="text-2xl font-bold">24/7</p>
+                <p className="text-xs text-[var(--muted)] mt-1">Bot online</p>
+              </div>
+              {/* &lt;2m */}
+              <div className="animate-fade-in" style={{ animationDelay: "160ms", animationFillMode: "both" }}>
+                <p className="text-2xl font-bold">&lt;2m</p>
+                <p className="text-xs text-[var(--muted)] mt-1">Aktivasi</p>
+              </div>
+              {/* Grup dilayani — counter animasi */}
+              <div className="animate-fade-in" style={{ animationDelay: "240ms", animationFillMode: "both" }}>
+                {totalServed !== null ? (
+                  <CountUp target={totalServed} className="text-2xl font-bold text-[var(--success)] tabular-nums" suffix="+" />
+                ) : (
+                  <div className="h-8 w-12 mx-auto rounded-md bg-[var(--card-border)] animate-pulse" />
+                )}
+                <p className="text-xs text-[var(--muted)] mt-1">Grup dilayani</p>
+              </div>
             </div>
           )}
         </div>
@@ -218,11 +383,10 @@ export default function Home() {
             <div>
               <p className="text-xs font-medium text-[var(--foreground)] mb-3">Layanan</p>
               <div className="flex flex-col gap-0.5">
-                <Link href="/about" className="text-xs text-[var(--muted)] hover:text-white transition py-1.5 inline-block">Tentang Kami</Link>
-                <Link href="/privacy" className="text-xs text-[var(--muted)] hover:text-white transition py-1.5 inline-block">Kebijakan Privasi</Link>
-                <Link href="/terms" className="text-xs text-[var(--muted)] hover:text-white transition py-1.5 inline-block">Ketentuan Layanan</Link>
+                <Link href="/about" className="text-xs text-[var(--muted)] hover:text-[var(--primary)] active:text-[var(--primary)] transition py-1.5 inline-block">Tentang Kami</Link>
+                <Link href="/privacy" className="text-xs text-[var(--muted)] hover:text-[var(--primary)] active:text-[var(--primary)] transition py-1.5 inline-block">Kebijakan Privasi</Link>
+                <Link href="/terms" className="text-xs text-[var(--muted)] hover:text-[var(--primary)] active:text-[var(--primary)] transition py-1.5 inline-block">Ketentuan Layanan</Link>
               </div>
-
             </div>
             <div>
               <p className="text-xs font-medium text-[var(--foreground)] mb-3">Kontak</p>
@@ -252,7 +416,7 @@ export default function Home() {
             </div>
           </div>
           <div className="border-t border-[var(--card-border)] pt-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[var(--muted)]">
-            <span>{siteName}</span>
+            <Link href="/" className="hover:text-[var(--primary)] active:text-[var(--primary)] transition">{siteName}</Link>
             <span>&copy; {new Date().getFullYear()} All rights reserved</span>
           </div>
         </div>

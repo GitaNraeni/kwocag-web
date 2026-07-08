@@ -14,24 +14,17 @@ export function DynamicFavicon() {
       .then((d) => {
         if (!d.success) return;
 
-        // Update favicon
-        if (d.data.siteLogo) {
-          // Remove existing favicons
+        // Update favicon — pakai siteIcon (square), bukan siteLogo (wide)
+        const iconUrl = d.data.siteIcon || d.data.siteLogo;
+        if (iconUrl) {
           document.querySelectorAll("link[rel='icon'], link[rel='shortcut icon']").forEach(el => el.remove());
-
           const link = document.createElement("link");
           link.rel = "icon";
-          link.type = "image/x-icon";
-          link.href = d.data.siteLogo;
+          link.href = iconUrl;
           document.head.appendChild(link);
         } else {
-          // Default favicon
           let link = document.querySelector("link[rel='icon']") as HTMLLinkElement;
-          if (!link) {
-            link = document.createElement("link");
-            link.rel = "icon";
-            document.head.appendChild(link);
-          }
+          if (!link) { link = document.createElement("link"); link.rel = "icon"; document.head.appendChild(link); }
           link.href = "https://files.catbox.moe/vms1wj.jpg";
         }
 

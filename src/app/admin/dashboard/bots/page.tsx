@@ -37,13 +37,13 @@ export default function AdminBotsPage() {
 
   useEffect(() => { fetchBots(); }, []);
 
-  const toggleActive = async (id: string, isActive: boolean) => {
-    await fetch(`/api/admin/bots/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isActive: !isActive }) });
-    fetchBots();
-  };
-
-  const toggleAccepting = async (id: string, accepting: boolean) => {
-    await fetch(`/api/admin/bots/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ acceptingOrders: !accepting }) });
+  const togglePause = async (id: string, isActive: boolean) => {
+    // Pause = nonaktifkan + tutup sewa sekaligus, Aktifkan = keduanya aktif
+    await fetch(`/api/admin/bots/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isActive: !isActive, acceptingOrders: !isActive }),
+    });
     fetchBots();
   };
 
@@ -83,18 +83,17 @@ export default function AdminBotsPage() {
             <div key={bot.id} className={`bg-[var(--card)] border border-[var(--card-border)] rounded-xl p-4 sm:p-5 ${!bot.isActive ? "opacity-50" : ""}`}>
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="min-w-0">
-                  <h4 className="font-semibold">{bot.name}</h4>
-                  <p className="text-xs text-[var(--muted)]">/{bot.slug} - {bot._count.rentals} sewa aktif</p>
-                </div>
-                <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
-                  {bot.acceptingOrders ? (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-500/10 text-green-400">Buka</span>
-                  ) : (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/10 text-red-400">Tutup</span>
-                  )}
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded ${bot.isActive ? "bg-green-500/10 text-green-400" : "bg-gray-500/10 text-gray-400"}`}>
-                    {bot.isActive ? "Aktif" : "Off"}
-                  </span>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <h4 className="font-semibold">{bot.name}</h4>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                      bot.isActive
+                        ? "bg-green-500/10 text-green-400"
+                        : "bg-gray-500/10 text-gray-400"
+                    }`}>
+                      {bot.isActive ? "Aktif" : "Pause"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[var(--muted)]">/{bot.slug} · {bot._count.rentals} sewa aktif</p>
                 </div>
               </div>
 
@@ -117,19 +116,19 @@ export default function AdminBotsPage() {
 
               <div className="flex gap-2 flex-wrap">
                 <Link href={`/admin/dashboard/bots/edit/${bot.id}`}
-                  className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-xs rounded-lg transition">
+                  className="px-3 py-1.5 bg-[var(--primary)]/15 hover:bg-[var(--primary)]/25 text-[var(--primary)] text-xs rounded-lg transition font-medium">
                   Edit
                 </Link>
-                <button onClick={() => toggleAccepting(bot.id, bot.acceptingOrders)}
-                  className={`px-3 py-1.5 text-xs rounded-lg transition ${bot.acceptingOrders ? "bg-orange-600/20 hover:bg-orange-600/30 text-orange-400" : "bg-green-600/20 hover:bg-green-600/30 text-green-400"}`}>
-                  {bot.acceptingOrders ? "Tutup Sewa" : "Buka Sewa"}
-                </button>
-                <button onClick={() => toggleActive(bot.id, bot.isActive)}
-                  className="px-3 py-1.5 bg-[var(--card-border)] hover:bg-[var(--muted)]/20 text-xs rounded-lg transition">
-                  {bot.isActive ? "Nonaktifkan" : "Aktifkan"}
+                <button onClick={() => togglePause(bot.id, bot.isActive)}
+                  className={`px-3 py-1.5 text-xs rounded-lg transition font-medium ${
+                    bot.isActive
+                      ? "bg-orange-500/15 hover:bg-orange-500/25 text-orange-400"
+                      : "bg-green-500/15 hover:bg-green-500/25 text-green-400"
+                  }`}>
+                  {bot.isActive ? "Pause" : "Aktifkan"}
                 </button>
                 <button onClick={() => setDeleteTarget(bot)}
-                  className="px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 text-xs rounded-lg transition">
+                  className="px-3 py-1.5 bg-red-500/15 hover:bg-red-500/25 text-red-400 text-xs rounded-lg transition font-medium">
                   Hapus
                 </button>
               </div>

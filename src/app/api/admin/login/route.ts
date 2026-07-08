@@ -4,6 +4,17 @@ import { createToken, verifyPassword } from "@/lib/auth";
 import { sendTelegramNotification, sendLogNotification } from "@/lib/telegram";
 import { cookies } from "next/headers";
 
+// Throttle notif rate limit — max 1 notif per 5 menit per IP
+const loginNotifMap = new Map<string, number>();
+function shouldNotifyLogin(ip: string): boolean {
+  const last = loginNotifMap.get(ip) || 0;
+  if (Date.now() - last > 5 * 60 * 1000) {
+    loginNotifMap.set(ip, Date.now());
+    return true;
+  }
+  return false;
+}
+
 // Rate limiting (in-memory, resets on redeploy)
 const loginAttempts = new Map<string, { count: number; blockedUntil: number }>();
 const MAX_ATTEMPTS = 5;
@@ -52,6 +63,12 @@ export async function POST(req: NextRequest) {
     if (isBlocked(ip)) {
       const data = loginAttempts.get(ip)!;
       const remainingMin = Math.ceil((data.blockedUntil - Date.now()) / 60000);
+      if (shouldNotifyLogin(ip)) {
+        const now = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
+        sendLogNotification(
+          `⚠️ <b>Rate Limit Login Terpicu</b>\n\nEndpoint: /admin/login\nIP: <code>${ip}</code>\nWaktu: ${now}`
+        ).catch(() => {});
+      }
       return NextResponse.json(
         { success: false, message: `Terlalu banyak percobaan. Coba lagi dalam ${remainingMin} menit.` },
         { status: 429 }

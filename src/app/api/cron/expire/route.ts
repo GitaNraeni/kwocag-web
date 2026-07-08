@@ -67,6 +67,13 @@ export async function GET() {
       }
     } catch { /* skip heartbeat check kalau error */ }
 
+    // 4. Cleanup ProcessedWebhook yang lebih dari 7 hari
+    try {
+      await (prisma as any).processedWebhook.deleteMany({
+        where: { createdAt: { lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } },
+      });
+    } catch { /* skip */ }
+
     return NextResponse.json({
       success: true,
       rentalsEnded: rentalCount,
