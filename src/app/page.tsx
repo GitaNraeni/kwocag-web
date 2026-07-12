@@ -206,7 +206,7 @@ export default function Home() {
     ]).finally(() => setReady(true));
 
     fetchStats();
-    const interval = setInterval(fetchStats, 30000);
+    const interval = setInterval(fetchStats, 60000);
     return () => clearInterval(interval);
   }, []);
 
