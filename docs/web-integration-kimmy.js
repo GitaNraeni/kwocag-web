@@ -16,7 +16,7 @@ import { logWithTime, selisihHari } from './lib/utils.js';
 import { deleteCache } from './lib/globalCache.js';
 
 // ============ GANTI INI PER PANEL ============
-const API_URL = 'https://sewabot.kwocag.web.id';
+const API_URL = 'https://kwocag.web.id';
 const API_KEY = 'chuLlTmvIq3rtp6WxCyglK3VABzHKEih';
 const INSTANCE = 1; // Panel 1 = 1, Panel 2 = 2
 const HANDLE_SLUGS = ['kimmy'];

@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin
 Disallow: /api
 
-Sitemap: https://sewabot.kwocag.web.id/sitemap.xml
+Sitemap: https://kwocag.web.id/sitemap.xml

@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 
 // ============ GANTI INI ============
-const API_URL = 'https://sewabot.kwocag.web.id';
+const API_URL = 'https://kwocag.web.id';
 const API_KEY = 'GANTI_DENGAN_PAKASIR_API_KEY';
 const INSTANCE = 1;
 const HANDLE_SLUGS = ['kimi-store'];

@@ -26,7 +26,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https://files.catbox.moe https://api.qrserver.com https://*.vercel.app https://*.catbox.moe https://*.ramashop.my.id https://ramashop.my.id",
-      "connect-src 'self' https://sewabot.kwocag.web.id https://api.telegram.org https://cloudflareinsights.com https://ramashop.my.id https://*.ramashop.my.id",
+      "connect-src 'self' https://kwocag.web.id https://api.telegram.org https://cloudflareinsights.com https://ramashop.my.id https://*.ramashop.my.id",
       "worker-src blob:",
       "frame-ancestors 'none'",
     ].join("; "),
