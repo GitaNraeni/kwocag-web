@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 /**
  * POST /api/bot-integration/heartbeat
- * Dipanggil bot tiap sync untuk tanda masih hidup
+ * Dipanggil bot untuk tanda masih hidup — cukup tiap 10 menit
  * Body: { instance: number, botTypeSlug: string }
  */
 export async function POST(req: NextRequest) {

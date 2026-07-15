@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 
 // ============ GANTI INI ============
-const API_URL = 'https://kwocag-web.vercel.app';
+const API_URL = 'https://sewabot.kwocag.web.id';
 const API_KEY = 'GANTI_DENGAN_PAKASIR_API_KEY';
 const INSTANCE = 1;
 const HANDLE_SLUGS = ['kimi-store'];
@@ -134,18 +134,58 @@ async function confirmLeft(orderId) {
   });
 }
 
-let p1, p2, p3;
+/**
+ * Polling ringan — hanya cek apakah ada order baru yang menunggu.
+ * Kirim ?since=<timestamp> supaya server hanya cek order setelah polling terakhir.
+ * Kalau hasPending = true → langsung fetch order penuh via checkWebOrders.
+ */
+let lastSignalCheck = Date.now() - 15 * 60 * 1000; // mulai dari 15 menit lalu biar tidak miss
+
+async function pollPendingSignal(sock) {
+  try {
+    const slug = HANDLE_SLUGS.length > 0 ? HANDLE_SLUGS[0] : '';
+    const params = new URLSearchParams({ since: String(lastSignalCheck) });
+    if (slug) params.set('slug', slug);
+
+    const res = await fetch(`${API_URL}/api/bot-integration/pending-signal?${params}`, {
+      headers: { 'x-api-key': API_KEY },
+    });
+    const data = await res.json();
+
+    if (data?.timestamp) lastSignalCheck = data.timestamp;
+
+    if (data?.hasPending) {
+      console.log(`[WebOrder] Signal: ada ${data.count} order pending → fetch sekarang`);
+      await checkWebOrders(sock);
+    }
+  } catch { /* silent */ }
+}
+
+let p1, p2, p3, p4;
 function startWebIntegration(sock) {
   console.log('[WebIntegration] Started');
-  p1 = setInterval(() => checkWebOrders(sock), 30000);
-  p2 = setInterval(() => checkWebExpired(sock), 120000);
-  p3 = setInterval(() => syncSewaToWebsite(sock), 300000);
+  // Strategi dua-tahap untuk hemat invocations tapi tetap pickup order cepat:
+  //
+  // p1 — pending-signal tiap 30 detik (RINGAN: 1 COUNT query, di-cache 25 dtk)
+  //      → kalau ada order baru, langsung trigger checkWebOrders
+  //      → bot pickup order dalam ~30 detik setelah payment
+  //
+  // p2 — checkWebOrders tiap 5 menit (FALLBACK: kalau signal miss)
+  // p3 — checkWebExpired tiap 10 menit
+  // p4 — syncSewaToWebsite tiap 30 menit
+  p1 = setInterval(() => pollPendingSignal(sock), 30 * 1000);      // 30 detik (ringan)
+  p2 = setInterval(() => checkWebOrders(sock), 5 * 60 * 1000);     // 5 menit (fallback)
+  p3 = setInterval(() => checkWebExpired(sock), 10 * 60 * 1000);   // 10 menit
+  p4 = setInterval(() => syncSewaToWebsite(sock), 30 * 60 * 1000); // 30 menit
   setTimeout(() => checkWebOrders(sock), 5000);
   setTimeout(() => syncSewaToWebsite(sock), 15000);
 }
 
 function stopWebIntegration() {
-  if (p1) clearInterval(p1); if (p2) clearInterval(p2); if (p3) clearInterval(p3);
+  if (p1) { clearInterval(p1); p1 = null; }
+  if (p2) { clearInterval(p2); p2 = null; }
+  if (p3) { clearInterval(p3); p3 = null; }
+  if (p4) { clearInterval(p4); p4 = null; }
 }
 
 module.exports = { startWebIntegration, stopWebIntegration };

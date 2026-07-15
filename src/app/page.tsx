@@ -152,7 +152,6 @@ export default function Home() {
   const [totalActive, setTotalActive] = useState(0);
   const [totalServed, setTotalServed] = useState<number | null>(null);
   const [bots, setBots] = useState<any[]>([]);
-  const [ready, setReady] = useState(false);
   // Banner
   const [showBanner, setShowBanner] = useState(false);
   const [bannerImage, setBannerImage] = useState("");
@@ -203,7 +202,7 @@ export default function Home() {
       fetch("/api/bots").then(r => r.json()).then(d => {
         if (d.success) setBots(d.data);
       }).catch(() => {}),
-    ]).finally(() => setReady(true));
+    ]).finally(() => {});
 
     fetchStats();
     const interval = setInterval(fetchStats, 60000);
@@ -239,7 +238,7 @@ export default function Home() {
       {/* Hero — pt-20 agar tidak tertutup navbar fixed */}
       <section className="relative z-10 flex-1 flex items-center px-6 pt-32 pb-16 md:pt-32 md:pb-20">
         <div className="max-w-5xl mx-auto w-full grid md:grid-cols-2 gap-10 md:gap-16 items-center">
-          <div className={ready ? "animate-slide-up" : "opacity-0"}>
+          <div className="animate-slide-up">
             <div className="h-8 mb-6">
               {totalActive > 0 && (
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/20 text-xs text-[var(--primary)] animate-fade-in">
@@ -273,7 +272,7 @@ export default function Home() {
           </div>
 
           {/* Right visual — TiltCard 3D */}
-          <div className="hidden md:block" style={{ opacity: ready ? 1 : 0, animation: ready ? 'fadeIn 0.4s ease-out 200ms both' : 'none' }}>
+          <div className="hidden md:block" style={{ animation: 'fadeIn 0.4s ease-out 200ms both' }}>
             <TiltCard className="relative">
               <div className="absolute -inset-4 bg-gradient-to-br from-[var(--primary)]/5 to-transparent rounded-3xl blur-2xl" />
               <div className="relative bg-[var(--card)] border border-[var(--card-border)] rounded-2xl p-6 card-glow">
@@ -330,8 +329,7 @@ export default function Home() {
       {/* Stats */}
       <section className="relative z-10 border-t border-[var(--card-border)] px-6 py-12">
         <div ref={statsRef} className="max-w-3xl mx-auto scroll-fade" style={{ minHeight: '80px' }}>
-          {ready && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
               {/* QRIS — logo resmi dengan float animation */}
               <div className="animate-fade-in" style={{ animationFillMode: "both" }}>
                 <div className="h-8 flex items-center justify-center">
@@ -368,12 +366,11 @@ export default function Home() {
                 <p className="text-xs text-[var(--muted)] mt-1">Grup dilayani</p>
               </div>
             </div>
-          )}
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-[var(--card-border)] px-6 py-8" style={{ opacity: ready ? 1 : 0, transition: 'opacity 0.3s ease' }}>
+      <footer className="relative z-10 border-t border-[var(--card-border)] px-6 py-8">
         <div ref={footerRef} className="max-w-5xl mx-auto scroll-fade">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
             <div>

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 // GET /api/bots - List semua tipe bot yang aktif (public)
+// Cache 5 menit — daftar bot & harga jarang berubah
 export async function GET() {
   try {
     const bots = await prisma.botType.findMany({
@@ -27,7 +28,10 @@ export async function GET() {
       isFull: bot.maxSlots > 0 && bot._count.rentals >= (bot.maxSlots * (bot.totalInstances || 1)),
     }));
 
-    return NextResponse.json({ success: true, data: botsWithSlot });
+    const response = NextResponse.json({ success: true, data: botsWithSlot });
+    // Cache 5 menit di Vercel Edge — data bot & harga jarang berubah
+    response.headers.set("Cache-Control", "public, s-maxage=300, stale-while-revalidate=60");
+    return response;
   } catch (error) {
     console.error("Error fetching bots:", error);
     return NextResponse.json(

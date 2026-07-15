@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 // GET /api/bot-integration/expired - List rental yang sudah expired (bot perlu leave grup)
+// Cache 4 menit di Vercel Edge untuk hemat function invocations
 export async function GET(req: NextRequest) {
   const apiKey = req.headers.get("x-api-key");
   if (apiKey !== process.env.PAKASIR_API_KEY) {
@@ -30,7 +31,7 @@ export async function GET(req: NextRequest) {
     include: { botType: true },
   });
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     success: true,
     data: rentals.map((r) => ({
       rentalId: r.id,
@@ -43,6 +44,11 @@ export async function GET(req: NextRequest) {
       contactPhone: r.contactPhone,
     })),
   });
+
+  // Cache 4 menit — bot polling tiap 10 menit, cukup aman
+  response.headers.set("Cache-Control", "public, s-maxage=240, stale-while-revalidate=60");
+
+  return response;
 }
 
 // POST /api/bot-integration/expired - Konfirmasi bot sudah leave & set ENDED

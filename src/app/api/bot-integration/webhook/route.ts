@@ -6,6 +6,7 @@ import { calculateExpiryDate } from "@/lib/utils";
 // Query params:
 //   ?instance=1 → hanya ambil order untuk bot instance 1
 //   ?slug=bot-store → hanya ambil order untuk tipe bot tertentu
+// Cache 4 menit di Vercel Edge untuk hemat function invocations
 export async function GET(req: NextRequest) {
   const apiKey = req.headers.get("x-api-key");
   if (apiKey !== process.env.PAKASIR_API_KEY) {

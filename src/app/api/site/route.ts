@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 // GET /api/site - Public site info (nama, logo, contact, banner)
+// Cache 5 menit di Vercel Edge — data jarang berubah, tidak perlu fresh tiap request
 export async function GET() {
   try {
     const settings = await prisma.siteSettings.findUnique({ where: { id: "main" } });
     const data = settings as any;
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       data: {
         siteName: data?.siteName || "KWOCAG",
@@ -27,6 +28,9 @@ export async function GET() {
         bannerLinkLabel: data?.bannerLinkLabel || null,
       },
     });
+    // Cache 5 menit — site settings jarang berubah
+    response.headers.set("Cache-Control", "public, s-maxage=300, stale-while-revalidate=60");
+    return response;
   } catch {
     return NextResponse.json({
       success: true,
