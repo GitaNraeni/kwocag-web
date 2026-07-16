@@ -1,70 +1,72 @@
-# 🤖 RentalBot - Website Sewa Bot WhatsApp
+# 🤖 KWOCAG ID - Website Sewa Bot WhatsApp
 
-Website untuk order/sewa bot WhatsApp dengan pembayaran otomatis via QRIS (Pakasir).
+Website untuk order/sewa bot WhatsApp dengan pembayaran otomatis via QRIS.
+
+🌐 Live: [kwocag.web.id](https://kwocag.web.id)
 
 ## Fitur
 
-- 🏪 Landing page dengan daftar tipe bot
+- 🏪 Landing page dengan daftar tipe bot & harga
 - 📝 Form order (pilih bot, durasi, link grup, kontak)
-- 💳 Pembayaran otomatis QRIS via Pakasir.com
-- 👨‍💼 Admin dashboard (kelola order, CRUD tipe bot, perpanjang sewa)
-- 📱 Notifikasi order ke Telegram
-- 🔗 API integrasi dengan script bot (cek sewa aktif, list aktif)
-- ➕ Admin bisa tambah tipe bot baru kapan saja
+- 💳 Pembayaran otomatis QRIS via **Pakasir** atau **RamaShop**
+- 👨‍💼 Admin dashboard (kelola order, rental, tipe bot, banner, settings)
+- 📱 Notifikasi order & alert ke Telegram
+- 🔗 API integrasi dengan script bot WhatsApp
+- ⚡ Bot pickup order otomatis dalam ~30 detik setelah payment
 
 ---
 
-## Cara Run (Step by Step)
+## Setup (Step by Step)
 
 ### 1. Install Dependencies
 
-Buka terminal di folder `rental-bot`, lalu jalankan:
-
 ```bash
-npm install @prisma/client zod uuid
-npm install -D prisma @types/uuid tsx
+npm install
 ```
 
-### 2. Setup Database (PostgreSQL Gratis)
+### 2. Setup Database (PostgreSQL)
 
 Pilih salah satu:
-- **Supabase** (gratis): https://supabase.com → buat project → copy connection string
-- **Neon** (gratis): https://neon.tech → buat project → copy connection string
+- **Neon** (gratis): https://neon.tech
+- **Supabase** (gratis): https://supabase.com
 
 ### 3. Buat file `.env`
-
-Copy dari `.env.example`:
 
 ```bash
 copy .env.example .env
 ```
 
-Lalu isi:
+Isi nilai yang diperlukan:
 
 ```env
+# Database
 DATABASE_URL="postgresql://user:password@host:5432/dbname?sslmode=require"
+DIRECT_URL="postgresql://user:password@host:5432/dbname?sslmode=require"
+
+# Payment Gateway — pilih salah satu (atur di Admin → Settings)
+# Pakasir: butuh API Key + Project Slug
+# RamaShop: butuh API Key saja
 PAKASIR_API_KEY="api_key_dari_pakasir"
-PAKASIR_MERCHANT_ID="merchant_id_dari_pakasir"
-TELEGRAM_BOT_TOKEN="token_bot_telegram_kamu"
-TELEGRAM_CHAT_ID="chat_id_telegram_kamu"
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
-JWT_SECRET="random_string_panjang_bebas"
+PAKASIR_PROJECT_SLUG="slug_project_pakasir"
+
+# Telegram Notifikasi
+TELEGRAM_BOT_TOKEN="token_bot_telegram"
+TELEGRAM_CHAT_ID="chat_id_tujuan_notifikasi"
+
+# App
+NEXT_PUBLIC_APP_URL="https://kwocag.web.id"
+JWT_SECRET="random_string_panjang"
 ```
 
-### 4. Setup Database & Seed Data
+### 4. Setup Database
 
 ```bash
 npx prisma generate
 npx prisma db push
-npm run db:seed
+npx prisma db seed
 ```
 
-Ini akan:
-- Generate Prisma client
-- Buat tabel di database
-- Isi data awal (2 tipe bot + admin account)
-
-### 5. Jalankan Development Server
+### 5. Jalankan Dev Server
 
 ```bash
 npm run dev
@@ -74,54 +76,73 @@ Buka http://localhost:3000
 
 ### 6. Login Admin
 
-- URL: http://localhost:3000/admin
-- Username: `admin`
-- Password: `admin123`
+- URL: `/admin` atau `/panel` (sesuai `ADMIN_PATH`)
+- Username & password sesuai seed atau yang diatur di admin settings
+
+---
+
+## Payment Gateway
+
+Website mendukung dua provider, bisa dipilih di **Admin → Settings**:
+
+| Provider | Yang dibutuhkan | Catatan |
+|---|---|---|
+| **Pakasir** | `PAKASIR_API_KEY` + `PAKASIR_PROJECT_SLUG` | Default. Set callback URL ke `/api/payment/callback` |
+| **RamaShop** | `PAKASIR_API_KEY` (isi dengan RamaShop API key) | Status di-poll dari frontend, tidak butuh webhook |
 
 ---
 
 ## Deploy ke Vercel
 
 1. Push ke GitHub
-2. Buka https://vercel.com → Import project
-3. Tambahkan Environment Variables (sama seperti `.env`)
-4. Deploy!
-
-Jangan lupa update `NEXT_PUBLIC_APP_URL` dan `PAKASIR_CALLBACK_URL` ke domain Vercel kamu.
+2. Import project di https://vercel.com
+3. Set Environment Variables (sama seperti `.env`)
+4. Set `NEXT_PUBLIC_APP_URL` ke domain production
+5. Untuk Pakasir: set callback URL di dashboard Pakasir ke `https://domain.com/api/payment/callback`
 
 ---
 
-## API Integrasi Script Bot
+## Integrasi Script Bot WhatsApp
 
-Untuk script bot kamu bisa panggil API ini:
+Copy file dari folder `docs/` ke script bot kamu:
 
-### Cek apakah grup masih aktif sewa
+- `docs/web-integration-kimmy.js` → untuk bot Kimmy (jaga grup)
+- `docs/web-integration-kimistore.js` → untuk bot Kimi Store
 
-```
-GET /api/bot-integration/check?group=https://chat.whatsapp.com/xxx
-Header: x-api-key: <PAKASIR_API_KEY>
-```
+Ganti konstanta di bagian atas file:
 
-Response:
-```json
-{
-  "success": true,
-  "active": true,
-  "data": {
-    "orderCode": "ORD-XXXXXXXX",
-    "botType": "bot-store",
-    "botTypeName": "Bot Store",
-    "expiresAt": "2025-02-01T00:00:00.000Z"
-  }
-}
+```js
+const API_URL = 'https://kwocag.web.id';
+const API_KEY = 'isi_dengan_PAKASIR_API_KEY';
+const INSTANCE = 1; // nomor instance bot
+const HANDLE_SLUGS = ['kimmy']; // slug tipe bot yang di-handle
 ```
 
-### List semua sewa aktif
+### Cara kerja integrasi
 
-```
-GET /api/bot-integration/active?botType=bot-store
-Header: x-api-key: <PAKASIR_API_KEY>
-```
+Bot menggunakan sistem dua-tahap untuk efisiensi:
+
+1. **Polling ringan** `/api/bot-integration/pending-signal` tiap 30 detik — hanya cek apakah ada order baru (1 COUNT query)
+2. **Kalau ada signal** → fetch `/api/bot-integration/webhook` untuk ambil detail order → bot join grup
+
+Bot pickup order dalam **~30 detik** setelah payment sukses.
+
+### Endpoint bot-integration
+
+| Endpoint | Method | Fungsi |
+|---|---|---|
+| `/api/bot-integration/pending-signal` | GET | Cek cepat ada order baru (ringan) |
+| `/api/bot-integration/webhook` | GET | Ambil order SUCCESS yang belum di-join |
+| `/api/bot-integration/webhook` | POST | Konfirmasi bot sudah join / failed |
+| `/api/bot-integration/expired` | GET | List rental yang sudah expired |
+| `/api/bot-integration/expired` | POST | Konfirmasi bot sudah leave |
+| `/api/bot-integration/heartbeat` | POST | Update status bot masih hidup |
+| `/api/bot-integration/sync` | POST | Sinkronisasi data sewa dari bot ke website |
+| `/api/bot-integration/kicked` | POST | Notif bot di-kick dari grup |
+| `/api/bot-integration/check` | GET | Cek apakah grup masih aktif sewa |
+| `/api/bot-integration/active` | GET | List semua rental aktif |
+
+Semua endpoint membutuhkan header `x-api-key: <PAKASIR_API_KEY>`.
 
 ---
 
@@ -130,42 +151,26 @@ Header: x-api-key: <PAKASIR_API_KEY>
 ```
 src/
 ├── app/
-│   ├── page.tsx              # Landing page
-│   ├── order/
-│   │   ├── [slug]/page.tsx   # Form order per bot
-│   │   └── status/
-│   │       ├── page.tsx      # Cek order by code
-│   │       └── [code]/page.tsx # Detail status order
-│   ├── admin/
-│   │   ├── page.tsx          # Login admin
-│   │   ├── dashboard/page.tsx # Kelola orders
-│   │   └── bots/page.tsx     # CRUD tipe bot
+│   ├── page.tsx                    # Landing page
+│   ├── order/                      # Halaman order
+│   ├── admin/dashboard/            # Admin panel
 │   └── api/
-│       ├── bots/             # Public: list bot
-│       ├── orders/           # Public: create & check order
-│       ├── payment/callback/ # Callback dari Pakasir
-│       ├── admin/            # Admin: login, orders, bots
-│       └── bot-integration/  # API untuk script bot
-├── lib/
-│   ├── prisma.ts             # Database client
-│   ├── auth.ts               # JWT auth
-│   ├── pakasir.ts            # Payment gateway
-│   ├── telegram.ts           # Notifikasi Telegram
-│   └── utils.ts              # Helper functions
-└── prisma/
-    ├── schema.prisma         # Database schema
-    └── seed.ts               # Data awal
+│       ├── bots/                   # Public: list bot & stats
+│       ├── orders/                 # Public: create & cek order
+│       ├── payment/callback/       # Webhook dari Pakasir
+│       ├── admin/                  # Admin API
+│       └── bot-integration/        # API untuk script bot
+├── components/                     # UI components
+└── lib/
+    ├── prisma.ts                   # Database client
+    ├── pakasir.ts                  # Payment gateway (Pakasir + RamaShop)
+    ├── telegram.ts                 # Notifikasi Telegram
+    └── utils.ts                    # Helper functions
+prisma/
+├── schema.prisma                   # Database schema
+└── seed.ts                         # Data awal
+docs/
+├── web-integration-kimmy.js        # Integrasi untuk bot Kimmy
+├── web-integration-kimistore.js    # Integrasi untuk bot Kimi Store
+└── INTEGRASI-BOT.md               # Panduan integrasi
 ```
-
-## Setup Pakasir.com
-
-1. Daftar di https://pakasir.com
-2. Buat merchant → aktifkan QRIS
-3. Copy API Key & Merchant ID ke `.env`
-4. Set callback URL ke `https://domain-kamu.vercel.app/api/payment/callback`
-
-## Setup Telegram Notifikasi
-
-1. Chat @BotFather di Telegram → `/newbot` → copy token
-2. Chat @userinfobot untuk dapat chat_id kamu
-3. Masukkan ke `.env`

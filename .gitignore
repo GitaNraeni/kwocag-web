@@ -42,9 +42,14 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# AI files
+# AI / editor
 AGENTS.md
 CLAUDE.md
 .kiro/
+.vscode/
 
-.vercel
+# tidak perlu di repo
+package-lock.json
+backup_data_only.sql
+backup_neon.sql
+build-log.txt

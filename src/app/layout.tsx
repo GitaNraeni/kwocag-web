@@ -28,20 +28,20 @@ const oxanium = Oxanium({
 export const metadata: Metadata = {
   metadataBase: new URL("https://kwocag.web.id"),
   title: {
-    default: "KWOCAG - Sewa Bot WhatsApp",
-    template: "%s | KWOCAG",
+    default: "KWOCAG ID - Sewa Bot WhatsApp",
+    template: "%s | KWOCAG ID",
   },
   description: "Layanan sewa bot WhatsApp untuk grup kamu. Aktif otomatis, langsung bisa digunakan.",
-  keywords: ["sewa bot whatsapp", "bot whatsapp otomatis", "bot grup whatsapp", "KWOCAG", "rental bot WA", "bot jaga grup", "bot store whatsapp"],
-  authors: [{ name: "KWOCAG" }],
+  keywords: ["sewa bot whatsapp", "bot whatsapp otomatis", "bot grup whatsapp", "KWOCAG", "KWOCAG ID", "rental bot WA", "bot jaga grup", "bot store whatsapp"],
+  authors: [{ name: "KWOCAG ID" }],
   alternates: {
     canonical: "https://kwocag.web.id",
   },
   openGraph: {
-    title: "KWOCAG - Sewa Bot WhatsApp",
+    title: "KWOCAG ID - Sewa Bot WhatsApp",
     description: "Layanan sewa bot WhatsApp untuk grup kamu. Aktif otomatis, langsung bisa digunakan.",
-    url: "https://kwocag-web.vercel.app",
-    siteName: "KWOCAG",
+    url: "https://kwocag.web.id",
+    siteName: "KWOCAG ID",
     type: "website",
     locale: "id_ID",
     images: [
@@ -49,13 +49,13 @@ export const metadata: Metadata = {
         url: "https://files.catbox.moe/amosh8.png",
         width: 1200,
         height: 630,
-        alt: "KWOCAG - Sewa Bot WhatsApp Otomatis",
+        alt: "KWOCAG ID - Sewa Bot WhatsApp Otomatis",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "KWOCAG - Sewa Bot WhatsApp",
+    title: "KWOCAG ID - Sewa Bot WhatsApp",
     description: "Layanan sewa bot WhatsApp untuk grup kamu. Aktif otomatis, langsung bisa digunakan.",
     images: ["https://files.catbox.moe/amosh8.png"],
   },
@@ -67,7 +67,17 @@ export const metadata: Metadata = {
       follow: true,
     },
   },
-  icons: [],
+  icons: [
+    {
+      rel: "icon",
+      url: "https://files.catbox.moe/lt03d3.png",
+      type: "image/png",
+    },
+    {
+      rel: "apple-touch-icon",
+      url: "https://files.catbox.moe/lt03d3.png",
+    },
+  ],
 };
 
 export default async function RootLayout({
