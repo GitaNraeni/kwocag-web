@@ -8,7 +8,6 @@ import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-
 
 export function Navbar({ backButton = false }: { backButton?: boolean }) {
   const [siteName, setSiteName] = useState("KWOCAG");
-  const [loading, setLoading] = useState(true);
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -23,11 +22,21 @@ export function Navbar({ backButton = false }: { backButton?: boolean }) {
   });
 
   useEffect(() => {
+    // Ambil siteName dari cache localStorage dulu biar tidak ada delay
+    try {
+      const cached = localStorage.getItem("kwocag_sitename");
+      if (cached) setSiteName(cached);
+    } catch {}
+
     fetch("/api/site")
       .then(r => r.json())
-      .then(d => { if (d.success) setSiteName(d.data.siteName || "KWOCAG"); })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      .then(d => {
+        if (d.success && d.data.siteName) {
+          setSiteName(d.data.siteName);
+          try { localStorage.setItem("kwocag_sitename", d.data.siteName); } catch {}
+        }
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => { setOpen(false); }, [pathname]);
@@ -91,13 +100,9 @@ export function Navbar({ backButton = false }: { backButton?: boolean }) {
             className="shrink-0 group mr-auto"
             style={{ fontFamily: "var(--font-logo)" }}
           >
-            {loading ? (
-              <div className="skeleton w-24 h-6 rounded" />
-            ) : (
-              <span className="text-lg font-bold text-white tracking-wide leading-none group-hover:text-[var(--primary)] group-active:text-[var(--primary)] transition-colors duration-200">
-                {siteName}
-              </span>
-            )}
+            <span className="text-lg font-bold text-white tracking-wide leading-none group-hover:text-[var(--primary)] group-active:text-[var(--primary)] transition-colors duration-200">
+              {siteName}
+            </span>
           </Link>
 
           {/* Desktop menu */}
