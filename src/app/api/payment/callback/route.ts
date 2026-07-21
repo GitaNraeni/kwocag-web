@@ -97,6 +97,9 @@ export async function POST(req: NextRequest) {
           groupLink: order.groupLink,
           totalPrice: order.totalPrice,
           expiresAt: expiresAt.toLocaleDateString("id-ID"),
+          isExtend: !!activeRental,
+          contactPhone: order.contactPhone,
+          contactEmail: order.contactEmail,
         })
       );
     } else if (verifiedFailed) {

@@ -95,11 +95,15 @@ export function formatPaymentSuccess(order: {
   groupLink: string;
   totalPrice: number;
   expiresAt: string;
+  isExtend?: boolean;
+  contactPhone?: string | null;
+  contactEmail?: string | null;
 }) {
   const now = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
+  const title = order.isExtend ? "🔄 <b>SEWA DIPERPANJANG</b>" : "✅ <b>SEWA BARU BERHASIL</b>";
 
   return `━━━━━━━━━━━━━━━━━━
-✅ <b>PEMBAYARAN BERHASIL</b>
+${title}
 ━━━━━━━━━━━━━━━━━━
 
 🆔 Kode: <code>${order.orderCode}</code>
@@ -108,6 +112,7 @@ export function formatPaymentSuccess(order: {
 💰 Total: <b>Rp ${order.totalPrice.toLocaleString("id-ID")}</b>
 
 🔗 Grup: ${order.groupLink}
+📱 HP: ${order.contactPhone || "-"}${order.contactEmail ? `\n📧 Email: ${order.contactEmail}` : ""}
 📅 Aktif sampai: <b>${order.expiresAt}</b>
 
 🕐 Dibayar: ${now}
@@ -118,9 +123,14 @@ export function formatOrderCancelled(order: {
   orderCode: string;
   botTypeName: string;
   reason: string;
+  cancelledBy?: "user" | "system";
 }) {
+  const title = order.cancelledBy === "system"
+    ? "⏰ <b>ORDER EXPIRED</b>"
+    : "❌ <b>ORDER DIBATALKAN</b>";
+
   return `━━━━━━━━━━━━━━━━━━
-❌ <b>ORDER DIBATALKAN</b>
+${title}
 ━━━━━━━━━━━━━━━━━━
 
 🆔 Kode: <code>${order.orderCode}</code>

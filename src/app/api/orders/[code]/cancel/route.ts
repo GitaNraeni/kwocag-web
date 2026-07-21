@@ -46,6 +46,7 @@ export async function POST(
         orderCode: order.orderCode,
         botTypeName: order.botType.name,
         reason: "Dibatalkan oleh user",
+        cancelledBy: "user",
       })
     );
 

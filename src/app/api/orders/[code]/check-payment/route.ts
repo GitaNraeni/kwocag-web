@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getTransactionDetail, cancelTransaction } from "@/lib/pakasir";
-import { sendTelegramNotification, formatPaymentSuccess } from "@/lib/telegram";
+import { sendTelegramNotification, formatPaymentSuccess, formatOrderCancelled } from "@/lib/telegram";
 import { calculateExpiryDate, getDurationLabel } from "@/lib/utils";
 import { getGroupInviteCode } from "@/lib/sanitize";
 
@@ -38,8 +38,16 @@ export async function GET(
         data: { status: "EXPIRED" },
       });
       await prisma.orderLog.create({
-        data: { orderId: order.id, action: "AUTO_EXPIRED", details: "Order expired otomatis (lebih dari 5 menit)" },
+        data: { orderId: order.id, action: "AUTO_EXPIRED", details: "Order expired" },
       });
+      await sendTelegramNotification(
+        formatOrderCancelled({
+          orderCode: order.orderCode,
+          botTypeName: order.botType.name,
+          reason: "QR tidak dibayar dalam 15 menit",
+          cancelledBy: "system",
+        })
+      );
       return NextResponse.json({ success: true, status: "EXPIRED" });
     }
 
@@ -109,6 +117,9 @@ export async function GET(
           groupLink: order.groupLink,
           totalPrice: order.totalPrice,
           expiresAt: expiresAt.toLocaleDateString("id-ID"),
+          isExtend: !!activeRental,
+          contactPhone: order.contactPhone,
+          contactEmail: order.contactEmail,
         })
       );
 
@@ -120,6 +131,7 @@ export async function GET(
         where: { id: order.id },
         data: { status: "CANCELLED" },
       });
+      // Tidak kirim notif di sini — sudah di-handle payment/callback atau user cancel
       return NextResponse.json({ success: true, status: "CANCELLED" });
     }
 

@@ -10,7 +10,7 @@ const path = require('path');
 
 // ============ GANTI INI ============
 const API_URL = 'https://kwocag.web.id';
-const API_KEY = 'GANTI_DENGAN_PAKASIR_API_KEY';
+const API_KEY = 'chuLlTmvIq3rtp6WxCyglK3VABzHKEih';
 const INSTANCE = 1;
 const HANDLE_SLUGS = ['kimi-store'];
 // ===================================
@@ -134,6 +134,16 @@ async function confirmLeft(orderId) {
   });
 }
 
+async function sendHeartbeat() {
+  try {
+    await fetch(`${API_URL}/api/bot-integration/heartbeat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
+      body: JSON.stringify({ instance: INSTANCE, botTypeSlug: HANDLE_SLUGS[0] || 'kimi-store' }),
+    });
+  } catch { /* silent */ }
+}
+
 /**
  * Polling ringan — hanya cek apakah ada order baru yang menunggu.
  * Kirim ?since=<timestamp> supaya server hanya cek order setelah polling terakhir.
@@ -161,24 +171,18 @@ async function pollPendingSignal(sock) {
   } catch { /* silent */ }
 }
 
-let p1, p2, p3, p4;
+let p1, p2, p3, p4, p5;
 function startWebIntegration(sock) {
+  stopWebIntegration(); // stop interval lama dulu biar tidak duplikat saat reconnect
   console.log('[WebIntegration] Started');
-  // Strategi dua-tahap untuk hemat invocations tapi tetap pickup order cepat:
-  //
-  // p1 — pending-signal tiap 30 detik (RINGAN: 1 COUNT query, di-cache 25 dtk)
-  //      → kalau ada order baru, langsung trigger checkWebOrders
-  //      → bot pickup order dalam ~30 detik setelah payment
-  //
-  // p2 — checkWebOrders tiap 5 menit (FALLBACK: kalau signal miss)
-  // p3 — checkWebExpired tiap 10 menit
-  // p4 — syncSewaToWebsite tiap 30 menit
   p1 = setInterval(() => pollPendingSignal(sock), 30 * 1000);      // 30 detik (ringan)
   p2 = setInterval(() => checkWebOrders(sock), 5 * 60 * 1000);     // 5 menit (fallback)
   p3 = setInterval(() => checkWebExpired(sock), 10 * 60 * 1000);   // 10 menit
   p4 = setInterval(() => syncSewaToWebsite(sock), 30 * 60 * 1000); // 30 menit
+  p5 = setInterval(() => sendHeartbeat(), 10 * 60 * 1000);         // 10 menit
   setTimeout(() => checkWebOrders(sock), 5000);
   setTimeout(() => syncSewaToWebsite(sock), 15000);
+  setTimeout(() => sendHeartbeat(), 3000); // kirim langsung saat start
 }
 
 function stopWebIntegration() {
@@ -186,6 +190,7 @@ function stopWebIntegration() {
   if (p2) { clearInterval(p2); p2 = null; }
   if (p3) { clearInterval(p3); p3 = null; }
   if (p4) { clearInterval(p4); p4 = null; }
+  if (p5) { clearInterval(p5); p5 = null; }
 }
 
 module.exports = { startWebIntegration, stopWebIntegration };
