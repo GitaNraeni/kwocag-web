@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 // GET /api/site - Public site info (nama, logo, contact, banner)
-// Cache 5 menit di Vercel Edge — data jarang berubah, tidak perlu fresh tiap request
+// PENTING: jangan di-cache. Endpoint ini dipakai halaman /maintenance buat
+// polling tiap 10 detik apakah maintenance sudah selesai (lihat
+// src/app/maintenance/page.tsx). Kalau di-cache (sebelumnya 5 menit),
+// begitu admin matiin maintenance di DB, endpoint ini tetap balikin
+// "maintenance: true" yang basi sampai cache-nya expire — makanya
+// pengunjung stuck di halaman maintenance walau sudah di-refresh manual.
 export async function GET() {
   try {
     const settings = await prisma.siteSettings.findUnique({ where: { id: "main" } });
@@ -28,8 +33,7 @@ export async function GET() {
         bannerLinkLabel: data?.bannerLinkLabel || null,
       },
     });
-    // Cache 5 menit — site settings jarang berubah
-    response.headers.set("Cache-Control", "public, s-maxage=300, stale-while-revalidate=60");
+    response.headers.set("Cache-Control", "no-store");
     return response;
   } catch {
     return NextResponse.json({
