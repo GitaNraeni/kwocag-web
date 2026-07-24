@@ -1,11 +1,46 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Inter, Oxanium } from "next/font/google";
 import "./globals.css";
-import { DynamicFavicon } from "@/components/DynamicFavicon";
 import { MaintenanceGuard } from "@/components/MaintenanceGuard";
 import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { unstable_cache } from "next/cache";
+
+const DEFAULT_ICON = "https://files.catbox.moe/lt03d3.png";
+
+// Ambil status maintenance + info situs (nama, icon) dari DB, di-cache 15 detik.
+// Sebelumnya query ini jalan LANGSUNG ke Prisma di setiap navigasi (termasuk
+// klik Link biasa), jadi tiap pindah halaman = 1 round-trip DB baru → lambat,
+// kerasa kayak "harus klik 2x". Dengan cache ini, DB cuma dihit sesekali,
+// sisanya diambil dari memory. Begitu admin toggle maintenance/ganti nama
+// situs di dashboard, cache ini langsung di-invalidate lewat
+// revalidateTag("site-settings") (lihat src/app/api/admin/settings/route.ts).
+const getSiteSettings = unstable_cache(
+  async () => {
+    try {
+      const settings = await prisma.siteSettings.findUnique({
+        where: { id: "main" },
+        select: {
+          maintenance: true,
+          siteName: true,
+          siteIcon: true,
+          siteLogo: true,
+        },
+      });
+      return {
+        maintenance: settings?.maintenance === true,
+        siteName: settings?.siteName,
+        icon: settings?.siteIcon || settings?.siteLogo || undefined,
+      };
+    } catch {
+      // DB error → anggap tidak maintenance, biar situs tetap jalan
+      return { maintenance: false, siteName: undefined, icon: undefined };
+    }
+  },
+  ["site-settings"],
+  { revalidate: 15, tags: ["site-settings"] }
+);
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-heading",
@@ -25,7 +60,10 @@ const oxanium = Oxanium({
   weight: ["600", "700", "800"],
 });
 
-export const metadata: Metadata = {
+// Tidak di-export langsung — cuma dipakai sebagai basis di generateMetadata()
+// di bawah. Next.js tidak mengizinkan `metadata` dan `generateMetadata`
+// di-export bareng dari file yang sama.
+const baseMetadata: Metadata = {
   metadataBase: new URL("https://kwocag.web.id"),
   title: {
     default: "KWOCAG ID - Sewa Bot WhatsApp",
@@ -70,15 +108,38 @@ export const metadata: Metadata = {
   icons: [
     {
       rel: "icon",
-      url: "https://files.catbox.moe/lt03d3.png",
+      url: DEFAULT_ICON,
       type: "image/png",
     },
     {
       rel: "apple-touch-icon",
-      url: "https://files.catbox.moe/lt03d3.png",
+      url: DEFAULT_ICON,
     },
   ],
 };
+
+// Title & favicon dinamis (nama situs, icon) sekarang di-generate di sini,
+// server-side, lewat API resmi Next.js — BUKAN lagi dengan manipulasi
+// document.head/document.title manual di client (komponen DynamicFavicon
+// lama sudah dihapus). Manipulasi DOM manual itu bentrok sama reconciler
+// React/Next pas navigasi antar halaman, dan itu penyebab error
+// "Cannot read properties of null (reading 'removeChild')" serta gejala
+// "harus klik 2x" yang dialami.
+export async function generateMetadata(): Promise<Metadata> {
+  const { siteName, icon } = await getSiteSettings();
+  return {
+    ...baseMetadata,
+    title: siteName
+      ? { default: `${siteName} - Sewa Bot WhatsApp`, template: `%s | ${siteName}` }
+      : baseMetadata.title,
+    icons: icon
+      ? [
+          { rel: "icon", url: icon, type: "image/png" },
+          { rel: "apple-touch-icon", url: icon },
+        ]
+      : baseMetadata.icons,
+  };
+}
 
 export default async function RootLayout({
   children,
@@ -95,16 +156,8 @@ export default async function RootLayout({
                pathname.startsWith("/maintenance");
 
   if (!skip) {
-    let settings = null;
-    try {
-      settings = await prisma.siteSettings.findUnique({
-        where: { id: "main" },
-        select: { maintenance: true },
-      });
-    } catch {
-      // DB error → lanjut normal
-    }
-    if (settings?.maintenance === true) {
+    const { maintenance } = await getSiteSettings();
+    if (maintenance) {
       redirect("/maintenance");
     }
   }
@@ -116,7 +169,6 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <DynamicFavicon />
         <MaintenanceGuard />
         {children}
       </body>

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getSession, hashPassword, verifyPassword } from "@/lib/auth";
 
@@ -143,17 +144,17 @@ export async function PUT(req: NextRequest) {
     await prisma.admin.update({ where: { id: session.id }, data: { password: hashed } });
   }
 
-  // Set cookie maintenance flag biar middleware bisa baca tanpa fetch
-  const response = NextResponse.json({ success: true, message: "Pengaturan tersimpan" });
-
+  // Catatan: sebelumnya di sini ada percobaan set cookie "site_maintenance"
+  // supaya middleware bisa baca status tanpa fetch DB. Itu tidak akan pernah
+  // bekerja untuk pengunjung lain — cookie hanya tersimpan di browser admin
+  // yang menyimpan setting, bukan di browser semua pengunjung situs. Status
+  // maintenance itu global (server-side), jadi caranya yang benar adalah
+  // invalidate cache di server, bukan set cookie di client.
   if (maintenance !== undefined) {
-    response.cookies.set("site_maintenance", maintenance ? "1" : "0", {
-      path: "/",
-      httpOnly: true,
-      maxAge: 60 * 60 * 24 * 365,
-      sameSite: "lax",
-    });
+    // Next.js 16 mewajibkan argumen kedua ("profile") — samakan dengan
+    // revalidate: 15 detik yang dipakai di unstable_cache pada layout.tsx.
+    revalidateTag("site-settings", { expire: 15 });
   }
 
-  return response;
+  return NextResponse.json({ success: true, message: "Pengaturan tersimpan" });
 }
