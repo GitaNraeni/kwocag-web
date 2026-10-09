@@ -2,8 +2,6 @@
 
 Website untuk order/sewa bot WhatsApp dengan pembayaran otomatis via QRIS.
 
-🌐 Live: [kwocag.web.id](https://kwocag.web.id)
-
 ## Fitur
 
 - 🏪 Landing page dengan daftar tipe bot & harga
